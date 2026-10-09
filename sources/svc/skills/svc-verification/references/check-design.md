@@ -13,7 +13,19 @@ The last item is only one way to obtain the observation.
 Preserve any stated scenario preconditions and initial data through this conversion; a check that supplies them itself may prove a narrower behavior than the requirement.
 Carry the conditions that make the judgment meaningful into evidence design, and carry setup, execution, waiting, and reset into repeatable checks.
 
+When several scenarios supply the obligations, retain their source locations and connect each distinct obligation to the case and observation that examine it.
+A shared case may cover several scenarios, but a feature name or representative success must not silently replace their different actors, entry paths, transitions, and required outcomes.
+Keep this association beside the existing plan or check code; leave obligations without suitable observations explicitly unverified rather than copying the requirements into a second specification.
+
 ## Express the Behavior Before Choosing the Check
+
+Before changing a shared entry point or behavior, identify the original scenarios that depend on it.
+Navigation, routing, authentication, permission resolution, and shared state can connect several otherwise separate features.
+In the current task material, retain the changed component, affected scenario source locations, and observable behavior that must remain supported.
+Derive these obligations from the requirements, not from the current implementation or checks.
+Choose journeys that exercise the affected connections; a feature's local check cannot establish that its shared entry still works.
+Keep any affected obligation without applicable evidence explicitly unverified.
+Do not expand this into an inventory of unrelated components or duplicate the specification.
 
 Product intent describes the value sought; a requirement describes what must hold; a design proposes how to achieve it.
 For example, preventing duplicate charges is a behavioral constraint, while using a particular queue is usually a design choice.
@@ -77,6 +89,18 @@ Use these distinctions when the requirement makes them relevant, not as addition
 If a check creates data or changes initial state to reach a later behavior, record what that setup bypassed.
 Keep a separate observation of the promised initial state when the product must provide it.
 When contradictory requirements require an assumption, keep the unresolved branch visible; a pass under the chosen assumption does not validate the discarded interpretation.
+
+## Independently Check the First Acceptance Translation
+
+When the first acceptance checks have been written, obtain a bounded independent comparison of their actual operations and assertions with the original scenario obligations and relevant shared-component changes.
+Use an existing qualified collaborator when available; give that collaborator the source requirements, check code, and changes rather than only the implementer's coverage summary.
+Ask for omitted conditions, entry paths, actions, and outcomes, including claims in test titles or comments that the code does not observe.
+The result should identify concrete gaps and the observations needed to resolve them, not endorse the implementation or require one test per scenario.
+Resolve each gap through a check or product correction, or retain it as an explicit limitation.
+
+Repeat this comparison only for materially changed criteria, skipped steps, reduced coverage, or shared behavior whose impact was not examined.
+A locator repair that preserves the promised observation does not require a fresh whole-suite review.
+When independent comparison is unavailable, make that limitation explicit and compare the same materials directly; do not describe self-review as independent evidence.
 
 ## A Requirement-to-Judgment Example
 

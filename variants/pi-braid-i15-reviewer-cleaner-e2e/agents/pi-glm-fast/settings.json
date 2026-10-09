@@ -5,12 +5,16 @@
     "modelScope": {
       "enforce": true,
       "strict": true,
-      "allow": ["factory26/*", "factory26-visual/*"]
+      "allow": [
+        "factory26/*",
+        "factory26-visual/*"
+      ]
     }
   },
   "defaultTools": [
     "read",
     "bash",
+    "background_job",
     "edit",
     "write",
     "grep",

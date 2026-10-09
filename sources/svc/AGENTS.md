@@ -1,10 +1,11 @@
 # SVC Skills 维护入口
 
-本工作树维护七个可独立装载的 SVC Agent Skills。
+本工作树维护八个可独立装载的 SVC Agent Skills。
 开发与 analysis 使用的完整 SVC 在独立工作树中维护；不要让运行时 skill 依赖 CLI、Catalog 或 wheel。
 
 ## 文件归属
 
+- `skills/svc-specs/`：长期项目知识的权威归属、文档准入与一致性维护；来自完整开发 SVC 的独立技能，不替代或别名映射 documentation。
 - `skills/svc-documentation/`：产品目的、技术协作、内部设计、运行知识及其维护；入口、按需 references 和可选模板。
 - `skills/svc-task-packet/`：外置任务工作记忆、当前判断与材料采用，按需规划、信息组织和模板。
 - `skills/svc-sub-agents/`：自包含的委派判断、工作塑造、能力与反馈匹配、成果采用。

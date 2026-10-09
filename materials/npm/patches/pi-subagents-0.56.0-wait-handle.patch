@@ -1,0 +1,13 @@
+--- a/src/runs/background/subagent-wait.ts
++++ b/src/runs/background/subagent-wait.ts
+@@ -551,8 +551,8 @@
+ 	let providerActive = providerSnapshot.items;
+ 	if (active.length === 0 && providerActive.length === 0) {
+ 		return result(params.id
+-			? `No active run matched "${params.id}". Nothing to wait for.`
+-			: "No active async runs or registered provider work in this session. Nothing to wait for.");
++			? `UNKNOWN_SUBAGENT: no active subagent matched "${params.id}". Bash pbb handles belong to background_job; use result or wait there.`
++			: "No active async runs or registered provider work in this session. Nothing to wait for.", Boolean(params.id));
+ 	}
+ 	const waitParams = params.id ? { ...params, id: active[0]!.id } : params;
+ 	const initialAsyncIds = new Set(active.map((run) => run.id));

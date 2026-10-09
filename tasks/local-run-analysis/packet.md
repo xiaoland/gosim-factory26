@@ -1,6 +1,6 @@
 # 本地实验的 Agent 过程分析
 
-状态：十个已离线评分产物的身份与证据盘点完成，其中八个已交付 run 和两个未交付但可评分产物均经逐 run 诊断；结论见[本地过程报告](../../reports/2026-09-23-local-agent-process.md)。不改 harness、SVC Corpus 或实验配置。
+状态：十个已离线评分产物的身份与证据盘点完成，其中八个已交付 run 和两个未交付但可评分产物均经逐 run 诊断；结论见[本地过程报告](../../runs/reports/2026-09-23-local-agent-process.md)。不改 harness、SVC Corpus 或实验配置。
 
 目标：利用本地 run 保存的原生会话、Braid 对象、生成产物与 Playwright 失败现场，解释已评分实验中的 Agent 工作机制和具体失分。先验证证据完整性，再给每个完整 run 一名独立分析者；跨 run 综合只使用可追溯的观察，不能从分数或最终源码倒推 Agent 决策。
 

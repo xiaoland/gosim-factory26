@@ -1,6 +1,6 @@
 ---
 name: svc-task-packet
-description: Use before and during non-trivial investigation, design, implementation, coordination, or recovery to keep current reasoning, decisions, evidence, and work in progress usable outside the conversation.
+description: "Use when starting or resuming non-trivial work, or when new evidence changes its explanation, decisions, obligations, plan, or completion judgment. Keep current task state and evidence usable outside conversation history without turning provisional findings into project specifications."
 metadata:
   version: "16.0.0"
 ---

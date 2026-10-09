@@ -59,12 +59,15 @@ def generation_inputs(inputs, sdk, *, expected_sdk=None, agent_provenance=None):
         raise ValueError('ARC generation cannot consume an application replay as an agent')
     if agent.is_dir() and (agent/'delivery-layout.json').is_file() and json.loads((agent/'delivery-layout.json').read_text()).get('mode')=='sdk-components':
         return {'sdk':role,'agent':{'variant':manifest['variant'],'role_readiness':'authenticated at actual child placement'},'requirements':{'entry':'requirements.yaml','sha256':digest(requirements/'requirements.yaml')}}
-    for name in ('runtime/bin/node', 'runtime/bin/braid'):
+    # Braid also uses the Pi backend; its frozen launcher lives under support/.
+    pi = manifest.get('backend') == 'pi' and 'runtime/bin/braid' not in manifest.get('files', {})
+    for name in (('runtime/bin/node',) if pi else ('runtime/bin/node', 'runtime/bin/braid')):
         header = member(name, 20)
         if header[:4] != b'\x7fELF' or header[4:6] != b'\x02\x01' or header[18:20] != b'\x3e\x00':
             raise ValueError('ARC Linux/amd64 Harness material needs a real ELF x86_64 binary: ' + name)
-    for name in ('support/agent_support.py', 'support/runtime_resources.py'):
-        member(name)
+    for name in (('runtime/bin/pi', 'agent_support.py') if pi else ('support/agent_support.py', 'support/runtime_resources.py')):
+        if not member(name, 1):
+            raise ValueError('ARC Harness member is empty: ' + name)
     return {'sdk': role, 'agent': {'variant': manifest.get('capabilities', {}).get('variant', manifest.get('variant'))},
             'requirements': {'entry': 'requirements.yaml', 'sha256': digest(requirements / 'requirements.yaml')}}
 
@@ -94,6 +97,8 @@ def job(job_id, inputs, limits, target, competition, task, *, python='{runtime_p
     command = [python, '-m', 'lab.arc_bench.arc_bench_adapter', '--runner', '{runner}',
                '--agent', '{agent}', '--requirements', '{requirements}', '--workspace', '{workspace}',
                '--competition', competition, '--task', task]
+    if 'template' in inputs:
+        command += ['--template', '{template}']
     if not requirements_only:
         command += ['--tests', '{tests}']
     if prepare_only:

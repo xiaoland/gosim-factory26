@@ -1,0 +1,118 @@
+{
+  "kind": "factory26.exp.intent",
+  "schema_version": 2,
+  "experiment_id": "i14-cleaner-stage2-continuation-20261003",
+  "authorization": "用户明确授权停止 9b4cc578b462 并以新版本保留进度接续；后续明确授权应用 sources/model-proxy。仅一个接续生成，保持原任务、glm-5.3-flash、角色和 self_funded，不注入隐藏评测反馈。",
+  "execution": {
+    "max_parallel": 1,
+    "budget": {
+      "max_attempts": 1
+    },
+    "storage": {
+      "host_reserve_bytes": 21474836480
+    }
+  },
+  "cases": {
+    "github-stage-2": {
+      "backend": {
+        "competition_id": "hackathon",
+        "task": "hackathon--github-stage-2"
+      }
+    }
+  },
+  "variants": {
+    "cleaner-direct": {
+      "generate": {
+        "purpose": "generate",
+        "backend": {
+          "kind": "hosted",
+          "variant": "pi-braid-i14-cleaner-direct",
+          "credential_mode": "self_funded",
+          "parallel_distinct_tasks": true
+        },
+        "inputs": {
+          "agent": {
+            "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/resource-recovery-20261003/direct-continuations/9b4cc578b462/projected-agent-v6.zip"
+          }
+        },
+        "checkpoint": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/resource-recovery-20261003/direct-continuations/9b4cc578b462/checkpoint-terminal-v1"
+        },
+        "prepared": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/resource-recovery-20261003/direct-continuations/9b4cc578b462/prepared-final-v4"
+        },
+        "stop_evidence": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/resource-recovery-20261003/direct-continuations/9b4cc578b462/bound-source-stop-evidence.json"
+        },
+        "outputs": [],
+        "limits": {
+          "storage_bytes": 42949672960,
+          "telemetry_bytes": 1073741824,
+          "wall_seconds": 43200
+        },
+        "environment": {
+          "FACTORY26_MODEL_GATEWAY_IMPLEMENTATION": "rust",
+          "FACTORY26_MODEL_BINDINGS": "{\"factory26\":{\"provider\":\"QIANFAN_TOKEN_PLAN\",\"base_url\":\"http://127.0.0.1:4011/v1\",\"credential_env\":\"FACTORY26_GATEWAY_TOKEN\",\"model\":\"glm-5.3-flash\"},\"factory26-visual\":{\"provider\":\"QIANFAN_TOKEN_PLAN\",\"base_url\":\"http://127.0.0.1:4011/v1\",\"credential_env\":\"FACTORY26_GATEWAY_TOKEN\"},\"factory26/deepseek-v4-flash\":{\"provider\":\"QIANFAN_TOKEN_PLAN\",\"base_url\":\"http://127.0.0.1:4011/v1\",\"credential_env\":\"FACTORY26_GATEWAY_TOKEN\",\"model_id\":\"deepseek-v4-flash-0731\"},\"factory26/kimi-k3\":{\"provider\":\"ARK_CODING_PLAN\",\"base_url\":\"http://127.0.0.1:4011/v1\",\"credential_env\":\"FACTORY26_GATEWAY_TOKEN\"}}"
+        }
+      }
+    }
+  },
+  "models": {
+    "flash": {
+      "config": {
+        "model": "glm-5.3-flash",
+        "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+        "provider": "QIANFAN_TOKEN_PLAN",
+        "visual_model": "glm-5.3-flash"
+      },
+      "bindings": {
+        "factory26": {
+          "provider": "QIANFAN_TOKEN_PLAN",
+          "base_url": "http://127.0.0.1:4011/v1",
+          "credential_env": "FACTORY26_GATEWAY_TOKEN",
+          "model": "glm-5.3-flash"
+        },
+        "factory26-visual": {
+          "provider": "QIANFAN_TOKEN_PLAN",
+          "base_url": "http://127.0.0.1:4011/v1",
+          "credential_env": "FACTORY26_GATEWAY_TOKEN"
+        },
+        "factory26/deepseek-v4-flash": {
+          "provider": "QIANFAN_TOKEN_PLAN",
+          "base_url": "http://127.0.0.1:4011/v1",
+          "credential_env": "FACTORY26_GATEWAY_TOKEN",
+          "model_id": "deepseek-v4-flash-0731"
+        },
+        "factory26/kimi-k3": {
+          "provider": "ARK_CODING_PLAN",
+          "base_url": "http://127.0.0.1:4011/v1",
+          "credential_env": "FACTORY26_GATEWAY_TOKEN"
+        }
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "cleaner-stage2-continuation",
+      "case": "github-stage-2",
+      "variant": "cleaner-direct",
+      "model": "flash"
+    }
+  ],
+  "selection_policy": {
+    "kind": "explicit"
+  },
+  "evaluation_policy": {
+    "kind": "none"
+  },
+  "labels": {
+    "iteration": "I14",
+    "execution": "hosted-progress-preserving-continuation",
+    "source_run": "9b4cc578b462",
+    "priority": "OOM-resource-release",
+    "expected_official_memory_bytes": "2147483648",
+    "transport_change": "direct-no-gateway to sources/model-proxy same model aliases",
+    "final_support_requirement": "v5 normalized request helper 40d545 with v6 exact private deployment closure",
+    "collector_cadence": "existing adapter default, no 900s override"
+  }
+}

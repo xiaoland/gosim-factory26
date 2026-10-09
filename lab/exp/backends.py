@@ -23,6 +23,57 @@ def _legacy_birth(value):
     return {key: value[key] for key in fields}
 
 
+def _verify_hosted_source_experiment(directory, attempt_id):
+    """Bind a legacy hosted attempt without reinterpreting its old producer.
+
+    Older I14 experiments use schema 2 records.  They still carry the
+    attempt/job/dispatch and frozen package identities needed for source-stop
+    evidence, but cannot pass the current ``verify`` routine, whose runtime
+    closure contract is deliberately schema-3-only.
+    """
+    directory = Path(directory).resolve(strict=True)
+    experiment = read(directory / 'experiment.json')
+    if experiment.get('kind') != 'factory26.exp.experiment' or experiment.get('schema_version') not in (1, 2):
+        raise Blocked('hosted legacy import only accepts the recorded schema-1/2 experiment')
+    attempt_path = directory / 'attempts' / identifier(attempt_id)
+    attempt = require(read(attempt_path / 'attempt.json'), 'attempt')
+    execution = require(read(attempt_path / 'execution.json'), 'execution')
+    request = require(read(attempt_path / 'request.json'), 'request')
+    job = next((item for item in experiment['jobs'] if item['id'] == attempt.get('job_id')), None)
+    backend = attempt.get('job', {}).get('backend', {})
+    attempt_job = dict(attempt.get('job') or {})
+    # Schema-2 attempts gained an empty input_locations field at dispatch;
+    # absence and an empty map carry the same frozen job identity.
+    if not attempt_job.get('input_locations') and not job.get('input_locations'):
+        attempt_job.pop('input_locations', None)
+        expected_job = dict(job)
+        expected_job.pop('input_locations', None)
+    else:
+        expected_job, attempt_job = job, attempt_job
+    if (attempt.get('attempt_id') != attempt_id or attempt.get('experiment_id') != experiment.get('experiment_id')
+            or expected_job != attempt_job or backend.get('kind') != 'hosted'
+            or execution.get('attempt_id') != attempt_id or execution.get('backend') != 'hosted'
+            or not execution.get('incarnation_id') or request.get('attempt_id') != attempt_id
+            or request.get('action') != 'dispatch'
+            or request.get('parameters_sha256') != canonical(request.get('parameters'))
+            or attempt.get('dispatch_request_id') != request.get('request_id')
+            or execution.get('dispatch_request_id') != request.get('request_id')):
+        raise Blocked('legacy hosted source experiment/attempt/job/dispatch binding differs')
+    package = attempt_path / 'inputs' / 'agent'
+    artifact_id = job.get('inputs', {}).get('agent', {}).get('artifact_id')
+    if not artifact_id:
+        raise Blocked('legacy hosted source has no frozen agent artifact identity')
+    frozen_agent = read(directory / 'artifacts' / identifier(artifact_id) / 'manifest.json')
+    package_sha256 = digest(package) if package.is_file() else None
+    contents = frozen_agent.get('contents', {})
+    if not package_sha256 or contents.get('kind') != 'file' or contents.get('sha256') != package_sha256:
+        raise Blocked('legacy hosted source package differs from its frozen artifact')
+    expected_dispatch = canonical({'backend': backend, 'package_sha256': package_sha256, 'request': request})
+    if execution.get('dispatch_sha256') != expected_dispatch:
+        raise Blocked('legacy hosted source dispatch differs from frozen package/request')
+    return experiment, attempt, execution, request
+
+
 def import_source_stop(birth, status, output, identity_output, authorization, cancel_evidence=None,
                        *, experiment=None, attempt_id=None):
     """Read saved ARC GET originals; cancellation intent alone grants no effect."""
@@ -44,31 +95,11 @@ def import_source_stop(birth, status, output, identity_output, authorization, ca
                         execution_instance=canonical(identity),
                         backend_identity={'kind': 'legacy-hosted', 'platform': 'arc', 'api': API, **identity})
     else:
-        from .controller import verify
         directory = Path(experiment).resolve(strict=True)
-        manifest = verify(directory)
+        _manifest, attempt, execution, request = _verify_hosted_source_experiment(directory, attempt_id)
         attempt_path = directory / 'attempts' / identifier(attempt_id)
-        attempt = require(read(attempt_path / 'attempt.json'), 'attempt')
-        execution = require(read(attempt_path / 'execution.json'), 'execution')
-        request = require(read(attempt_path / 'request.json'), 'request')
-        job = next((item for item in manifest['jobs'] if item['id'] == attempt.get('job_id')), None)
         backend = attempt['job']['backend']
-        if (attempt.get('attempt_id') != attempt_id or attempt.get('experiment_id') != manifest['experiment_id'] or
-                job != attempt['job'] or backend.get('kind') != 'hosted' or
-                execution.get('attempt_id') != attempt_id or execution.get('backend') != 'hosted' or
-                not execution.get('incarnation_id') or request.get('attempt_id') != attempt_id or
-                request.get('action') != 'dispatch' or request.get('parameters_sha256') != canonical(request['parameters']) or
-                attempt.get('dispatch_request_id') != request.get('request_id') or
-                execution.get('dispatch_request_id') != request.get('request_id')):
-            raise Blocked('hosted source experiment/attempt/job/dispatch binding differs')
         identifier(execution['incarnation_id'])
-        package = attempt_path / 'inputs' / 'agent'
-        frozen_agent = read(directory / 'artifacts' / identifier(job['inputs']['agent']['artifact_id']) / 'manifest.json')
-        package_sha256 = digest(package) if package.is_file() else None
-        if (not package_sha256 or frozen_agent['contents'].get('kind') != 'file' or
-                frozen_agent['contents'].get('sha256') != package_sha256 or execution.get('dispatch_sha256') !=
-                canonical({'backend': backend, 'package_sha256': package_sha256, 'request': request})):
-            raise Blocked('hosted source dispatch differs from its frozen package and request')
         if (_legacy_birth(execution.get('platform_result')) != identity or
                 execution.get('run_id') != identity['id'] or execution.get('submission_id') != identity['submission_id'] or
                 backend.get('competition_id') != identity['competition_id'] or backend.get('task') != identity['requirement_id']):
@@ -1606,7 +1637,7 @@ def seal_sdk_source(directory, binding, request_id):
         saved = read(saved_path)
         if saved.get('snapshot_request') == request_id and not current.get('capture'):
             return {'snapshot': saved, 'holder': current, 'source': source,
-                    'capabilities': {'sdk_resume': False, 'harness_state_from_actual_bootstrap': True}}
+                    'capabilities': {'sdk_resume': False, 'harness_state_from_actual_bootstrap': source.get('delivery_mode') != 'copied-tree'}}
     holder = state.begin_capture(directory, binding, request_id)
     acquisition = state.capture_acquisition(binding, holder)
     if holder.get('snapshot'):
@@ -1651,4 +1682,4 @@ print(json.dumps({'reference':ref,'store':'/assets','member':'.','retention':hol
     # Keep the sealed lease for the caller's RO inventory/reception helper. It must
     # close that helper before end_capture; no live writer is reopened.
     return {'snapshot': snapshot, 'holder': holder, 'source': source,
-            'capabilities': {'sdk_resume': False, 'harness_state_from_actual_bootstrap': True}}
+            'capabilities': {'sdk_resume': False, 'harness_state_from_actual_bootstrap': source.get('delivery_mode') != 'copied-tree'}}

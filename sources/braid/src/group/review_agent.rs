@@ -19,6 +19,10 @@ impl GroupDriver<'_> {
                 }
             };
         for candidate in candidates {
+            let materializing = candidate.action != "unassign"
+                && !candidate.unassigned
+                && candidate.work_item_kind == "review"
+                && matches!(candidate.action.as_str(), "assign" | "mention" | "activate");
             let result = if candidate.action == "unassign" {
                 self.settle_unassignment(candidate).await
             } else if candidate.unassigned {
@@ -28,6 +32,10 @@ impl GroupDriver<'_> {
             };
             if let Err(error) = result {
                 tracing::error!(%error,"cannot materialize review responsibility");
+            }
+            if materializing {
+                // Let the worker dispatch this responsibility before another startup.
+                return;
             }
         }
     }
@@ -53,6 +61,7 @@ impl GroupDriver<'_> {
             self.spec.profile.context_window_tokens,
         );
         context::record_context_revision(&canonical, &rendered, self.store)?;
+        let slot = self.sessions.reserve().await?;
         let Some(materialization) = self.store.begin_agent_assignment(
             candidate.event_id.clone(),
             self.spec.profile_record.clone(),
@@ -93,10 +102,10 @@ impl GroupDriver<'_> {
                 "local".into(),
                 checkout.path.clone(),
                 checkout.origin,
-                format!("refs/braid/reviews/{}/head", candidate.number),
+                format!("refs/braid/reviews/{}/head", checkout.request_id),
                 format!(
                     "braid-review-{}-r{}-i{}",
-                    candidate.number,
+                    checkout.request_id,
                     checkout.responsibility_revision,
                     checkout.issue_assignment_revision
                 ),
@@ -116,6 +125,7 @@ impl GroupDriver<'_> {
             profile,
             instructions,
             rendered,
+            slot,
         )
         .await
     }

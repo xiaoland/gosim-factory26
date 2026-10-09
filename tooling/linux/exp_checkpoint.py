@@ -81,7 +81,7 @@ def path_at(root, member):
 
 def semantic_readback(payload, logical_root, materials=None, definition_mounts=None):
     """Harness-owned readback: preserve Git, Braid DB/WAL and native history."""
-    gaps, git, native = [], [], []
+    gaps, git, native, limitations = [], [], [], []
     mounts = [(str(logical_root), payload)]
     mounts += [(str(row['logical_root']), path_at(payload.parent, row['member'])) for row in materials or []]
     mounts += definition_mounts or []
@@ -151,11 +151,11 @@ def semantic_readback(payload, logical_root, materials=None, definition_mounts=N
         finally:
             db.close()
     reconstruction = payload/'recovery-git.json'
-    if reconstruction.is_file():
-        restored = json.loads(reconstruction.read_text())
-        if restored.get('repaired'):
-            gaps.append({'kind':'lost-original-git-history','impact':restored.get('limitation','Original clone history was reconstructed'),
-                         'members':[row.get('path') for row in restored['repaired']]})
+    repaired = json.loads(reconstruction.read_text()).get('repaired', []) if reconstruction.is_file() else []
+    if repaired:
+        limitations.append({'kind': 'original-clone-metadata-not-restored',
+                            'impact': '原index、reflog及未导出私有历史没有恢复；当前Git结构独立读回',
+                            'members': [row.get('member', row.get('path')) for row in repaired]})
     repositories = [payload / 'work/application', state / 'origin.git']
     repositories += [p for (value,) in worktrees if (p := resolve(value)) is not None]
     for repository in dict.fromkeys(repositories):
@@ -200,6 +200,20 @@ def semantic_readback(payload, logical_root, materials=None, definition_mounts=N
         if head.returncode or objects.returncode:
             gaps.append({'kind': 'git_history', 'member': member,
                          'error': head.stderr.strip() + objects.stderr.strip()})
+        for row in repaired:
+            recorded_member = row.get('member')
+            if recorded_member is None and row.get('path'):
+                recorded = Path(row['path'])
+                if recorded.is_relative_to(logical_root):
+                    recorded_member = recorded.relative_to(logical_root).as_posix()
+            if recorded_member != member:
+                continue
+            branch = subprocess.run(command + ['symbolic-ref', '--quiet', 'HEAD'],
+                                    capture_output=True, text=True, env=environment)
+            if (head.stdout.strip() != row.get('published_base') or branch.returncode
+                    or branch.stdout.strip() != 'refs/heads/' + row.get('branch', '')):
+                gaps.append({'kind': 'reconstructed_git_identity', 'member': member,
+                             'impact': '恢复Git的实际HEAD/branch与显式恢复依据不一致'})
     for logical, physical in scan_mounts:
         for member, row in inventory(physical, hash_files=False).items() if physical.is_dir() else []:
             if row['type'] != 'symlink':
@@ -234,7 +248,7 @@ def semantic_readback(payload, logical_root, materials=None, definition_mounts=N
                                  'error': f'{type(error).__name__}: {error}'})
             if home is None or not home.is_dir():
                 gaps.append({'kind': 'native_history', 'profile': profile, 'impact': 'native root 原件缺失'})
-    return {'gaps': gaps, 'git': git, 'native': native}
+    return {'gaps': gaps, 'git': git, 'native': native, 'limitations': limitations}
 
 
 def source_identity_fields(identity, *, legacy_read=False):
@@ -286,6 +300,13 @@ def _acquisition(source, identity):
     if source is None:
         return {'status': 'unknown', 'limitation': '历史 stopped 原件不能证明捕获窗口持续关闭全部 writer'}
     value = json.loads(Path(source).read_text()) if isinstance(source, (str, Path)) else source
+    if value.get('kind') == 'factory26.exp.legacy-terminal-export':
+        if value.get('source_identity') != identity or value.get('status') != 'terminal-export':
+            raise ValueError('legacy terminal export必须绑定同一停止来源及明确终态')
+        if not value.get('terminal_status') or not value.get('terminal_finished_at') or not value.get('archive_sha256'):
+            raise ValueError('legacy terminal export缺少终态或归档完整性字段')
+        return {'status': 'legacy-terminal-export', 'closure': value,
+                'limitation': 'Hosted终态归档保存了同源内容，但没有managed writer-closure/capture token；不能宣称连续停写证明'}
     if value.get('kind') != 'factory26.exp.writer-closure' or value.get('source_identity') != identity:
         raise ValueError('checkpoint acquisition 必须是同源的执行域 writer-closure 合同')
     if value.get('status') != 'closed' or not value.get('closure_id') or not value.get('writers') or not value.get('capture_token'):
@@ -347,10 +368,45 @@ def _refresh_native(run, logical_root, material, logical_material_root=None):
 
 def apply_repairs(output, manifest, repair, *, state_root=None):
     """Bounded material changes; original Git, native history and application stay intact."""
-    if set(repair) - {'materials', 'provider_bindings', 'aliases', 'transient_links', 'nodegyp_tools', 'runtime'}:
+    if set(repair) - {'materials', 'provider_bindings', 'aliases', 'transient_links', 'nodegyp_tools', 'runtime', 'git_metadata'}:
         raise ValueError('未支持的恢复修复类别')
     content, run = output/'content', Path(state_root) if state_root is not None else output/'content/run'
     effects = []
+    git_repairs = []
+    for row in repair.get('git_metadata', []):
+        target = path_at(run, row['member'])
+        origin = run / 'braid-state/origin.git'
+        commit, branch = row['commit'], row['branch']
+        if (not re.fullmatch(r'[0-9a-f]{40}', commit) or not row.get('evidence')
+                or not target.is_dir() or (target/'.git').exists()):
+            raise ValueError('Git元数据恢复需要缺失.git的既有目录、完整真实commit和显式依据')
+        def git_command(*arguments, cwd=target):
+            return subprocess.check_output(['git', '-C', str(cwd), *arguments], text=True).strip()
+        git_command('check-ref-format', '--branch', branch, cwd=origin)
+        if git_command('rev-parse', '--verify', commit+'^{commit}', cwd=origin) != commit:
+            raise ValueError('Git恢复commit不在保全origin中')
+        before_files = inventory(target)
+        git_command('init', '-q', '-b', branch)
+        # Fetch only the retained object store; the persisted remote keeps its future logical path.
+        git_command('fetch', '-q', str(origin), '+refs/heads/*:refs/remotes/origin/*')
+        git_command('remote', 'add', 'origin', str(Path(manifest['layout']['run_root'])/'braid-state/origin.git'))
+        git_command('update-ref', 'refs/heads/'+branch, commit)
+        git_command('symbolic-ref', 'HEAD', 'refs/heads/'+branch)
+        git_command('read-tree', commit)
+        git_command('config', 'user.name', 'Factory Agent')
+        git_command('config', 'user.email', 'factory26@localhost')
+        git_command('config', 'commit.gpgsign', 'false')
+        (target/'.git/info/exclude').write_text('.braid/\nnode_modules/\n')
+        after_files = {name: value for name, value in inventory(target).items()
+                       if PurePosixPath(name).parts[0] != '.git'}
+        if before_files != after_files:
+            raise ValueError('Git元数据恢复改变了非.git文件')
+        git_repairs.append({'member': row['member'], 'published_base': commit, 'branch': branch,
+                            'evidence': row['evidence'], 'retained_changes': git_command('status', '--porcelain')})
+    if git_repairs:
+        write(run/'recovery-git.json', {'limitation': '原index/reflog及缺失私有历史未恢复；文件与现存对象保留',
+                                       'repaired': git_repairs})
+        effects.append({'hook': 'git-metadata', 'repaired': git_repairs})
     for row in repair.get('runtime', []):
         target = path_at(content,row['member'])
         if not row['member'].startswith('materials/') or target.name != 'runtime' or not target.is_dir():
@@ -612,7 +668,7 @@ def validate(root, artifact_store=None, *, _verified_assets=None, _state_readbac
     return validation_receipt(root, manifest, readback)
 
 
-def checkpoint(source, output, identity, stop, materials=(), acquisition=None, definition_bindings=None, state_binding=None, snapshot=None):
+def checkpoint(source, output, identity, stop, materials=(), acquisition=None, definition_bindings=None, state_binding=None, snapshot=None, legacy_source_mapping=False):
     source = Path(source).resolve(strict=True)
     layout_path = source / 'harness-layout.json'
     if not layout_path.is_file() or materials:
@@ -623,8 +679,16 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
     logical_root = Path(layout['state_root'])
     export = json.loads(Path(state_binding).read_text()) if state_binding else None
     export_binding = export.get('state_binding') if export else None
+    legacy_mapping = None
     if logical_root != source and not export_binding and not snapshot:
-        raise ValueError('导出state需要显式state-binding真实export回执；不猜原logical路径')
+        identity_probe = json.loads(Path(identity).read_text())
+        stop_probe = json.loads(Path(stop).read_text())
+        if legacy_source_mapping and identity_probe.get('attempt_id') and stop_probe.get('effect') == 'stopped':
+            legacy_mapping = {'kind': 'legacy-hosted-archive', 'source_root': str(source),
+                              'declared_logical_root': str(logical_root),
+                              'basis': 'explicit-source-archive-and-terminal-stop'}
+        else:
+            raise ValueError('导出state需要显式state-binding真实export回执；不猜原logical路径')
     source_layout = {'run_root': str(logical_root), 'os': platform.system(), 'architecture': platform.machine(), 'definition_layout': layout.get('definition_layout')}
     if export_binding:
         from lab.exp import artifacts
@@ -681,10 +745,25 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
                 'acquisition': acquisition_value, 'validator': validator_identity(), 'coverage': capabilities(),
                 'layout': source_layout,
                 'definition_assets': assets, 'derived_inputs': layout['derived_inputs'], 'capabilities': capabilities()}
+    if legacy_mapping:
+        manifest['legacy_source_mapping'] = legacy_mapping
     verified_assets = {}
     mounts, bindings = resolve_definition_assets(output, manifest, verified=verified_assets)
     from lab.exp import artifacts
     physical_roots = dict(mounts)
+    if legacy_mapping:
+        agent_asset = next(row for row in assets if row['name'] == 'agent')
+        original_agent = physical_roots[agent_asset['logical_root']]
+        package_manifest = original_agent/'package-manifest.json'
+        package = json.loads(package_manifest.read_text())
+        with (original_agent/'runtime/bin/braid').open('rb') as binary:
+            braid_header = binary.read(20)
+        if (package.get('platform') != 'linux-x86_64' or braid_header[:6] != b'\x7fELF\x02\x01'
+                or int.from_bytes(braid_header[18:20], 'little') != 62):
+            raise ValueError('旧Hosted导入需要原definition的Linux x86_64 manifest和实际ELF一致')
+        source_layout.update(os='Linux', architecture='x86_64')
+        legacy_mapping['platform_basis'] = {'package_manifest_sha256': digest(package_manifest),
+                                            'platform': package['platform'], 'elf_machine': 62}
     for row in definition_mount_roots(assets, logical_root):
         logical, actual = row['logical_root'], physical_roots[row['logical_root']]
         if export_binding:
@@ -696,7 +775,8 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
                                   and str(Path(value['root']) / row['member']) == logical), None)
                 if not placement:
                     raise ValueError('导出definition缺少原执行真实RO input装配关系：' + logical)
-        elif not snapshot and Path(logical).resolve() != actual.resolve() and artifacts.contents(Path(logical)) != artifacts.member_contents(bindings[row['name']]['store'], row['artifact'], row['member']):
+        elif (not snapshot and not legacy_mapping and Path(logical).resolve() != actual.resolve()
+              and artifacts.contents(Path(logical)) != artifacts.member_contents(bindings[row['name']]['store'], row['artifact'], row['member'])):
             raise ValueError('声明definition与冻结artifact内容不同：' + logical)
     write(output / 'provenance/asset-bindings.json', bindings)
     if export:
@@ -736,6 +816,65 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
     return manifest
 
 
+def verify_runtime_patch(binding, manifest, old, new, old_agent):
+    """Accept one reviewed mechanical patch, bound to the actual frozen runtimes."""
+    if set(binding) != {'contract', 'sha256', 'source'}:
+        raise ValueError('runtime_patch需要明确contract、sha256及source身份')
+    contract_path = Path(binding['contract']).resolve(strict=True)
+    if digest(contract_path) != binding['sha256']:
+        raise ValueError('runtime patch合同SHA与冻结输入不一致')
+    contract = json.loads(contract_path.read_text())
+    if (contract.get('kind') != 'factory26.recovery.explicit-runtime-patch-contract'
+            or contract.get('schema_version') not in (1, 2)
+            or contract.get('status') != 'mechanically_verified_runtime_binding'):
+        raise ValueError('runtime patch需要已完成的机械兼容证明')
+    proof = contract['verification']
+    if (proof.get('all_machine_checks_passed') is not True
+            or proof['database_schema'].get('all_migration_hashes_equal') is not True
+            or proof['database_schema'].get('new_migrations')
+            or proof['database_schema'].get('changed_migrations')
+            or proof['pi_package_and_protocol'].get('protocol_format_unchanged') is not True
+            or proof['pi_package_and_protocol'].get('npm_lock_equal') is not True):
+        raise ValueError('runtime patch改变DB schema或Pi协议，不能接续现有会话')
+    history = proof['native_history']
+    if (history.get('format_unchanged') is not True
+            or history.get('same_logical_root_cross_daemon') is not True
+            or any(history.get(key) is not False for key in
+                   ('native_path_migration', 'cross_os', 'cross_architecture'))):
+        raise ValueError('runtime patch不能改变原生历史格式或路径')
+    published = contract['published_old_definitions'][binding['source']]
+    source_identity = manifest['source_identity']['backend_identity']
+    expected_identity = published.get('execution_identity', {}).get('backend_identity') or published
+    if (source_identity.get('kind') != 'hosted'
+            or source_identity.get('id') != expected_identity.get('id', expected_identity.get('run_id'))
+            or source_identity.get('submission_id') != expected_identity['submission_id']):
+        raise ValueError('runtime patch证明不属于此Hosted来源')
+    package = published.get('package_manifest') or published['definition_package_manifest']
+    old_source = published.get('runtime_source') or published['definition_runtime_source']
+    target = contract['target_runtime']
+    if (digest(old_agent/'package-manifest.json') != package['sha256']
+            or digest(old/'runtime-source.json') != old_source['sha256']
+            or digest(new/'runtime-source.json') != target['runtime_source']['sha256']):
+        raise ValueError('runtime patch来源包或目标runtime source身份不一致')
+    old_record = json.loads((old/'runtime-source.json').read_text())
+    new_record = json.loads((new/'runtime-source.json').read_text())
+    if (manifest['layout']['os'] != 'Linux' or manifest['layout']['architecture'] != 'x86_64'
+            or old_record['platform'] != published['runtime']['platform']
+            or new_record['platform'] != target['platform']
+            or old_record['sources']['braid']['target'] != target['target']
+            or new_record['sources']['braid']['target'] != target['target']):
+        raise ValueError('runtime patch平台或架构不一致')
+    members = dict(proof['protected_member_hashes']['runtime_members'])
+    members['bin/braid'] = {'old_sha256': published['runtime']['binary_sha256'],
+                            'new_sha256': target['braid']['binary_sha256']}
+    for member, expected in members.items():
+        for root, key in ((old, 'old_sha256'), (new, 'new_sha256')):
+            path = path_at(root, member)
+            if not path.is_file() or digest(path) != expected[key]:
+                raise ValueError('runtime patch保护成员不匹配：' + member + ':' + key)
+    return contract
+
+
 def prepare(source, output, target, repair=None, artifact_store=None, *, state_binding=None, state_readback=None):
     source = Path(source).resolve(strict=True)
     manifest = json.loads((source / 'harness-manifest.json').read_text())
@@ -744,7 +883,7 @@ def prepare(source, output, target, repair=None, artifact_store=None, *, state_b
     verified_assets = {}
     validation = validate(source, _verified_assets=verified_assets)
     repair = repair or {}
-    if set(repair) - {'definition_assets', 'provider_bindings', 'transient_links', 'nodegyp_tools'}:
+    if set(repair) - {'definition_assets', 'provider_bindings', 'transient_links', 'nodegyp_tools', 'git_metadata', 'runtime_patch'}:
         raise ValueError('v3修复仅支持显式definition关系替换与既有状态派生输入修复，不修改原共享材料')
     if validation['coverage']['structure'] != 'complete' and not repair:
         raise ValueError('结构缺损checkpoint需要明确支持的修复；不重建历史')
@@ -849,14 +988,23 @@ def prepare(source, output, target, repair=None, artifact_store=None, *, state_b
     runtime_asset = next((row for row in prepared['definition_assets'] if row['name'] == 'runtime'), None)
     if runtime_asset and runtime_asset['name'] in seen:
         old, new = old_by_root[runtime_asset['logical_root']], new_by_root[runtime_asset['logical_root']]
-        for member in ('bin/braid', 'native-managed.mjs', 'node_modules/@earendil-works/pi-coding-agent/package.json'):
-            if not (old/member).is_file() or not (new/member).is_file() or digest(old/member) != digest(new/member):
-                raise ValueError('definition替换必须保留原Braid/native hook/Pi协议；不能迁移会话')
+        if repair.get('runtime_patch'):
+            old_agent = old_by_root[assets['agent']['logical_root']]
+            contract = verify_runtime_patch(repair['runtime_patch'], manifest, old, new, old_agent)
+            write(output/'provenance/runtime-patch-contract.json', contract)
+            changes.append({'hook': 'explicit-runtime-patch', 'binding': repair['runtime_patch'],
+                            'contract_member': 'provenance/runtime-patch-contract.json'})
+        else:
+            for member in ('bin/braid', 'native-managed.mjs', 'node_modules/@earendil-works/pi-coding-agent/package.json'):
+                if not (old/member).is_file() or not (new/member).is_file() or digest(old/member) != digest(new/member):
+                    raise ValueError('definition替换必须保留原Braid/native hook/Pi协议；不能迁移会话')
+    elif repair.get('runtime_patch'):
+        raise ValueError('runtime_patch必须绑定显式runtime definition替换')
     if 'agent' in seen:
         agent = assets['agent']
         _refresh_native(run, Path(manifest['layout']['run_root']),
                         new_by_root[agent['logical_root']], agent['logical_root'])
-    state_repairs = {key: value for key, value in repair.items() if key != 'definition_assets'}
+    state_repairs = {key: value for key, value in repair.items() if key not in {'definition_assets', 'runtime_patch'}}
     effects = apply_repairs(output, prepared, state_repairs, state_root=run)
     run_layout = run / 'harness-layout.json'
     layout = json.loads(run_layout.read_text())
@@ -882,7 +1030,7 @@ def prepare(source, output, target, repair=None, artifact_store=None, *, state_b
 
 
 
-def application(source, output, requirements, source_identity, delivery_kind, commit=None):
+def application(source, output, requirements, source_identity, delivery_kind, commit=None, *, excluded_platform_paths=()):
     """Freeze an application independently of checkpoint and archive completeness."""
     if delivery_kind not in {'final','stage'}:
         raise ValueError('应用交付身份必须为 final 或 stage')
@@ -898,9 +1046,11 @@ def application(source, output, requirements, source_identity, delivery_kind, co
         from braid_runtime import export_delivery
         resolved = subprocess.check_output(['git','-C',str(source),'rev-parse','--verify',commit+'^{commit}'],text=True).strip()
         if resolved != commit: raise ValueError('应用冻结必须使用完整commit身份')
-        export_delivery(source,commit,output/'application')
-        policy = 'selected-commit-only; uncommitted files excluded'
+        export_delivery(source,commit,output/'application', excluded_platform_paths=excluded_platform_paths)
+        policy = ('selected-commit application projection; explicit platform roots and uncommitted files excluded'
+                  if excluded_platform_paths else 'selected-commit-only; uncommitted files excluded')
     else:
+        if excluded_platform_paths: raise ValueError('平台路径投影必须绑定明确Git commit')
         if delivery_kind == 'stage': raise ValueError('阶段应用必须有明确Git commit')
         shutil.copytree(source,output/'application',symlinks=True)
         policy = 'delivered-snapshot; no reconstructed Git attribution'
@@ -914,6 +1064,8 @@ def application(source, output, requirements, source_identity, delivery_kind, co
                 'requirements':inventory(requirements),'files':files,
                 'producer':validator_identity(), 'status':'published',
                 'coverage':{'content':'frozen','checkpoint':'not-required','evaluation':'not-observed'}}
+    if excluded_platform_paths:
+        manifest['excluded_platform_paths'] = sorted(set(excluded_platform_paths))
     write(output/'application-manifest.json',manifest)
     return manifest
 
@@ -934,6 +1086,8 @@ def main():
     parser.add_argument('--requirements', type=Path)
     parser.add_argument('--delivery-kind',choices=['final','stage'])
     parser.add_argument('--commit')
+    parser.add_argument('--legacy-source-mapping', action='store_true',
+                        help='仅对有明确旧Hosted终态与harness-layout的归档启用logical-root映射')
     args = parser.parse_args()
     if args.command == 'capabilities':
         print(json.dumps(capabilities(),ensure_ascii=False,indent=2)); return
@@ -947,7 +1101,7 @@ def main():
     elif args.command == 'checkpoint':
         if not args.output or not args.source_identity or not args.stop_evidence:
             parser.error('checkpoint 需要 output/source-identity/stop-evidence')
-        result = checkpoint(args.source, args.output, args.source_identity, args.stop_evidence, args.materials_root,args.acquisition, json.loads(args.definition_bindings.read_text()) if args.definition_bindings else None, args.state_binding)
+        result = checkpoint(args.source, args.output, args.source_identity, args.stop_evidence, args.materials_root,args.acquisition, json.loads(args.definition_bindings.read_text()) if args.definition_bindings else None, args.state_binding, legacy_source_mapping=args.legacy_source_mapping)
     else:
         if not args.output or not args.target_layout:
             parser.error('prepare 需要 output/target-layout')

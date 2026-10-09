@@ -10,7 +10,10 @@ from __future__ import annotations
 from collections import deque
 from datetime import datetime
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 import time
 from typing import Any
 
@@ -33,10 +36,19 @@ def _stamp(value: Any) -> float | None:
 
 def _native_log_candidates(harness: Path) -> set[Path]:
     """Find native logs without walking the generated application workspace."""
+    homes = harness / "work/native-homes"
+    if homes.is_dir():
+        for home in homes.iterdir():
+            if home.is_dir():
+                # glob silently skips private SDK-created homes. Make that
+                # boundary explicit before treating discovery as complete.
+                with os.scandir(home):
+                    pass
     candidates = {path for path in (harness / "pi-timing.jsonl", harness / "session.jsonl")
                   if path.is_file()}
     for pattern in (
         "session/**/session.jsonl",
+        "work/native-homes/*/sessions/**/*.jsonl",
         "work/native-homes/*/sessions/*/*/run-*/session.jsonl",
         "work/native-homes/*/sessions/*/*/session.jsonl",
     ):
@@ -50,7 +62,37 @@ def _pi(run: Path, scope: str, observed_at: float, since: float | None) -> dict[
     effective_action: dict[str, Any] | None = None
     sessions: dict[str, dict[str, Any]] = {}
     usage_groups, seen_usage = {}, set()
-    candidates = _native_log_candidates(harness)
+    try:
+        candidates = _native_log_candidates(harness)
+    except PermissionError as exc:
+        diagnostic = {"source": str(harness.relative_to(run)),
+                      "error": f"PermissionError: {exc}"}
+        if os.geteuid() != 0:
+            # Local Docker creates private root-owned native homes. Reuse this
+            # reader under the host's existing read authority, never chmod a
+            # live session or copy its transcript into the status record.
+            script = ("import json,sys; from pathlib import Path; "
+                      "sys.path.insert(0,str(Path(sys.argv[1]).parent)); "
+                      "sys.path.insert(0,str(Path(sys.argv[1]).parents[2])); "
+                      "from native_observation import _pi; "
+                      "json.dump(_pi(Path(sys.argv[2]),sys.argv[3],float(sys.argv[4]),"
+                      "None if sys.argv[5]=='None' else float(sys.argv[5])),sys.stdout)")
+            try:
+                result = subprocess.run(["sudo", "-n", sys.executable, "-c", script,
+                                         str(Path(__file__).resolve()), str(run), scope,
+                                         str(observed_at), str(since)],
+                                        text=True, capture_output=True, check=True, timeout=25)
+                value = json.loads(result.stdout)
+                value["reader_errors"].append({**diagnostic, "recovered": True,
+                                               "reader_identity": "host sudo read-only"})
+                return value
+            except (OSError, subprocess.SubprocessError, ValueError) as failure:
+                errors.append({"source": str(harness.relative_to(run)),
+                               "error": f"privileged native read failed: {failure}",
+                               "stderr": getattr(failure, "stderr", None)})
+        errors.append(diagnostic)
+        candidates = {path for path in (harness / "pi-timing.jsonl", harness / "session.jsonl")
+                      if path.is_file()}
     for path in sorted(candidates):
         session_id = None
         pending_tools: dict[str, dict[str, Any]] = {}

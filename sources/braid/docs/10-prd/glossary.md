@@ -6,7 +6,7 @@
 | Work Item | 一个由 Braid 激活的 GitHub Issue 或 PR。 |
 | GitHub Issue | Issue 在 Context 中的 repository-qualified 对象引用，例如 `owner/repo#123`；不是 Markdown link，也不另列重复 URL。 |
 | GitHub PR | PR 在 Context 中的 repository-qualified 对象引用，例如 `owner/repo#456`；不是 Markdown link，也不另列重复 URL。 |
-| Associated Issue | 与一个 PR 建立 GitHub 原生关联、因而向该 PR 提供 Issue Context 的 Issue。一个 PR 可以关联多个 Issue，一个 Issue 也可以关联多个 PR。 |
+| Associated Issue | 与一个 PR 建立 GitHub 原生关联、因而向该 PR 提供 Issue Context 的 Issue。一个 PR 可以关联多个 Issue，一个 Issue也可以关联多个 PR。 |
 | GitHub Context | 从当前 GitHub canonical state 确定性渲染出的、面向 Agent 的简洁 Markdown 或纯文本；不是 JSON、provider transcript 或创建时快照。 |
 | GitHub Working Memory | GitHub Context 作为 Agent 的 durable working memory 的产品语义。Agent 通过更新 description/body、metadata 和简短 comments 管理未来 Context，而不是依赖不断膨胀的 provider transcript。 |
 | Issue Context | GitHub Issue、title、description、纳入范围的 metadata，以及 comments 按生命周期规则组成的 GitHub Context。 |
@@ -16,7 +16,7 @@
 | Provider Context | Codex、Pi、Claude Code 等 provider 实际交给模型的 context window/history。 |
 | Context Replacement | 让 Provider Context 对齐当前 GitHub Context；必要时会替换物理 Provider Session。 |
 | Provider Compaction | Provider 自己的有损 compact；不是 Braid 的 GitHub Context，也不能替代 Context Materialization。 |
-| Event Reference | 作为 user message 发送给 Agent 的简短 Markdown/纯文本引用；包含发生了什么以及可读取目标，不复制正文、payload 或 JSON。 |
+| Event Reference | 作为 user message 发送给 Agent 的简短 Markdown/纯文本引用；列出对象、变化及必要关联，不复制正文、payload、JSON 或操作教学。 |
 | Wake Event | 进入 debounce 队列，并在 Quiet Window 或数量阈值满足后启动 turn 的外部事件。 |
 | Hard Invalidation | 非 Agent-origin 的变化改写或移除了同一 Work Item 已经进入 Provider Context 的事实。它立即 fence 旧 Context Revision 的写能力，并要求在安全边界 Context Replacement；自身不一定启动 turn。 |
 | Dependency Dirty | PR 的直接 Associated Issue 发生非 description 变化。它不打断当前 PR turn；Braid 在下一次 PR turn 前重新 materialize PR Context，并按规则投递 Event Reference。 |

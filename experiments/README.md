@@ -11,6 +11,7 @@ Mac 的项目产物按 [存储规则](../AGENTS.md#工作知识与反馈) 位于
 | 入口 | 适用范围 |
 | --- | --- |
 | [Lab run 入口](../lab/README.md) | 当前三参数启动、状态、同 variant restart、Python 自动化与独立评测。 |
+| [跨 variant 模型配方](../materials/model-recipes/README.md) | ARC API、自费、比赛三种公共配方；实验选择并冻结实际输入，不由 variant 目录持有通道政策。 |
 | [旧 I14 intent 接入说明](i14-0/README.md) | 原冻结 compiler/recipe 合同，保留历史消费，不作为新 run 启动路径。 |
 | [Hackathon 公开需求回放](hackathon-local/README.md) | 将已冻结应用按场景交给官方本地 Runner，不生成应用、不预测官网分数。 |
 | [pi-braid Lite 配方](pi-braid-lite/README.md) | 固定 I10 `pi-braid` 身份的 Keep/BookStack 配方；不是当前 I13/I14 基线的通用启动器。 |

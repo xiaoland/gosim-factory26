@@ -20,28 +20,44 @@
       "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-offline-materialization-source-aligned-20261007",
       "remote_runtime": "/home/yyh/factory26-lab-runtime/offline-materialization-source-aligned-20261007-published",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed"
-    },
-    "pi-minimal-vv-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-offline-materialization-source-aligned-20261007",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/offline-materialization-source-aligned-20261007-published",
-      "remote_runtime_base": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed"
     }
   },
   "tasks": {
+    "github-stages": {
+      "stages": [
+        "github-stage-1",
+        "github-stage-2"
+      ]
+    },
     "bookstack": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/requirements",
       "platform_task": "bookstack",
-      "evaluations": [{"kind": "task", "requirements": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/requirements", "tests": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/tests", "target": "wsl"}]
+      "evaluations": [
+        {
+          "kind": "task",
+          "requirements": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/requirements",
+          "tests": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/tests",
+          "target": "wsl"
+        }
+      ]
     },
     "github-stage-1": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements",
       "platform_task": "hackathon--github-stage-1",
-      "evaluations": [{"kind": "self-test"}]
+      "evaluations": [
+        {
+          "kind": "self-test"
+        }
+      ]
     },
     "github-stage-2": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-2/requirements",
       "platform_task": "hackathon--github-stage-2",
-      "evaluations": [{"kind": "self-test"}]
+      "evaluations": [
+        {
+          "kind": "self-test"
+        }
+      ]
     },
     "github-stage-1-req-test": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements",
@@ -63,7 +79,11 @@
       "runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime",
       "skills": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/skills",
       "image_id": "sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681",
-      "endpoint": {"context": "development-2", "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc", "remote": true}
+      "endpoint": {
+        "context": "development-2",
+        "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc",
+        "remote": true
+      }
     },
     "sfp7": {
       "kind": "local",
@@ -75,7 +95,11 @@
       "runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime",
       "skills": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/skills",
       "image_id": "sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681",
-      "endpoint": {"context": "development-2", "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc", "remote": true}
+      "endpoint": {
+        "context": "development-2",
+        "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc",
+        "remote": true
+      }
     },
     "wsl": {
       "kind": "local",
@@ -87,7 +111,11 @@
       "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
       "image_id": "sha256:cfb9196831ef938f357c3be479a42ebf5861d4dad221796a94c68ac0cee21013",
-      "endpoint": {"context": "development-1", "daemon_id": "0c1d4a2e-b921-49be-a075-1e30571f0995", "remote": true}
+      "endpoint": {
+        "context": "development-1",
+        "daemon_id": "0c1d4a2e-b921-49be-a075-1e30571f0995",
+        "remote": true
+      }
     },
     "hosted": {
       "kind": "hosted",

@@ -73,7 +73,7 @@ def run(requirements, output):
     if key:
         env['FACTORY26_API_KEY'] = key
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home/'.config'), PI_CODING_AGENT_DIR=str(native),
-               PI_OFFLINE='1',
+               PI_OFFLINE='1', FACTORY26_SUBAGENT_CATALOG='1',
                PONYTAIL_DEFAULT_MODE='full', PI_CAPABILITY_EVIDENCE_DIR=str(evidence/'capabilities'),
                FACTORY26_PI_TIMING_FILE=str(evidence/'pi-timing.jsonl'),
                PATH=str(runtime/'bin')+':/usr/local/bin:/usr/bin:/bin',

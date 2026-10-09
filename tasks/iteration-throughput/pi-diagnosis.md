@@ -6,7 +6,7 @@
 
 Pi 0.85.1 的 RPC 文档明确区分了几件事。文档来自本机实际安装包 `/Users/lanzhijiang/Library/pnpm/global/v11/1484d-1a0aea79857-e3fc93e34b677276/node_modules/@earendil-works/pi-coding-agent`：`prompt` 成功只表示已接受或排队，后续失败通过事件流报告（`docs/rpc.md:43-76`）；`abort` 只承诺中止当前 operation 并等待 session idle（`docs/rpc.md:124-135`）；独立 shell 命令另有 `abort_bash`（`docs/rpc.md:539-550`）；`get_state` 同时返回稳定的 `sessionId` 与可能变化的 `sessionFile`（`docs/rpc.md:185-214`）。扩展若创建 session-scoped 资源，官方要求扩展自己在幂等的 `session_shutdown` handler 中清理（`docs/extensions.md:220-225,516-525`）。因此，RPC 的 `abort`、extension cleanup 和操作系统进程树终止不是同一个合同，不能相互替代。
 
-原生反证也存在。2026-09-21 的 Pi+Braid 自编辑探针在未启用 native sub-agent 时完成 9 个物理会话、7 次 context replacement 和最终交付，且无残留 PID（`reports/2026-09-21-braid-collaboration-pi-probe.md:3-20`）。Pi 第二次原生能力场景也已完成图像、executor 和双 browser-operator；失败发生在父 session 路径归档，不是 child 执行（`tasks/multi-agent-integration/cells/capabilities-ready.md:38-42`）。更早的 SSE JSON 截断同时出现在 Pi 与 Codex，且三次隔离重放均成功，优先指向共享网关/传输，不能算 Pi lifecycle 证据（`reports/2026-09-21-braid-svc-checkpoint.md:39-47`）。
+原生反证也存在。2026-09-21 的 Pi+Braid 自编辑探针在未启用 native sub-agent 时完成 9 个物理会话、7 次 context replacement 和最终交付，且无残留 PID（`runs/reports/2026-09-21-braid-collaboration-pi-probe.md:3-20`）。Pi 第二次原生能力场景也已完成图像、executor 和双 browser-operator；失败发生在父 session 路径归档，不是 child 执行（`tasks/multi-agent-integration/cells/capabilities-ready.md:38-42`）。更早的 SSE JSON 截断同时出现在 Pi 与 Codex，且三次隔离重放均成功，优先指向共享网关/传输，不能算 Pi lifecycle 证据（`runs/reports/2026-09-21-braid-svc-checkpoint.md:39-47`）。
 
 ## 1. 子树终态证明仍混合了“控制请求”和“已经停止”
 
@@ -39,7 +39,7 @@ Pi 0.85.1 的 RPC 文档明确区分了几件事。文档来自本机实际安�
 
 随后，新 generation 只继承 retired assignment，未继承 blocked assignment，导致重复创建仍被旧 assignment 占用的分支；`673c119` 改为从最新 retired 或 blocked assignment 转移同一 worktree/head/脏内容（`sources/braid/src/store/mod.rs:3871-3925`，执行记录见 `tasks/multi-agent-integration/cells/runtime-ready.md:39`）。因此这两项归 Braid store/lifecycle，不归 Pi adapter、`pi-subagents` 或原生 Pi。
 
-已知修复有单元/集成证据，且 `pi-verification BookStack` 后续正常交付；但本批两项分数依赖确定性人工导出，只证明应用质量，不证明当时 Braid 交付链正常（`reports/2026-09-22-multi-agent-lite.md:12-22`）。仍未知的是 crash 恰好发生在 stopped receipt 已落盘、replacement 尚未物化的窗口时，重启能否只接管一次；以及一次重放前 provider 已完成外部副作用但终态丢失时，CLI 幂等是否覆盖全部操作。下一阶段应只验证这些切点，不再增加重试层或从模型错误文案推断恢复策略。
+已知修复有单元/集成证据，且 `pi-verification BookStack` 后续正常交付；但本批两项分数依赖确定性人工导出，只证明应用质量，不证明当时 Braid 交付链正常（`runs/reports/2026-09-22-multi-agent-lite.md:12-22`）。仍未知的是 crash 恰好发生在 stopped receipt 已落盘、replacement 尚未物化的窗口时，重启能否只接管一次；以及一次重放前 provider 已完成外部副作用但终态丢失时，CLI 幂等是否覆盖全部操作。下一阶段应只验证这些切点，不再增加重试层或从模型错误文案推断恢复策略。
 
 ## 下一阶段最小三层对照 spike
 

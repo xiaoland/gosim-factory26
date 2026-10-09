@@ -4,7 +4,7 @@
 
 本审查覆盖 `coverage.json` 中 `owner=issue:1` 的全部 25 个单元，共 1,584 records、4,072,705 字符。材料包括 root native session、vision transcript、三份 advisor transcript、subagent transcript/history；canonical view 均位于 `github/views/`。对应 record 范围见本目录 `read-receipts.json`。
 
-四个目标外部约束也纳入判断：当时的运行分析说明（已删除）、`requirements.yaml`、`issue-1-board.txt`，以及 root 已提供的 `cells/root/background-reset.md`。没有修改源码、`cells/root/`、主 `coverage.json`，没有运行测试。
+四个目标外部约束也纳入判断：当时的运行分析说明（现已删除）、`requirements.yaml`、`issue-1-board.txt`，以及 root 已提供的 `cells/root/background-reset.md`。没有修改源码、`cells/root/`、主 `coverage.json`，没有运行测试。
 
 **截断区分：** record 范围本身已逐单元覆盖；但某些原生运行输出有两类需要分开记录的截断：
 

@@ -1,0 +1,30 @@
+--- a/src/extension/index.ts
++++ b/src/extension/index.ts
+@@ -55,7 +55,7 @@
+ import registerSubagentNotify, { parseSubagentNotifyContent, type SubagentNotifyDetails } from "../runs/background/notify.ts";
+ import { formatSteeringNotice, handleSubagentSteeringNotice, SUBAGENT_STEERING_MESSAGE_TYPE, type SubagentSteeringMessageDetails } from "./steering-notices.ts";
+ import { SUBAGENT_CHILD_ENV, SUBAGENT_PARENT_SESSION_ENV } from "../runs/shared/pi-args.ts";
+-import { resolveCurrentSubagentCapabilityCeiling } from "../runs/shared/capability-ceiling.ts";
++import { isAgentAllowedByCapabilityCeiling, resolveCurrentSubagentCapabilityCeiling } from "../runs/shared/capability-ceiling.ts";
+ import { formatDuration, shortenPath } from "../shared/formatters.ts";
+ import { loadConfig, resolveAsyncByDefault, resolveScheduledStoreRoot } from "./config.ts";
+ import { buildSubagentToolDescription, buildSubagentToolPromptMetadata } from "./tool-description.ts";
+@@ -511,6 +511,18 @@
+ 			agents: merged.agents.map((agent) => agent.maxThinking === discovered.maxThinking ? agent : { ...agent, maxThinking: discovered.maxThinking }),
+ 		};
+ 	};
++	// Project only discovery metadata; role and skill bodies remain independent files.
++	if (process.env.FACTORY26_SUBAGENT_CATALOG === "1") {
++		pi.on("before_agent_start", (event, ctx) => {
++			const ceiling = resolveCurrentSubagentCapabilityCeiling(resolveCurrentSessionId(ctx.sessionManager));
++			const agents = discoverAgentsForRuntime(ctx.cwd, "both").agents
++				.filter((agent) => !agent.disabled && isAgentAllowedByCapabilityCeiling(agent.name, ceiling))
++				.sort((a, b) => a.name.localeCompare(b.name));
++			if (!agents.length) return;
++			const catalog = agents.map((agent) => `- ${agent.name}: ${agent.description.replace(/\s+/g, " ").trim()}`).join("\n");
++			return { systemPrompt: `${event.systemPrompt}\n\nAvailable native sub-agent roles:\n${catalog}` };
++		});
++	}
+ 	const { ensurePoller, refreshWidget, handleStarted, handleComplete, resetJobs, restoreActiveJobs, dispose: disposeAsyncJobTracker } = createAsyncJobTracker(pi, state, DIRS.async, {
+ 		widgetEnabled: asyncWidgetEnabled,
+ 		onJobTerminal: () => refreshResultDelivery(),

@@ -1,0 +1,55 @@
+主题：申请 Stage 2 重评，并核查 Stage 3 测试错误与阶段接续问题
+
+ARC-Bench 主办方老师您好：
+
+我们复核了 10 月 3 日提交的 GitHub 任务结果，并整理了平台下载的工作区报告及相关记录，申请处理以下三个问题。
+
+参赛账号：Lan_zhijiang
+Submission：aea08b61772c
+Stage 2 run：32db20c04573，结果 0/29
+Stage 3 run：d86b43e8c891，结果 0/41
+
+一、Stage 2：29 个场景均因浏览器无法启动而失败，申请原应用重评
+
+评测报告中，29 个场景全部报同一错误：
+
+Error: browserType.launch: Executable doesn't exist at /ms-playwright/chromium-1200/chrome-linux64/chrome
+
+Runner 日志显示应用构建、启动成功，http://127.0.0.1:3000 可达，但测试均在启动 Chromium 时失败，未进入应用交互。同包 preflight.json 曾记录 chromium-ready、passed=true，实际评测却找不到浏览器可执行文件。
+
+请核查并排除该浏览器启动故障，使用 run 32db20c04573 保存的原应用重新评测，并据重评结果更新成绩。错误报告、环境检查及 Runner 日志见附件 A。
+
+二、Stage 3：测试脚本调用未定义函数，申请修复后重评
+
+REQ-6-3-3「Add Review Comments to Changed Code Lines」Scenario 2 报错：
+
+ReferenceError: uniqueAccount is not defined
+/workspace/tests/REQ-6-3-3-add-review-comment.spec.ts:22:19
+
+报告附带的代码片段显示，第 22 行调用 uniqueAccount() 生成评论内容，第 24 行才开始登录。测试在准备数据时即中断，未执行评论操作。
+
+请修复该脚本错误，重新评测受影响场景。错误及代码片段见附件 B。
+
+三、Stage 3：请确认初始应用来源，以及空白启动时提供的前置需求
+
+平台任务说明写明：Stage 3 有前一阶段应用时继续开发，没有时从空白模板开始。官网前端也显示相应来源提示，创建 run 的请求未要求用户指定来源应用。
+
+本次 Stage 1、2、3 在约一分钟内陆续启动，Stage 3 启动时 Stage 2 尚未完成。启动前保存的任务列表中，Stage 2、3 的 source_run_id 均为 blank。
+
+Stage 3 工作区中的 requirements.yaml 包含 REQ-5、REQ-6，并引用 REQ-1-1-2、REQ-3-3、REQ-4-3、REQ-4-3-1，但没有这些前置需求的定义；prerequisites.md 为空。平台摘要中的阶段接续及空白启动说明，也没有出现在这份需求文件中。
+
+这直接关系到 Agent 的开发起点：接续已有应用时，可以在登录、仓库和分支能力上增加 Issue/PR；从空白开始时，则需要同时补齐当前任务依赖的前置能力。
+
+请确认：
+1. 前一阶段应用是否由平台自动选择和复制？本次 Stage 2、3 分别使用了什么初始应用？如接续历史应用，请提供来源 run。
+2. 如从空白模板开始，Agent 实际获得了哪些前置需求？通过哪份输入被告知需要补齐这些能力？
+3. 如完整接续需要等待上一阶段完成，平台如何告知这一条件，并处理上一阶段仍在运行时的启动请求？
+
+Stage 3 其余 40 个场景集中报“找不到指定的可见导航目标”。原应用源码已实现仓库内的 Issues、Pull requests 和标题详情入口。请结合 REQ-5-1-1 Scenario 1 与 REQ-5-1-2 Scenario 1 的页面记录和测试步骤，定位这两个场景为何未能进入目标页面。相关需求、应用源码及平台资料见附件 C、D。
+
+请分别回复 Stage 2 的重评安排、Stage 3 测试错误的处理，以及阶段接续和前置输入的核查结论。若确认空白启动缺少必要需求或测试依赖未提供的约定，请说明对受影响提交的统一补救安排。
+
+附件保留原始文件、来源记录和校验值，完整工作区包可按需提供。感谢核查。
+
+Lan_zhijiang
+2026 年 10 月 6 日

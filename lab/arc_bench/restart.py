@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import time
 from pathlib import Path
@@ -32,7 +33,9 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
             task: str | None = None, target: str | None = None,
             route: str | None = None, competition: bool | None = None,
             task_version: str | None = None, snapshot: str | None = None,
-            variant: str | None = None, keep_data: bool = False) -> dict[str, Any]:
+            variant: str | None = None, keep_data: bool = False,
+            allow_route_change: bool = False, route_change_reason: str | None = None,
+            model_catalog: str | None = None) -> dict[str, Any]:
     """Stop/save a source, then assemble a fresh or data-retained run.
 
     By default the destination starts from the selected task's normal inputs,
@@ -49,11 +52,56 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
         raise ValueError("restart cannot change variant")
     same_task = (task is None or task == source_state.get("task")) and (
         task_version is None or task_version == source_state.get("task_version"))
+    i15_resume = keep_data and same_task and source_state.get('variant') == 'pi-braid-i15-reviewer-cleaner-e2e' and source_state.get('native_scope_id') is not None
+    route_change = None
+    catalog_override = None
+    substitution = None
+    if model_catalog is not None:
+        target_config = source_state.get('target_config') or {}
+        if not (i15_resume and allow_route_change and route is not None and
+                target_config.get('kind') == 'local' and not source_state.get('competition')):
+            raise ValueError('显式catalog仅支持本地自费I15授权原生模型替换')
+        catalog_override = Path(model_catalog).expanduser().resolve(strict=True)
+        supplied_catalog = json.loads(catalog_override.read_text())
+        substitution = supplied_catalog.get('native_model_substitution')
+        if not isinstance(substitution, dict) or substitution.get('text_alias') != 'glm-5.3-flash' or substitution.get('actual_text_model') != 'glm-5.3' or substitution.get('vision_alias') != 'i15-local-vision-flash':
+            raise ValueError('catalog缺少明确的本轮Flash至GLM5.3/独立视觉替换声明')
+        source_catalog = json.loads((paths(source)['inputs']/'model-gateway.json').read_text())
+        allowed_connections = {(r['litellm_params']['api_base'],r['litellm_params']['api_key']) for r in source_catalog['model_list']}
+        for row in supplied_catalog['model_list']:
+            params = row['litellm_params']
+            if (params['api_base'], params['api_key']) not in allowed_connections:
+                raise ValueError('临时模型替换不能引入来源未配置的供应商连接')
+    if allow_route_change and (not i15_resume or route is None or not route_change_reason or not route_change_reason.strip()):
+        raise ValueError('授权路由变更需要I15同scope原生恢复、显式route及具体原因')
+    if i15_resume and route is not None:
+        frozen = json.loads((paths(source)['inputs']/'gateway-routes.json').read_text())
+        supplied = json.loads(Path(route).expanduser().resolve(strict=True).read_text())
+        for alias, chain in frozen.items():
+            native_alias = 'deepseek-v4-flash-0731' if alias == 'deepseek-v4-flash' else alias
+            if supplied.get(alias, supplied.get(native_alias)) != chain:
+                if not allow_route_change:
+                    raise ValueError('I15原生恢复默认保留冻结路由；变更需要--allow-route-change及原因')
+        if supplied != frozen and allow_route_change:
+            if set(supplied) != set(frozen) and catalog_override is None:
+                raise ValueError('原生恢复路由变更不能改变模型alias集合')
+            from tooling.scripts.hackathon_gateway import prepare_catalog
+            prepare_catalog(catalog_override or paths(source)['inputs']/'model-gateway.json', supplied, aliases=list(supplied))
+            route_change = {'authorized_by': 'user', 'reason': route_change_reason,
+                            'old_routes': frozen, 'new_routes': supplied,
+                            'changed_aliases': [alias for alias in sorted(set(frozen) | set(supplied)) if frozen.get(alias) != supplied.get(alias)],
+                            'native_model_substitution': substitution}
     observed = execution.observe(source)
     if observed.get("lifecycle") not in {"completed", "failed", "stopped"}:
         execution.control(source, "stop")
         _wait_stopped(source)
-    saved = execution.save(source)
+    remote_data = None
+    if i15_resume and not snapshot:
+        from . import local_run
+        destination_target = execution._target({"target": target or source_state["target"],
+                                                "variant": source_state["variant"]})
+        remote_data = local_run.saved_restart_source(source, destination_target)
+    saved = remote_data["saved"] if remote_data else execution.save(source)
     if saved.get("saved") is not True:
         raise RuntimeError(f"source data was not saved: {saved}")
     root = source.parents[1]
@@ -75,7 +123,7 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
     destination_paths = paths(destination)
     for key in ("program", "inputs", "workspace", "harness", "records", "snapshots", "evaluations"):
         destination_paths[key].mkdir(parents=True, exist_ok=True)
-    if keep_data:
+    if keep_data and not remote_data:
         data_source = paths(source)["workspace"].parent
         if snapshot:
             candidate = Path(snapshot).expanduser()
@@ -131,6 +179,20 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
         "native_resume": keep_data and same_task and source_state.get("native_scope_id") is not None,
         "lifecycle": "starting",
     })
+    if remote_data:
+        fresh["remote_restart_data"] = remote_data
+        # Route-change validation consumes this small native metadata locally;
+        # the complete application/native state stays saved on the source host.
+        from . import local_run
+        scope = str(fresh["native_scope_id"])
+        remote_routing = Path(remote_data["remote_run"]) / "data/harness" / scope / "routing-snapshot.json"
+        exists = local_run._remote_exec(remote_data["executor"], ["test", "-f", str(remote_routing)])
+        if exists.returncode == 0:
+            if not local_run._remote_file(remote_data["executor"], remote_routing,
+                                         destination_paths["harness"] / scope / "routing-snapshot.json"):
+                raise RuntimeError("saved native routing snapshot could not be recovered")
+        elif exists.returncode != 1:
+            raise RuntimeError(f"saved native routing lookup failed: {exists.stderr}")
     if fresh['native_resume']:
         write_json(destination_paths['inputs']/'native-resume.json', {
             'kind': 'lab.native-resume', 'source_run': source.name,
@@ -138,6 +200,11 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
             'requirements_version': fresh['requirements_version'],
             'source_lifecycle': execution.observe(source).get('lifecycle'),
             'saved': saved, 'created_at': time.time()})
+    if catalog_override is not None:
+        shutil.copy2(catalog_override, destination_paths['inputs']/'authorized-model-catalog.json')
+    if route_change is not None:
+        fresh['route_override'] = str(Path(route).expanduser().resolve(strict=True))
+        fresh['native_route_change'] = route_change
     write_manifest(destination, fresh)
     execution.assemble(destination)
     started = execution.start(destination)

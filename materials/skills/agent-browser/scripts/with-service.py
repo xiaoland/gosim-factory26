@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Run a check with an owned temporary service, or wrap a self-managed check."""
 import argparse
+from contextlib import closing
 import json
 import os
 from pathlib import Path
 import re
 import signal
 import socket
+import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -85,6 +88,19 @@ def stop(process, grace=5, already_terminated=False):
         errors.append(f'process {process.pid} did not exit after KILL')
     except OSError as exc:
         errors.append(f'wait for process {process.pid}: {exc}')
+    deadline = time.monotonic() + (5 if grace >= 1 else 0.1)
+    while True:
+        try:
+            os.killpg(pgid, 0)
+        except ProcessLookupError:
+            break
+        except OSError as exc:
+            errors.append(f'confirm stopped process group {pgid}: {exc}')
+            break
+        if time.monotonic() >= deadline:
+            errors.append(f'process group {pgid} still exists after KILL')
+            break
+        time.sleep(0.02)
     return errors
 
 
@@ -106,6 +122,12 @@ def main():
     mode.add_argument('--start', help='foreground service command; bash with pipefail')
     mode.add_argument('--check-only', action='store_true', help='wrap a check that manages its own services')
     parser.add_argument('--port', type=int)
+    parser.add_argument('--fresh-data', type=Path,
+                        help='copy source data into a new attempt directory; never replace a live path')
+    parser.add_argument('--data-env', help='existing application environment variable receiving the fresh path')
+    parser.add_argument('--data-mode', choices=['sqlite', 'file', 'directory'],
+                        help='sqlite uses a read-only online backup; directory source must be quiescent')
+    parser.add_argument('--evidence-root', type=Path, help='parent directory for attempt evidence and fresh data')
     parser.add_argument('--ready-path', default='/')
     parser.add_argument('--ready-timeout', type=float, default=90)
     parser.add_argument('--context', action='append', default=[], metavar='KEY=VALUE',
@@ -123,6 +145,12 @@ def main():
         parser.error('ready-timeout must be positive')
     if not args.ready_path.startswith('/') or args.ready_path.startswith('//'):
         parser.error('ready-path must be a local path')
+    data_options = [args.fresh_data is not None, args.data_env is not None, args.data_mode is not None]
+    if any(data_options) and not all(data_options):
+        parser.error('--fresh-data, --data-env and --data-mode must be supplied together')
+    if args.data_env and (not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', args.data_env)
+                          or args.data_env in {'HOME', 'PATH', 'PORT', 'BASE_URL', 'TMPDIR'}):
+        parser.error('--data-env must name the application data-path variable')
     context = {}
     for item in args.context:
         key, separator, value = item.partition('=')
@@ -133,7 +161,9 @@ def main():
     if not cwd.is_dir():
         parser.error('cwd must be a directory')
 
-    evidence = Path(tempfile.mkdtemp(prefix='service-check-'))
+    evidence_root = args.evidence_root.resolve() if args.evidence_root else Path(tempfile.gettempdir()).resolve()
+    evidence_root.mkdir(parents=True, exist_ok=True)
+    evidence = Path(tempfile.mkdtemp(prefix='service-check-', dir=evidence_root))
     base_url = f'http://127.0.0.1:{args.port}' if args.start is not None else None
     env = dict(os.environ)
     if base_url:
@@ -159,6 +189,23 @@ def main():
     print(f'Evidence: {evidence}' + (f'\nBASE_URL={base_url}' if base_url else ''), flush=True)
     record()
     try:
+        if args.fresh_data is not None:
+            source = args.fresh_data.resolve(strict=True)
+            fresh = evidence / 'data' / ('database.db' if args.data_mode == 'sqlite' else source.name)
+            fresh.parent.mkdir(parents=True)
+            if args.data_mode == 'sqlite':
+                with closing(sqlite3.connect(source.as_uri() + '?mode=ro', uri=True)) as original, closing(sqlite3.connect(fresh)) as target:
+                    original.backup(target)
+            elif args.data_mode == 'directory':
+                if fresh.resolve().is_relative_to(source):
+                    raise RuntimeError('fresh data destination must not be inside its directory source')
+                shutil.copytree(source, fresh)
+            else:
+                shutil.copy2(source, fresh)
+            env[args.data_env] = str(fresh)
+            result['data'] = {'source': str(source), 'path': str(fresh), 'environment_variable': args.data_env,
+                              'mode': args.data_mode, 'scope': 'new attempt copy; source is not modified'}
+            record()
         with (evidence/'service.log').open('wb') as service_log, (evidence/'check.log').open('wb') as check_log:
             if args.start is not None:
                 # Fail before launching when the requested listener is already occupied.
@@ -178,6 +225,10 @@ def main():
                             if response.geturl().split('/')[2] != base_url.split('/')[2]:
                                 raise RuntimeError('readiness redirected to another origin')
                             result['ready_http_status'] = response.status
+                        if service.poll() is not None:
+                            raise RuntimeError(f'service exited while readiness responded: {service.returncode}')
+                        result['service_pgid'] = service.pid
+                        result['readiness_identity'] = 'port prechecked vacant; owned process alive before and after HTTP; listener PID not independently verified'
                         break
                     except (urllib.error.URLError, TimeoutError) as exc:
                         last_error = str(exc)
@@ -206,7 +257,7 @@ def main():
         print(f'interrupted: {exc}', file=sys.stderr)
         code = 130
         record()  # A supervisor may escalate before full cleanup finishes.
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, sqlite3.Error) as exc:
         result.update(status='service_error' if phase == 'service' or isinstance(exc, RuntimeError)
                       else 'check_start_error', error=str(exc))
         print(f'{result["status"]}: {exc}', file=sys.stderr)

@@ -1,6 +1,6 @@
 ---
 name: "explorer"
-description: "承担有明确用途、证据路径复杂或噪声较高的调查、根因诊断与探索；独立完成局部证据获取与分析，将结果压缩为调用方可采用的结论、关键来源和重要未知。关键信息不足时可请求调用方补充。"
+description: "承担有明确用途、证据路径复杂或噪声较高的调查、根因诊断与探索；独立完成局部证据获取与分析，将结果压缩为调用方可采用的结论、关键来源和重要未知。"
 model: "factory26/deepseek-v4-flash"
 thinking: "high"
 systemPromptMode: "append"

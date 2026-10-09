@@ -58,10 +58,10 @@
 
 | 材料族及文件数 | 性质与证据入口 | 处置 |
 | --- | --- | --- |
-| `docs/agent-guides` 1、`docs/deployment` 1 | delegation 与 model-providers 是长期操作说明；[开发委派](../development-delegation/packet.md)、[模型供应商](../external-model-providers/packet.md) | 保留权威文档，进入文档负责人核对。 |
+| `docs/deployment` 1 | model-providers 是长期操作说明；[模型供应商](../external-model-providers/packet.md) | 保留权威文档，进入文档负责人核对；已删除的项目级委派指南不再列为现行文档。 |
 | `harness/skills/svc` 27 | [hackathon-capabilities packet](../hackathon-capabilities/packet.md)及[implementation](../hackathon-capabilities/implementation.md)明确是迁移前单技能快照，归档 variant 和 native-hackathon 仍消费 | 历史材料支持，不能将未跟踪等同可删除。 |
 | `variants/pi-braid-i11` 25 | [I11 variant](../iteration11/variant.md)明确用户要求复制 I10，改身份并保持独立；包含角色、入口、build、扩展、工具 | 独立实现，保留；不和 I10/I12 去重。 |
-| `reports/2026-09-23-*` 4 | local-agent-process、local-experiment-infrastructure、model-reasoning-probe、official-results 四份历史结论 | 保留报告身份与条件；是否整合长期知识归文档负责人，原报告不静默覆盖。 |
+| `runs/reports/2026-09-23-*` 4 | local-agent-process、local-experiment-infrastructure、model-reasoning-probe、official-results 四份历史结论 | 保留报告身份与条件；是否整合长期知识归文档负责人，原报告不静默覆盖。 |
 | `tasks/iteration10` 844、`tasks/iteration11` 1,150 | [I10 instruction-audit](../iteration10/instruction-audit/packet.md)、I10 run-audit、[I11 GitHub audit](../iteration11/run-audit/github/packet.md)、[Sheet audit](../iteration11/run-audit/sheet/packet.md)、[Sheet full-lineage](../iteration11/sheet-effectiveness-analysis/packet.md)是原件、源码快照、派生索引、逐段回读与分析脚本的组合 | `current/`、`current-runtime/`、`work/native-homes/` 是调查快照；分析脚本绑定固定输入。保留完整 lineage 和覆盖账，后续物理整理由数据清单约束；不得直接执行其采集或监控脚本。 |
 | `tasks/iteration12` 20、`iteration13` 31、`iteration14` 4 | I12 原生身份/root-cause 证据；I13 材料与恢复调查；I14 baseline-roots、provider-recovery 与 dx-resume 执行页，各子 packet 可定位 | 区分活动方案与历史读取材料，保留 source/run/commit 身份；未调用运行入口。 |
 | `tasks/acceptance-integrity` 41、`braid-architecture-audit` 9、`braid-collaboration` 11、`braid-github-minimal-review` 20、`braid-product-hardening` 15、`braid-product-reaudit` 69、`braid-usability` 14 | 各族现有 packet、design/review/disposition 明确职责。reaudit 的 token-{deep-03,final-review}/analyze/extract、freeze_local_workspace，acceptance 的 run-method-check 是分析/操作辅助，`source/official-billing` 是来源证据 | 是调查/设计/实施结果及原件，未整体改造成共享库；是否尚有未交付结论由各 packet 接续。稳定会话 owner 未逐一实时确认。 |

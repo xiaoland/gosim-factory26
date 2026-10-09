@@ -1,6 +1,6 @@
 --- a/src/runs/foreground/execution.ts
 +++ b/src/runs/foreground/execution.ts
-@@ -541,12 +541,22 @@
+@@ -541,15 +541,31 @@
  
  	const exitCode = await new Promise<number>((resolve) => {
  		const spawnSpec = getPiSpawnCommand(args);
@@ -25,7 +25,16 @@
  		const jsonlWriter = createJsonlWriter(shared.jsonlPath, proc.stdout);
  		let processClosed = false;
  		let lifecycleFinished = false;
-@@ -1310,7 +1320,8 @@
++		const startup = managedRuntime?.waitManagedStartup(proc);
++		startup?.catch((error) => {
++			result.error = error instanceof Error ? error.message : String(error);
++			result.finalOutput = result.error;
++			try { proc.kill("SIGTERM"); } catch {}
++		});
+ 		let detached = false;
+ 		let intercomStarted = false;
+ 		let assistantError: string | undefined;
+@@ -1310,7 +1326,8 @@
  			childExited = true;
  			clearFinalDrainTimers();
  		});
@@ -35,7 +44,7 @@
  			if (lifecycleFinished) return;
  			processClosed = true;
  			clearFinalDrainTimers();
-@@ -1917,7 +1928,7 @@
+@@ -1917,7 +1934,7 @@
  			// Preserve the legacy intercom handoff contract: once this logical run has
  			// been handed to a supervisor, terminating that attempt must not launch a
  			// startup retry or model fallback. Explicit user detach retains fallback.
@@ -57,7 +66,7 @@
  			cwd,
  			detached: true,
  			stdio: ["ignore", stdoutFd ?? "ignore", stderrFd ?? "ignore"],
-@@ -546,13 +548,14 @@
+@@ -546,13 +548,15 @@
  				...omitExtensionBindingsEnv(process.env),
  				...(piPackageRoot ? { [PI_CODING_AGENT_PACKAGE_ROOT_ENV]: piPackageRoot } : {}),
  			},
@@ -69,31 +78,39 @@
  			console.error(`[pi-subagents] async spawn failed: ${error.message}`);
  		});
 -		proc.once("close", (exitCode, signal) => {
++		const managedStartup = managedRuntime?.waitManagedStartup(proc);
 +		proc.once("close", async (exitCode, signal) => {
 +			await managedRuntime?.finishManagedProcess(proc, { exit_code: exitCode, signal, observed_at: Date.now() });
  			const launch = launchConfig as { asyncDir?: unknown; id?: unknown; nestedRoute?: NestedRouteInfo; nestedSelf?: { parentRunId: string; parentStepIndex?: number; depth: number; path?: Array<{ runId: string; stepIndex?: number; agent?: string }> } };
  			const asyncDir = launch.asyncDir;
  			const runId = launch.id;
-@@ -642,6 +645,16 @@
- 				fs.rmSync(startupPath, { force: true });
- 			} catch {
+@@ -644,6 +648,23 @@
  				// Proceed is the commit point; handshake cleanup cannot turn a running revival into a start error.
-+			}
-+		}
-+		if (managedRuntime && launchAsyncDir) {
-+			try {
-+				const startup = managedRuntime.waitChildStartup(launchAsyncDir, RUNNER_STARTUP_TIMEOUT_MS);
-+				if (startup.status !== "started") throw new Error(startup.reason || "Async child was not physically started.");
-+			} catch (error) {
-+				const message = error instanceof Error ? error.message : String(error);
-+				terminateRunnerBeforeProceed(proc.pid);
-+				return { pid: proc.pid, runnerProcessInstanceId, error: message, terminationObserved: false, startupDidNotProceed: false };
  			}
  		}
++		managedStartup?.then(async () => {
++			if (!launchAsyncDir) return;
++			const startup = await managedRuntime.waitChildStartup(launchAsyncDir, RUNNER_STARTUP_TIMEOUT_MS);
++			if (startup.status !== "started") throw new Error(startup.reason || "Async child was not physically started.");
++		}).catch((error) => {
++			const message = error instanceof Error ? error.message : String(error);
++			console.error(`[pi-subagents] managed async startup failed: ${message}`);
++			if (typeof proc.pid === "number") terminateRunnerBeforeProceed(proc.pid);
++			if (!launchAsyncDir) return;
++			try {
++				const statusPath = path.join(launchAsyncDir, "status.json");
++				const status = JSON.parse(fs.readFileSync(statusPath, "utf-8"));
++				writePrivateAtomicJson(statusPath, { ...status, state: "failed", lastUpdate: Date.now(), error: message });
++			} catch (persistError) {
++				console.error("Failed to persist managed async startup error:", persistError);
++			}
++		});
  		return { pid: proc.pid, runnerProcessInstanceId };
+ 	} catch (error) {
+ 		closeFd(stdoutFd);
 --- a/src/runs/background/subagent-runner.ts
 +++ b/src/runs/background/subagent-runner.ts
-@@ -583,13 +583,25 @@
+@@ -583,13 +583,28 @@
  			...(piPackageRoot ? { piPackageRoot } : {}),
  			...(piArgv1 ? { argv1: piArgv1 } : {}),
  		});
@@ -107,9 +124,11 @@
  			env: spawnEnv,
  			windowsHide: true,
  			detached: process.platform !== "win32",
--		});
 +		}, { kind: "native", manifest: outputFile });
-+		managedRuntime?.publishChildStartup(path.dirname(outputFile), "started");
++		void managedRuntime?.waitManagedStartup(child).then(() => managedRuntime.publishChildStartup(path.dirname(outputFile), "started")).catch((error) => {
++			managedRuntime.publishChildStartup(path.dirname(outputFile), "failed", error instanceof Error ? error.message : String(error));
++			try { child.kill("SIGTERM"); } catch {}
+ 		});
 +		} catch (error) {
 +			const message = error instanceof Error ? error.message : String(error);
 +			managedRuntime?.publishChildStartup(path.dirname(outputFile), "failed", message);
@@ -121,7 +140,7 @@
  		let processTreeController: OwnedProcessTreeController | undefined;
  		const stderrTail = createBoundedByteTail();
  		const rawStdoutTail = createBoundedByteTail();
-@@ -598,7 +610,7 @@
+@@ -598,7 +613,7 @@
  		let model: string | undefined;
  		let writerRegistrationError: string | undefined;
  		if (typeof child.pid === "number") {
@@ -130,7 +149,7 @@
  			try {
  				onWriterProcess?.({ state: "running", pid: child.pid });
  			} catch (writerError) {
-@@ -988,6 +1000,7 @@
+@@ -988,6 +1003,7 @@
  			clearDrainTimers();
  		});
  		child.on("close", async (exitCode, signal) => {
@@ -138,7 +157,7 @@
  			settled = true;
  			const processCloseObservedAt = Date.now();
  			const processTree = processTreeController
-@@ -1817,7 +1830,8 @@
+@@ -1817,7 +1833,8 @@
  			turnBudgetExceeded: run.turnBudgetExceeded,
  		})) ? formatProcessSignalError(run.processSignal!) : undefined;
  		const error = formatSubagentExtensionConflictError(
@@ -148,7 +167,7 @@
  				?? completionGuardError
  				?? structuredError
  				?? emptyOutputError
-@@ -1849,7 +1863,7 @@
+@@ -1849,7 +1866,7 @@
  			toolBudget = toolBudgetState(step.toolBudget, toolMessages.length, blockedMessage ? (blockedMessage as { toolName?: string }).toolName : undefined);
  		}
  		finalResult = { ...run, exitCode: effectiveExitCode, model: candidate ?? run.model, error, structuredOutput, runtimeAcknowledgedExtensions, ...(step.agentContract ? { agentContract: step.agentContract } : {}), ...(fileMutationEffect ? { effects: { fileMutation: fileMutationEffect } } : {}) } as RunPiStreamingResult & { structuredOutput?: unknown; agentContract?: import("../../shared/types.ts").AgentContract; effects?: import("../../shared/types.ts").EffectsProjection };
@@ -157,7 +176,7 @@
  		if (run.stopped || run.timedOut || ctx.timeoutSignal?.aborted || ctx.stopSignal?.aborted || ctx.skipAcceptance?.()) break modelAttemptsLoop;
  		if (attempt.success || completionGuardTriggered) break modelAttemptsLoop;
  
-@@ -5384,6 +5398,7 @@
+@@ -5384,6 +5401,7 @@
  }
  
  async function runConfiguredSubagent(config: SubagentRunConfig): Promise<void> {
@@ -165,7 +184,7 @@
  	let lease: ReturnType<typeof acquireSessionLease> | undefined;
  	let startupCommitted = config.revivalLease === undefined;
  	const startupPath = path.join(config.asyncDir, "runner-startup.json");
-@@ -5415,6 +5430,10 @@
+@@ -5415,6 +5433,10 @@
  			}
  		}
  		await runSubagent(config, lease ? (writer) => lease!.updateWriter(writer) : undefined);
@@ -176,7 +195,7 @@
  	} catch (error) {
  		if (config.revivalLease && !startupCommitted) {
  			try {
-@@ -5423,6 +5442,7 @@
+@@ -5423,6 +5445,7 @@
  				// The parent will time out and terminate this runner if the handshake cannot be written.
  			}
  		}
@@ -229,7 +248,7 @@
 +}
 --- a/src/extension/index.ts
 +++ b/src/extension/index.ts
-@@ -530,6 +530,11 @@
+@@ -531,6 +531,11 @@
  	);
  	const { startResultWatcher, primeExistingResults, stopResultWatcher } = resultWatcher;
  	refreshResultDelivery = resultWatcher.refreshResultDelivery;
@@ -241,7 +260,7 @@
  	const asyncRetentionAbort = new AbortController();
  	const asyncRetentionTimer = setTimeout(async () => {
  		try {
-@@ -1050,6 +1055,7 @@
+@@ -1060,6 +1065,7 @@
  	});
  
  	pi.on("session_shutdown", async () => {

@@ -12,11 +12,11 @@ Context 失效先保留待重建事件，并将变更引用告知原会话。运
 
 持久化 idle 只描述 Braid 已管理 turn 的状态；Pi 原生会话仍可能执行后台 follow-up。新普通输入与重置通知领取前均核对原生当前是否可接收，发送时若状态变化而返回 Deferred，则保留待投递义务。重置通知复用同一未开始 turn，记录原始延后原因、首次和最近延后时间及次数，不记为执行失败；旧会话仍须收到通知并完成原生证据验证后才能替换。
 
-支持 managed execution 的 Pi 将原生静止与输入可接收分别报告。`get_state.data.managed_state` 包含 `status` 和当前 `execution_id`；只有身份一致的 `quiescent` 可以卸载 OPEN 的 idle 成员。服务、后台工作或未消费结果使原生仍为 busy，但服务驻留本身不禁止普通输入。卸载前在同一 Store 事务确认当前 assignment/member/version、无活动 turn、待输入或 reset，并清除旧 `cli_binding_id`；事务之后到达的新输入继续留队。停止证明通过后释放物理句柄，逻辑成员、provider session、clone 与 native history 保留，正常卸载不制造 Unknown。恢复检查仍保留有效句柄，只为真实排队输入、必要 Context 重建或未知执行接续恢复进程；无输入的普通 idle 成员不会被周期检查全部拉起。不新增持久 residency 字段，既有 binding fence 和运行内句柄集合承担这一区分。
+支持 managed execution 的 Pi 将原生静止与输入可接收分别报告。 `Arc` 和 `Box` 等透明 provider 包装层必须转发 `managed_state` 与 `yield_stoppable_services`，不能落入接口默认的 Unknown；输入可接收的转发不能替代这两项资源生命周期事实。`get_state.data.managed_state` 包含 `status` 和当前 `execution_id`；只有身份一致的 `quiescent` 可以卸载 OPEN 的 idle 成员。服务、后台工作或未消费结果使原生仍为 busy，但服务驻留本身不禁止普通输入。卸载前在同一 Store 事务确认当前 assignment/member/version、无活动 turn、待输入或 reset，并清除旧 `cli_binding_id`；事务之后到达的新输入继续留队。停止证明通过后释放物理句柄，逻辑成员、provider session、clone 与 native history 保留，正常卸载不制造 Unknown。若该 session 明确记录的是 `ResourceDeferred`，Store fence 可忽略普通 pending wake/event 以释放 quiescent 物理句柄，但仍拒绝 active turn、resetting/materializing event 或 context reset；普通 `Deferred` 保持原严格 fence。恢复检查仍保留有效句柄，只为真实排队输入、必要 Context 重建或未知执行接续恢复进程；无输入的普通 idle 成员不会被周期检查全部拉起。不新增持久 residency 字段，不改变 queue/history/clone，既有 binding fence 和运行内句柄集合承担这一区分。
 
-启用运行资源控制时，所有 Pi start/resume、description reset 与重新激活均通过同一共享 launcher 准入。launcher 用运行目录的文件锁登记启动 UUID、进程 birth identity 和独立 PGID 后 exec 原 Pi，payload 在登记之前不能执行。资源拒绝必须有该启动 UUID 对应的 `resource_deferred` 原件，不能仅按退出码 75 推断。普通 turn 只检查当前压力，不再领取整个进程生命周期的启动 reservation。拒绝 start 保留原 assignment 代次、clone 和激活事件；拒绝 reset 保留 materializing reset；拒绝 sleeping activation 保留原责任与联系，各路径均可接续，不将资源不足写成永久的 assignment blocked。
+启用运行资源观察时，所有 Pi start/resume、description reset 与重新激活均通过同一 launcher 登记启动 UUID、进程 birth identity 和独立 PGID 后 exec 原 Pi；资源观察不构成启动准入，也不排队等待压力下降。资源触顶由 run owner 保存 memory/pids 的 current/max/events 与原始进程身份，按固定截止执行一次安全处置；补救无效、采样不可用或再次触顶时保存 `resource_exhausted`，停止本 run 新工作并进入有界 shutdown。拒绝 start 只用于 execution stopping 等生命周期 fence，不能把资源不足写成永久 waiting/running。
 
-各 group 复用既有两秒恢复循环；共享 factory 按 collector sample 串行执行至多一次原生 `relieve_pressure`，随后重读压力。原生运行时选择确切自有的有限作业并保存退出、部分输出与资源原因，Braid 不读取工具私有作业表。每个成员的一条连续 Unknown 链只自动恢复一次，成功 completed 或明确的新工作输入才解除限制；自动恢复通知、Braid 系统评论及自身 deferred/failed 重放不解除限制。资源准入拒绝使用独立的 `ResourceDeferred` 类型，不消耗 Unknown 恢复额度；driver 在 `provider_health` 中报告 `waiting_for_resources`，保留待执行义务并继续等待采样恢复，即使所有 group 暂时都在等待，也不封存整轮。`can_progress` 仍只报告真实活动，不把等待伪装为推进。资源等待不能掩盖同组或其它 group 的真实恢复失败、配置不兼容或恢复额度耗尽；这些错误在所有已观察 group 均不能推进时仍可返回 blocked。真正 owned execution 停止证明为 unknown 时仍沿既有 fatal 边界立即阻断整轮；本轮未建立任意未知 writer 的独立权限撤销或隔离。
+group worker 不因 `ResourceDeferred` 无限等待；该类 provider 原错会进入失败投影，由执行侧统一处置或结束 run。Braid 只负责原生状态落盘和自己的进程生命周期，不创建资源准入队列、不反复 suspend/resume 维持 running。资源失败与 `owned execution stop unproved` 分开记录，后者仍沿既有 fatal 边界阻断整轮。
 
 close/merge 不中断当前执行，也不额外授予 finalization。自己关闭只保存对象状态；外部关闭作为普通输入投递给负责人。真实待处理输入继续执行，无输入的关闭成员自然休眠并保留责任关系；reopen 或定向评论可重新激活。旧归档的 finalizing 状态仍能沿既有恢复链收尾，新关闭不创建该状态。
 
@@ -34,6 +34,18 @@ Pi 路径可完整查找且确切原生文件已经缺失时，adapter 返回 Hi
 
 `--offline-resume` 已由宿主证明旧执行停止后，可重新物化一次此前因 Pi 新会话启动不可用而封锁的 Context reset。恢复只接受仍为 OPEN 的同一活动 assignment、相同成员/Profile/指派版本、无后续 reset 或 provider session，且物理尝试记录明确为 `failed`、没有原生会话身份的情形；已终结、改派、身份不明或后来成功接续的工作项保持原状态。恢复沿用原 reset 和失效事件，交给既有 Context 物化与续接链；若再次失败仍会封锁，不在运行中循环重试。
 
+若 reset 因旧会话在通知处理完成前失败而封锁，显式离线接续可以沿原 reset 重试通知。此路径要求旧 Pi 身份仍存在、责任与工作树仍匹配、没有后继会话或 reset，且没有在途 turn；宿主仍须先证明旧执行已停止。恢复保留旧历史和失败 turn，原 assignment 可处于 active、finalizing 或 blocked，但未完成的 reset 继续阻止普通任务派发，只允许原 reset 的通知领取；通知得到验证并确认旧 writer 退出后，才沿既有流程替换 Context。再次失败仍保留阻塞，不能把待处理 batch 或 provider 恢复为 idle 单独当作恢复完成。
+
+首次工作输入也可能在普通 turn 建立前被 provider 拒绝。若旧会话没有普通工作 turn、保留了失败的 reset notice，且同一 reset 的事件能定位原 wake batch，则 Context 替换时保留该 batch 中原始 wake 输入的续接，避免仅因缺少普通 failed turn 而丢失实施义务。此路径不重放 assignment、invalidate 或 reset_continuation 事件；已有普通工作 turn 时仍按其持久终态决定续接，不借此重发结果未知的输入。
+
+若该判断在旧 runtime 已完成 reset 且将 `continuation=0` 写入 Store，后续 `--offline-resume` 仍可补偿同一精确形状：reset 已为 `applied`、reset notice 明确 `failed`、旧 session 没有普通 turn，且同一已消费 wake batch 可定位原始 `wake`。补偿只按原 wake event 的 dedupe key 建立一次 pending replay，并保留旧 reset、assignment、失败历史和 native identity；不重放 assignment、invalidate、reset_continuation，也不把普通 Unknown 输入当作可重放。若任一身份、责任、历史或停止证明条件缺失，保持原阻塞。
+
 根及全部工作项终态且没有未解决合并时，不再派发普通讨论的新执行；已接受的执行和重建续接自然结束后，local 返回 quiescent；根仍开放时继续等待或检查，必要恢复受阻时返回 blocked。退出时读取当前 delivery ref 的提交，供调用方决定如何使用；Braid 不把工作项状态或单个 provider terminal 当成应用验收结论。Git 合并的 prepared/applied/conflict 与恢复边界见 [本地运行契约](local.md)。
 
 Bub 沿同一物理会话与 Context 恢复契约接入；其私有 steering 不能保证同轮终态关联，因此明确 Deferred，由 queue 在下个空闲边界投递。取消核实 owned process 已停止，缺少原生 terminal 时记录 Unknown。恢复前先核对持久化 ID/cwd，首次 prompt 前仍保留待物化 Context；具体原生限制见 [Bub adapter](app-server.md#bub-原生-acp-adapter)。不把 ACP load 对未知 ID 的成功响应当作历史存在证据。
+
+Issue、PR 和 review 的 assignment materializer 每次处理一个有效激活项后返回 group worker，让现有 dispatch 尝试投递，再继续后续激活。卸任和无效事件仍正常消费；不会先把整批候选的物理原生进程全部启动，再投递第一轮输入。这是启动与投递的交错顺序，不设置会话并发上限，也不改变 busy、停止 fence、reset 或逻辑会话身份合同。
+
+本地请求可冻结正整数 `max_active_agents`，未设置时不限制。它控制本轮所有 Issue、PR、review 和根负责人的实际顶层原生执行，共享一个公平等待的执行池；不会限制逻辑工作项数量或改变模型配方身份。指派立即登记，创建或改派回执的 `execution_dispatch: queued` 表示执行仍须获得槽，不保证进程已启动。启动、原生恢复、重新激活和 Context 替换都使用同一池；物化 assignment 与创建独立工作区之前须先取得槽。已有 Store 事件和工作输入保持等待权威，内存 semaphore 只保存各 driver 当前的等待次序，不另建持久队列。离线恢复采用当前请求的调度上限，并保留已有职责、模型与原生历史约束。
+
+执行槽由实际 Session 持有，直到 teardown 与 close 已证实停止；初始化失败若停止未获证明则保留槽并阻断继续执行。模型 turn 结束不等于子作业结束：有限 Bash、测试、subagent 和未消费结果都继续占用父执行槽。满池时，空闲 Pi 可调用 `yield_stoppable_services` 交接显式声明可停止并下轮重启的服务；只有 native turn/messages、有限作业与未消费结果全部为空，且所有活跃 owned 进程均属于显式 service 根时，原生层才停止这些服务。Braid 核对执行身份，并独立调用 get_state 再确认 Quiescent，随后原子 fence 当前 provider、完整 teardown，最后归还槽。未标记进程、未知状态和停止失败不能通过命令名称或持续时间猜测为服务。reviewer 在自己的独立 checkout 启动所需服务；上一执行者不能以保留服务器为由永久占槽。

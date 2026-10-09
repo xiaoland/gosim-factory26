@@ -1,6 +1,6 @@
 #![allow(clippy::wildcard_imports)]
-use super::*;
 use super::process::NativeProcess;
+use super::*;
 
 #[derive(Clone)]
 pub struct CodexProvider {
@@ -19,14 +19,18 @@ impl CodexProvider {
         Ok(())
     }
 
-    pub async fn connect(config: &CodexConfig, cli: &crate::agent_session::CliContext) -> Result<Self, ProviderError> {
+    pub async fn connect(
+        config: &CodexConfig,
+        cli: &crate::agent_session::CliContext,
+    ) -> Result<Self, ProviderError> {
         let mut command = Command::new(&config.executable);
         #[cfg(unix)]
         command.process_group(0);
         if let Ok(current_exe) = std::env::current_exe()
             && let Some(exe_dir) = current_exe.parent()
         {
-            let mut paths: Vec<_> = std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()).collect();
+            let mut paths: Vec<_> =
+                std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()).collect();
             if !paths.iter().any(|path| path == exe_dir) {
                 paths.insert(0, exe_dir.to_path_buf());
             }
@@ -251,22 +255,32 @@ impl AgentProvider for CodexProvider {
         Ok(())
     }
 
-    async fn message_was_processed(&self, thread_id: &str, message: &str) -> Result<bool, ProviderError> {
+    async fn message_was_processed(
+        &self,
+        thread_id: &str,
+        message: &str,
+    ) -> Result<bool, ProviderError> {
         // ponytail: full-history read uses the stable API; page turns if long sessions time out.
-        let result = self.request("thread/read", json!({"threadId":thread_id,"includeTurns":true})).await?;
+        let result =
+            self.request("thread/read", json!({"threadId":thread_id,"includeTurns":true})).await?;
         codex_message_was_processed(&result, message)
     }
 }
 
 fn codex_message_was_processed(result: &Value, message: &str) -> Result<bool, ProviderError> {
-    let turns = result.pointer("/thread/turns").and_then(Value::as_array)
+    let turns = result
+        .pointer("/thread/turns")
+        .and_then(Value::as_array)
         .ok_or_else(|| ProviderError::Protocol("thread/read omitted thread.turns".into()))?;
     let Some(turn) = turns.last() else { return Ok(false) };
-    if turn["status"] != "completed" { return Ok(false) }
+    if turn["status"] != "completed" {
+        return Ok(false);
+    }
     if turn["itemsView"].as_str().is_some_and(|view| view != "full") {
         return Err(ProviderError::Protocol("thread/read did not load full turn items".into()));
     }
-    let items = turn["items"].as_array()
+    let items = turn["items"]
+        .as_array()
         .ok_or_else(|| ProviderError::Protocol("thread/read omitted turn.items".into()))?;
     let mut notice_seen = false;
     for item in items {

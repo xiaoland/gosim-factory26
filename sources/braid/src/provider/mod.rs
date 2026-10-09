@@ -69,7 +69,17 @@ pub trait AgentProvider: Send + Sync {
         Ok(true)
     }
 
-    async fn managed_state(&self, _thread_id: &str) -> Result<crate::agent_session::ManagedState, ProviderError> {
+    async fn managed_state(
+        &self,
+        _thread_id: &str,
+    ) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        Ok(crate::agent_session::ManagedState::Unknown)
+    }
+
+    async fn yield_stoppable_services(
+        &self,
+        _thread_id: &str,
+    ) -> Result<crate::agent_session::ManagedState, ProviderError> {
         Ok(crate::agent_session::ManagedState::Unknown)
     }
 
@@ -115,15 +125,21 @@ pub trait AgentProvider: Send + Sync {
 
     /// Pi's steer acknowledgement means queued, not sampled. The native
     /// session must contain this exact user message followed by assistant work.
-    async fn message_was_processed(&self, _thread_id: &str, _message: &str) -> Result<bool, ProviderError> {
-        Err(ProviderError::Protocol("native message receipt is unavailable for this adapter".into()))
+    async fn message_was_processed(
+        &self,
+        _thread_id: &str,
+        _message: &str,
+    ) -> Result<bool, ProviderError> {
+        Err(ProviderError::Protocol(
+            "native message receipt is unavailable for this adapter".into(),
+        ))
     }
 }
 
 mod bub;
 mod codex;
-mod process;
 mod pi;
+mod process;
 mod session;
 mod util;
 

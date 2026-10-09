@@ -23,7 +23,7 @@ pub(crate) fn session_factory(config: ProviderConfig) -> anyhow::Result<Arc<dyn 
             providers: Mutex::new(BTreeMap::new()),
         })),
         (None, Some(config), None) => {
-            Ok(Arc::new(PiSessions { config, bindings, providers: Mutex::new(BTreeMap::new()), pressure_sample: Mutex::new(None) }))
+            Ok(Arc::new(PiSessions { config, bindings, providers: Mutex::new(BTreeMap::new()) }))
         }
         (None, None, Some(config)) => Ok(Arc::new(bub::BubSessions::new(config, bindings))),
         _ => anyhow::bail!("必须配置且仅配置一个会话 adapter"),
@@ -61,7 +61,9 @@ impl CodexSessions {
         config.executable = binding.executable.clone();
         config.home = home.clone();
         let provider = Arc::new(
-            CodexProvider::connect(&config, cli).await.map_err(super::session::map_provider_error)?,
+            CodexProvider::connect(&config, cli)
+                .await
+                .map_err(super::session::map_provider_error)?,
         );
         Ok((provider, home))
     }
@@ -111,7 +113,9 @@ impl SessionFactory for CodexSessions {
         instructions: String,
         cli: CliContext,
     ) -> Result<CreatedSession, SessionError> {
-        if self.providers.lock().await.contains_key(id) { self.teardown(id).await?; }
+        if self.providers.lock().await.contains_key(id) {
+            self.teardown(id).await?;
+        }
         let native_home = self.homes.lock().await.get(id).cloned();
         let native_home = match native_home {
             Some(home) => Some(home),
@@ -122,14 +126,21 @@ impl SessionFactory for CodexSessions {
         })?;
         let (provider, native_home) = self.connection(&profile, Some(native_home), &cli).await?;
         let session = match ProviderAgentSession::resume(
-            Arc::clone(&provider) as Arc<dyn AgentProvider>, profile, instructions, id,
-        ).await {
+            Arc::clone(&provider) as Arc<dyn AgentProvider>,
+            profile,
+            instructions,
+            id,
+        )
+        .await
+        {
             Ok(session) => session,
             Err(error) => {
                 if let Err(stop_error) = provider.close_native().await {
                     // Keep ownership so the next attempt must settle this writer.
                     self.providers.lock().await.insert(id.to_owned(), provider);
-                    return Err(SessionError::Failed(format!("{error}; failed resume teardown: {stop_error}")));
+                    return Err(SessionError::Failed(format!(
+                        "{error}; failed resume teardown: {stop_error}"
+                    )));
                 }
                 return Err(error);
             }
@@ -158,17 +169,9 @@ struct PiSessions {
     config: PiConfig,
     bindings: BTreeMap<String, RuntimeBinding>,
     providers: Mutex<BTreeMap<String, Arc<PiProvider>>>,
-    pressure_sample: Mutex<Option<String>>,
 }
 
 impl PiSessions {
-    async fn check_start_resources(&self) -> Result<(), SessionError> {
-        let resource = super::pi::resource_status().await.map_err(|error| SessionError::Deferred(error.to_string()))?;
-        if let Some(resource) = resource {
-            if resource["status"] != "normal" { return Err(SessionError::ResourceDeferred(format!("resource pressure: {resource}"))); }
-        }
-        Ok(())
-    }
     fn config_for(
         &self,
         profile: &Profile,
@@ -196,7 +199,11 @@ impl PiSessions {
         Ok(config)
     }
 
-    fn resume_path(&self, profile: &Profile, session_path: &str) -> Result<(PathBuf, PathBuf), SessionError> {
+    fn resume_path(
+        &self,
+        profile: &Profile,
+        session_path: &str,
+    ) -> Result<(PathBuf, PathBuf), SessionError> {
         let path = Path::new(session_path);
         let binding = self.bindings.get(&profile.id).ok_or_else(|| {
             SessionError::Failed(format!("missing runtime binding for profile {}", profile.id))
@@ -208,10 +215,21 @@ impl PiSessions {
             .or_else(|| self.config.home.clone())
             .unwrap_or_else(|| profile.workspace().join(".braid/native-home"));
         let candidate = root.join(session_path);
-        let exact_exists = path.is_absolute() && path.try_exists().map_err(|error| SessionError::Failed(format!("cannot inspect Pi native session {session_path}: {error}")))?;
+        let exact_exists = path.is_absolute()
+            && path.try_exists().map_err(|error| {
+                SessionError::Failed(format!(
+                    "cannot inspect Pi native session {session_path}: {error}"
+                ))
+            })?;
         let native_path = if exact_exists && path.is_file() {
             path.to_path_buf()
-        } else if candidate.try_exists().map_err(|error| SessionError::Failed(format!("cannot inspect Pi native session {}: {error}",candidate.display())))? && candidate.is_file() {
+        } else if candidate.try_exists().map_err(|error| {
+            SessionError::Failed(format!(
+                "cannot inspect Pi native session {}: {error}",
+                candidate.display()
+            ))
+        })? && candidate.is_file()
+        {
             candidate
         } else {
             let basename = path.file_name().ok_or_else(|| {
@@ -220,8 +238,8 @@ impl PiSessions {
             let mut stack = vec![root.clone()];
             let mut found = None;
             while let Some(directory) = stack.pop() {
-                for entry in
-                    fs::read_dir(&directory).map_err(|error| SessionError::Failed(error.to_string()))?
+                for entry in fs::read_dir(&directory)
+                    .map_err(|error| SessionError::Failed(error.to_string()))?
                 {
                     let entry = entry.map_err(|error| SessionError::Failed(error.to_string()))?;
                     let entry_path = entry.path();
@@ -236,7 +254,12 @@ impl PiSessions {
                     }
                 }
             }
-            found.ok_or_else(|| SessionError::HistoryUnavailable(format!("cannot locate Pi native session {session_path} under {}",root.display())))?
+            found.ok_or_else(|| {
+                SessionError::HistoryUnavailable(format!(
+                    "cannot locate Pi native session {session_path} under {}",
+                    root.display()
+                ))
+            })?
         };
         // 配置根位于 sessions 之上；旧平铺绝对路径仍以文件父目录为根。
         let home = native_path
@@ -244,9 +267,13 @@ impl PiSessions {
             .ok()
             .and_then(|relative| relative.components().next())
             .map(|component| root.join(component))
-            .or_else(|| native_path.ancestors()
-                .find(|directory| directory.file_name().is_some_and(|name| name == "sessions"))
-                .and_then(Path::parent).map(Path::to_path_buf))
+            .or_else(|| {
+                native_path
+                    .ancestors()
+                    .find(|directory| directory.file_name().is_some_and(|name| name == "sessions"))
+                    .and_then(Path::parent)
+                    .map(Path::to_path_buf)
+            })
             .or_else(|| native_path.parent().map(Path::to_path_buf))
             .ok_or_else(|| SessionError::Failed("Pi session path has no native home".into()))?;
         Ok((native_path, home))
@@ -274,29 +301,6 @@ fn materialize_native_home(
 
 #[async_trait::async_trait]
 impl SessionFactory for PiSessions {
-    async fn maintain_resources(&self) -> Result<(), SessionError> {
-        // The same factory is shared by every group; keep one relief operation
-        // in flight and consume each collector sample at most once.
-        let mut last_sample = self.pressure_sample.lock().await;
-        let Some(status) = super::pi::resource_status().await.map_err(super::session::map_provider_error)? else { return Ok(()); };
-        let sample = status["sample_id"].to_string();
-        if last_sample.as_ref() == Some(&sample) { return Ok(()); }
-        *last_sample = Some(sample);
-        if !matches!(status["status"].as_str(), Some("pressured" | "critical")) { return Ok(()); }
-        let providers: Vec<_> = self.providers.lock().await.values().cloned().collect();
-        for provider in providers {
-            match provider.relieve_pressure().await {
-                Ok(receipt) => {
-                    tracing::warn!(pressure = %status, receipt = %receipt, "native pressure relief");
-                    if receipt["data"]["status"] == "relieved" { break; }
-                }
-                Err(error) => tracing::warn!(%error, "native pressure relief unavailable"),
-            }
-        }
-        let after = super::pi::resource_status().await.map_err(super::session::map_provider_error)?;
-        tracing::info!(before = %status, after = ?after, "resource pressure after relief");
-        Ok(())
-    }
     async fn check(&self) -> Result<(), SessionError> {
         // Pi has no global process: processes belong to physical sessions.
         let executable = self
@@ -314,7 +318,6 @@ impl SessionFactory for PiSessions {
         context: String,
         cli: CliContext,
     ) -> Result<CreatedSession, SessionError> {
-        self.check_start_resources().await?;
         let config = self.config_for(&profile, None)?;
         let provider = Arc::new(PiProvider::connect(&config, cli, None));
         let session = match ProviderAgentSession::start(
@@ -323,13 +326,19 @@ impl SessionFactory for PiSessions {
             instructions,
             Some(context),
         )
-        .await {
+        .await
+        {
             Ok(session) => session,
             Err(error) => {
                 if let Err(stop) = provider.close_native().await {
-                    let identity = provider.native_session_id().await.unwrap_or_else(|| uuid::Uuid::now_v7().to_string());
+                    let identity = provider
+                        .native_session_id()
+                        .await
+                        .unwrap_or_else(|| uuid::Uuid::now_v7().to_string());
                     self.providers.lock().await.insert(identity, provider);
-                    return Err(SessionError::StopUnproved(format!("{error}; failed start teardown: {stop}")));
+                    return Err(SessionError::StopUnproved(format!(
+                        "{error}; failed start teardown: {stop}"
+                    )));
                 }
                 return Err(error);
             }
@@ -349,20 +358,28 @@ impl SessionFactory for PiSessions {
         instructions: String,
         cli: CliContext,
     ) -> Result<CreatedSession, SessionError> {
-        self.check_start_resources().await?;
-        if self.providers.lock().await.contains_key(id) { self.teardown(id).await?; }
+        if self.providers.lock().await.contains_key(id) {
+            self.teardown(id).await?;
+        }
         let (native_path, home) = self.resume_path(&profile, id)?;
         let config = self.config_for(&profile, Some(home))?;
         let provider = Arc::new(PiProvider::connect(&config, cli, Some(native_path.clone())));
         let session = match ProviderAgentSession::resume(
-            Arc::clone(&provider) as Arc<dyn AgentProvider>, profile, instructions, id,
-        ).await {
+            Arc::clone(&provider) as Arc<dyn AgentProvider>,
+            profile,
+            instructions,
+            id,
+        )
+        .await
+        {
             Ok(session) => session,
             Err(error) => {
                 if let Err(stop_error) = provider.close_native().await {
                     // Keep ownership so the next attempt must settle this writer.
                     self.providers.lock().await.insert(id.to_owned(), provider);
-                    return Err(SessionError::StopUnproved(format!("{error}; failed resume teardown: {stop_error}")));
+                    return Err(SessionError::StopUnproved(format!(
+                        "{error}; failed resume teardown: {stop_error}"
+                    )));
                 }
                 return Err(error);
             }

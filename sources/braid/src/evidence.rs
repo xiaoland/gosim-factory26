@@ -30,6 +30,7 @@ const TABLES: &[&str] = &[
     "local_merges",
     "review_requests",
     "review_checkouts",
+    "pr_review_sessions",
     "assignments",
     "agent_instances",
     "provider_sessions",
@@ -78,8 +79,7 @@ fn inventory_summary(mut entries: Vec<Value>) -> Result<Value> {
         let size = entry["bytes"].as_u64().unwrap_or(0);
         bytes = bytes.saturating_add(size);
         let kind = entry["logical_type"].as_str().unwrap_or("unknown");
-        let row = types.entry(kind.to_owned())
-            .or_insert_with(|| json!({"artifacts":0,"bytes":0}));
+        let row = types.entry(kind.to_owned()).or_insert_with(|| json!({"artifacts":0,"bytes":0}));
         row["artifacts"] = json!(row["artifacts"].as_u64().unwrap_or(0) + 1);
         row["bytes"] = json!(row["bytes"].as_u64().unwrap_or(0).saturating_add(size));
     }
@@ -208,7 +208,9 @@ impl EvidenceCollector {
         emit: &mut impl FnMut(&Value) -> Result<bool>,
     ) -> Result<Option<(Option<String>, Value)>> {
         match fs::read(path) {
-            Ok(bytes) => self.capture_artifact(&bytes, source, kind, metadata, mode, emit).map(Some),
+            Ok(bytes) => {
+                self.capture_artifact(&bytes, source, kind, metadata, mode, emit).map(Some)
+            }
             Err(error) => {
                 gaps.push(format!("{}: {error}", path.display()));
                 Ok(None)
@@ -254,8 +256,16 @@ impl EvidenceCollector {
                 }
                 let bytes = serde_json::to_vec(&objects)?;
                 let (id, entry) = self.capture_artifact(
-                    &bytes, "objects.json", "objects", &Value::Null, mode, emit)?;
-                if let Some(id) = id { artifacts.push(id); }
+                    &bytes,
+                    "objects.json",
+                    "objects",
+                    &Value::Null,
+                    mode,
+                    emit,
+                )?;
+                if let Some(id) = id {
+                    artifacts.push(id);
+                }
                 inventory.push(entry);
                 Some(objects)
             }
@@ -297,7 +307,9 @@ impl EvidenceCollector {
                 &mut gaps,
                 emit,
             )? {
-                if let Some(id) = id { artifacts.push(id); }
+                if let Some(id) = id {
+                    artifacts.push(id);
+                }
                 inventory.push(entry);
             }
         }
@@ -321,8 +333,16 @@ impl EvidenceCollector {
             }
             let bytes = serde_json::to_vec(&manifest)?;
             let (id, entry) = self.capture_artifact(
-                &bytes, "native-manifest.json", "native_manifest", &Value::Null, mode, emit)?;
-            if let Some(id) = id { artifacts.push(id); }
+                &bytes,
+                "native-manifest.json",
+                "native_manifest",
+                &Value::Null,
+                mode,
+                emit,
+            )?;
+            if let Some(id) = id {
+                artifacts.push(id);
+            }
             inventory.push(entry);
             (sessions, Some(path.parent().unwrap_or(Path::new(".")).canonicalize()?))
         } else {
@@ -389,7 +409,8 @@ impl EvidenceCollector {
             match header {
                 Some(id) if expected.is_none_or(|expected| expected == id) => {
                     metadata["native_session_id"] = json!(id);
-                    metadata["parse_status"] = json!(if provider == "bub" { "recognized-path" } else { "recognized" });
+                    metadata["parse_status"] =
+                        json!(if provider == "bub" { "recognized-path" } else { "recognized" });
                 }
                 _ => {
                     metadata["parse_status"] = json!("unparsed");
@@ -458,7 +479,8 @@ impl EvidenceCollector {
             "final":final_capture,"native_archive":native_manifest.is_some(),
             "coverage":{"status":status,"native_sessions":native_count,"objects":objects.is_some(),"run_terminal":terminal,"database_lifecycle":database_lifecycle},"gaps":gaps,
         });
-        let event_kind = if mode == CaptureMode::Portable { "evidence_snapshot" } else { "evidence_summary" };
+        let event_kind =
+            if mode == CaptureMode::Portable { "evidence_snapshot" } else { "evidence_summary" };
         let id = self.record(event_kind, manifest.clone(), emit)?;
         let mut summary_gaps = manifest["gaps"].as_array().cloned().unwrap_or_default();
         summary_gaps.extend(self.omissions.iter().map(|gap| json!(gap)));
@@ -466,11 +488,9 @@ impl EvidenceCollector {
         if !self.omissions.is_empty() {
             coverage["status"] = json!("partial");
         }
-        Ok(
-            json!({"run_id":self.run_id,"snapshot_id":id,"mode":mode.label(),
+        Ok(json!({"run_id":self.run_id,"snapshot_id":id,"mode":mode.label(),
                 "coverage":coverage,"inventory":manifest["inventory"],
-                "native_sessions":native_count,"usage":usage,"gaps":summary_gaps}),
-        )
+                "native_sessions":native_count,"usage":usage,"gaps":summary_gaps}))
     }
 }
 
@@ -510,16 +530,33 @@ fn bub_native_usage(bytes: &[u8]) -> Vec<Value> {
     let mut messages = Vec::new();
     for line in bytes.split(|byte| *byte == b'\n') {
         let Ok(entry) = serde_json::from_slice::<Value>(line) else { continue };
-        if entry["kind"] != "event" || entry["payload"]["name"] != "run" { continue; }
+        if entry["kind"] != "event" || entry["payload"]["name"] != "run" {
+            continue;
+        }
         let data = &entry["payload"]["data"];
         let Some(usage) = data["usage"].as_object() else { continue };
         let id = entry["meta"]["run_id"].as_str().map_or_else(|| digest(line), str::to_owned);
-        if !seen.insert(id) { continue; }
-        let mut tokens = json!({});
-        for (target, primary, alternate) in [("input", "prompt_tokens", "input_tokens"), ("output", "completion_tokens", "output_tokens")] {
-            if let Some(value) = usage.get(primary).or_else(|| usage.get(alternate)).and_then(Value::as_u64) { tokens[target] = json!(value); }
+        if !seen.insert(id) {
+            continue;
         }
-        if let Some(value) = usage.get("completion_tokens_details").and_then(|detail| detail.get("reasoning_tokens")).and_then(Value::as_u64) { tokens["reasoning"] = json!(value); }
+        let mut tokens = json!({});
+        for (target, primary, alternate) in [
+            ("input", "prompt_tokens", "input_tokens"),
+            ("output", "completion_tokens", "output_tokens"),
+        ] {
+            if let Some(value) =
+                usage.get(primary).or_else(|| usage.get(alternate)).and_then(Value::as_u64)
+            {
+                tokens[target] = json!(value);
+            }
+        }
+        if let Some(value) = usage
+            .get("completion_tokens_details")
+            .and_then(|detail| detail.get("reasoning_tokens"))
+            .and_then(Value::as_u64)
+        {
+            tokens["reasoning"] = json!(value);
+        }
         messages.push(json!({"provider":"bub","model":data["model"].as_str().unwrap_or("unknown"),"usage":tokens}));
     }
     messages
@@ -854,23 +891,37 @@ fn decode_artifact(artifact: &Value, records: &BTreeMap<String, Value>) -> Resul
 #[allow(clippy::too_many_lines)] // Decode, verify and write in one ordered pass with one gap inventory.
 pub fn reconstruct(input: &Path, output: &Path, run_id: Option<&str>) -> Result<Value> {
     ensure!(!output.exists(), "output already exists: {}", output.display());
-    let mut runs: BTreeMap<String, BTreeMap<String, Value>> = BTreeMap::new();
-    let mut gaps = Vec::new();
+    let mut decoded = Vec::new();
+    let mut decode_gaps = Vec::new();
     for path in protobuf_files(input)? {
-        if path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_some_and(|name| name.ends_with("-traces.pb") || name.ends_with("-metrics.pb"))
-        {
+        if path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with("-traces.pb") || name.ends_with("-metrics.pb")) {
             continue;
         }
-        let request = match ExportLogsServiceRequest::decode(fs::read(&path)?.as_slice()) {
-            Ok(request) => request,
-            Err(error) => {
-                gaps.push(format!("{}: protobuf decode: {error}", path.display()));
-                continue;
-            }
-        };
+        match ExportLogsServiceRequest::decode(fs::read(&path)?.as_slice()) {
+            Ok(request) => decoded.push(json!({"file": path.display().to_string(), "signal": "logs", "data": serde_json::to_value(request)?})),
+            Err(error) => decode_gaps.push(format!("{}: protobuf decode: {error}", path.display())),
+        }
+    }
+    reconstruct_from_decoded(&decoded, output, run_id, decode_gaps)
+}
+
+/// Reconstruct from decoded OTLP batches. The Python viewer uses this entry point
+/// after retaining decoded batches across polling cutoffs, so protobuf decoding
+/// is not repeated for every published projection.
+pub fn reconstruct_from_decoded(
+    decoded: &[Value],
+    output: &Path,
+    run_id: Option<&str>,
+    mut gaps: Vec<String>,
+) -> Result<Value> {
+    ensure!(!output.exists(), "output already exists: {}", output.display());
+    let mut runs: BTreeMap<String, BTreeMap<String, Value>> = BTreeMap::new();
+    for batch in decoded {
+        if batch["signal"] != "logs" {
+            continue;
+        }
+        let request: ExportLogsServiceRequest = serde_json::from_value(batch["data"].clone())
+            .with_context(|| format!("decoded OTLP batch {} is invalid", batch["file"]))?;
         for resource in request.resource_logs {
             for scope in resource.scope_logs {
                 for record in scope.log_records {

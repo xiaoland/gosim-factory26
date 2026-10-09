@@ -31,6 +31,15 @@ I14_VARIANTS = {'pi-braid-i14', 'pi-braid-i14-cleaner', 'pi-braid-i14-reviewer',
                 'pi-braid-i14-cleaner-direct', 'pi-braid-i14-reviewer-direct'}
 
 
+def gateway_sources():
+    """One source closure for the selected gateway and its installed adapter."""
+    sources = {name: ROOT/'tooling/scripts'/name for name in
+               ('model_gateway_service.py', 'hackathon_gateway.py',
+                'hackathon_gateway_compat.py', 'responses_compat.py')}
+    sources['model_proxy_prepare.py'] = ROOT/'sources/model-proxy/prepare.py'
+    return sources
+
+
 def require_private_artifact(path):
     path = Path(path).resolve()
     if path.is_relative_to(ROOT) and subprocess.run(
@@ -127,6 +136,9 @@ def bundle_files(root):
         if resolved in ancestors:
             raise ValueError(f'参赛包链接形成循环：{directory}')
         for path in sorted(directory.iterdir()):
+            # Omit npm launch links before resolving them, as write_zip does.
+            if path.name == ".bin" and path.parent.name == "node_modules":
+                continue
             if is_metadata_path(path.name):
                 continue
             target = path.resolve()
@@ -143,6 +155,25 @@ def bundle_files(root):
 
 def write_zip(bundle, output, backend, records, capabilities=None, *, persist_manifest=True):
     bundle = bundle.resolve()
+    # A public thin package deliberately installs the runtime after delivery;
+    # its package root has no runtime tree for this producer-side check.  Keep
+    # the frozen-runtime check for legacy/prebuilt packages and let the common
+    # installer consume the submitted lock and patch set for thin packages.
+    if backend == 'pi' and (bundle / 'runtime').is_dir():
+        from tooling.scripts.runtime import require_pi_retry_source
+        require_pi_retry_source(bundle/'runtime')
+    if (capabilities or {}).get('e2e') is True:
+        from tooling.scripts.e2e_runtime import require_e2e_addon
+        addon = bundle / 'runtime/e2e'
+        if addon.is_dir():
+            require_e2e_addon(addon)
+        else:
+            # Thin public packages install the addon from these inputs inside
+            # the execution container; do not require generated node_modules
+            # at delivery time.
+            for member in ('package.json', 'package-lock.json', 'addon-source.json'):
+                if not (bundle / 'inputs/e2e' / member).is_file():
+                    raise ValueError(f'thin E2E package missing {bundle / "inputs/e2e" / member}')
     if (bundle/'.private').is_dir():
         require_private_artifact(output)
     files = [path for path in bundle_files(bundle)
@@ -207,6 +238,9 @@ def copy_file(source, destination):
 
 def assemble(source, destination, runtime, skill_source, skills):
     """Copy selected files. This boundary does not parse profiles or choose behavior."""
+    from tooling.scripts.runtime import require_pi_retry_source
+    from tooling.scripts.pi_extensions import copy_extensions
+    require_pi_retry_source(runtime)
     destination=Path(destination);destination.mkdir(parents=True)
     source=Path(source)
     if (source/'materials.json').exists():
@@ -215,15 +249,16 @@ def assemble(source, destination, runtime, skill_source, skills):
         if item.name in {'__pycache__','variant.json','build.py'}: continue
         if item.is_dir(): shutil.copytree(item,destination/item.name)
         else: shutil.copy2(item,destination/item.name)
+    copy_extensions(source.name, destination/'extensions')
     shutil.copy2(ROOT/'tooling/linux/exp_checkpoint.py',destination/'exp_checkpoint.py')
     if source.name in I14_VARIANTS:
         shutil.copy2(ROOT/'tooling/linux/recover_completed.py',destination/'recover_completed.py')
     support=destination/'support';support.mkdir()
-    for name in ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','model_budget.mjs','runtime_resources.py'):
+    for name in ('agent_support.py','resource_monitor.py','braid_runtime.py','core.py','harness_layout.py','execution_context.py','state_writer.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'tooling/scripts'/name,support/name)
     if source.name in I14_VARIANTS:
-        for name in ('hackathon_gateway.py', 'hackathon_gateway_compat.py', 'responses_compat.py'):
-            shutil.copy2(ROOT/'tooling/scripts'/name, support/name)
+        for name, path in gateway_sources().items():
+            shutil.copy2(path, support/name)
         shutil.copy2(ROOT/'materials/model-gateway.json', support/'model-gateway.json')
     if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i11', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
@@ -319,6 +354,7 @@ def _selected_asset(value):
 
 def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=None, otlp_dependencies=None, provider_env=None, application_seed=None, gateway_routes=None):
     """Describe the same literal material selection consumed by variant build.py."""
+    from tooling.scripts.pi_extensions import extension_identity
     source = ROOT/'variants'/variant
     declaration=json.loads((source/'materials.json').read_text())
     if declaration.get('kind')!='factory26.harness.variant' or declaration.get('schema_version')!=1:
@@ -327,6 +363,9 @@ def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=No
     if not isinstance(skills,list) or any(not isinstance(name,str) for name in skills):
         raise ValueError('variant material skills must be declared names')
     runtime, runtime_binding = _selected_asset(runtime)
+    if variant.startswith('pi-') or variant == 'I14-dx-test':
+        from tooling.scripts.runtime import require_pi_retry_source
+        require_pi_retry_source(runtime)
     for member in declaration['runtime_files']:
         if not (runtime/member).is_file():
             raise ValueError('runtime lacks variant-required member: '+member)
@@ -334,12 +373,14 @@ def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=No
     # The declarative build selection and the final source bytes both affect production.
     variant_source = {name: identity for name, identity in _tree_identity(source).items()
                       if name not in {'variant.json','build.py'}}
-    dependencies = {'variant': variant, 'variant_source': variant_source,
+    dependencies = {'native_extensions': extension_identity(variant),
+                    'extension_selector': _tree_identity(ROOT/'tooling/scripts/pi_extensions.py'),
+                    'variant': variant, 'variant_source': variant_source,
                     'builder': _tree_identity(Path(__file__)), 'runtime': ({'binding':{key:value for key,value in runtime_binding.items() if key!='store'}} if runtime_binding else _tree_identity(runtime)),
                     'skills': {name: _tree_identity(skill_source/name) for name in skills},
                     'shared_skills': ({'binding':{key:value for key,value in skill_binding.items() if key!='store'}} if skill_binding else _tree_identity(skill_source)),
                     'support': {name: _tree_identity(ROOT/'tooling/scripts'/name) for name in
-                                ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','execution_context.py','execution_bootstrap.py','experiment_entry.py','state_writer.py','model_budget.mjs','runtime_resources.py')},
+                                ('agent_support.py','resource_monitor.py','braid_runtime.py','core.py','harness_layout.py','execution_context.py','execution_bootstrap.py','experiment_entry.py','state_writer.py','model_budget.mjs','runtime_resources.py')},
                     'checkpoint': _tree_identity(ROOT/'tooling/linux/exp_checkpoint.py'),
                     'prepared_executor': _tree_identity(ROOT/'tooling/linux/recover_completed.py'),
                     'collector': {name:_tree_identity(ROOT/'lab'/name) for name in ('__init__.py','otlp.py','control.py','records.py','exp/__init__.py','exp/core.py','exp/telemetry.py','exp/state.py','exp/artifacts.py','arc_bench/__init__.py','arc_bench/workspace_archive.py')},
@@ -367,7 +408,7 @@ def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=No
     if application_seed is not None and 'application_seed' not in declaration['inputs']:
         raise ValueError('variant does not declare application_seed input')
     if gateway_routes is not None or provider_env is not None:
-        dependencies['gateway_code']={name:_tree_identity(ROOT/'tooling/scripts'/name) for name in ('model_gateway_service.py','hackathon_gateway.py','hackathon_gateway_compat.py','responses_compat.py')}
+        dependencies['gateway_code']={name:_tree_identity(path) for name,path in gateway_sources().items()}
         dependencies['gateway_catalog']=_tree_identity(ROOT/'materials/model-gateway.json')
     return dependencies
 
@@ -430,7 +471,7 @@ def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
     components['skills']=bound_component('skills',skill_binding) if skill_binding else _component(cache,'skills',skill_identity,skill_files)
     otlp_source=_selected_asset(otlp_dependencies)[0] if otlp_dependencies is not None else None
     otlp=_otlp_dependencies(cache,otlp_source)
-    support_names=('agent_support.py','braid_runtime.py','core.py','harness_layout.py',
+    support_names=('agent_support.py','resource_monitor.py','braid_runtime.py','core.py','harness_layout.py',
                    'execution_context.py','execution_bootstrap.py','experiment_entry.py','state_writer.py','model_budget.mjs','runtime_resources.py')
     support_dependencies={name:dependencies['support'][name] for name in support_names}
     support_dependencies.update(checkpoint=dependencies['checkpoint'],recover=dependencies['prepared_executor'],
@@ -459,6 +500,10 @@ def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
         support_readback()
     components['support']=_component(cache,'support',support_dependencies,support_files)
     def variant_files(target):
+        from tooling.scripts.pi_extensions import extension_identity, copy_extensions
+        if (extension_identity(variant) != dependencies['native_extensions']
+                or _tree_identity(ROOT/'tooling/scripts/pi_extensions.py') != dependencies['extension_selector']):
+            raise ValueError('selected Pi extensions changed since frozen selection')
         if (source/'package-manifest.json').exists() or (source/'replay-manifest.json').exists():
             raise ValueError('new definition source must not contain a historical delivery manifest')
         if _tree_identity(ROOT/'lab/arc_bench/agent_runtime')!=dependencies['sdk_wrapper'] or _tree_identity(ROOT/'lab/arc_bench/__main__.py')!=dependencies['sdk_exporter']:
@@ -470,11 +515,17 @@ def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
             if item.name in {'__pycache__','variant.json','build.py'}: continue
             if item.is_dir(): shutil.copytree(item,target/item.name,copy_function=copy_file)
             else: shutil.copy2(item,target/item.name)
+        copied_extensions = copy_extensions(variant, target/'extensions')
+        if copied_extensions != dependencies['native_extensions']:
+            raise ValueError('produced Pi extensions differ from frozen selection')
         subprocess.run([sys.executable,'-B','-m','lab.arc_bench','runtime','export','--output',str(target/'arc-runtime.pyz')],
                        cwd=ROOT,check=True,stdout=subprocess.DEVNULL)
+        if (extension_identity(variant) != dependencies['native_extensions']
+                or _tree_identity(ROOT/'tooling/scripts/pi_extensions.py') != dependencies['extension_selector']):
+            raise ValueError('Pi extension closure changed during component production')
         if {name:identity for name,identity in _tree_identity(source).items() if name not in {'variant.json','build.py'}}!=observed:
             raise ValueError('variant changed during production')
-    variant_dependencies={key:dependencies[key] for key in ('variant','variant_source','sdk_wrapper','sdk_exporter')}
+    variant_dependencies={key:dependencies[key] for key in ('variant','variant_source','sdk_wrapper','sdk_exporter','native_extensions','extension_selector')}
     components['agent']=_component(cache,'agent',variant_dependencies,variant_files)
     if 'e2e-runtime' in declaration['definition_roles']:
         addon,addon_binding=_selected_asset(e2e_runtime or runtime/'e2e')
@@ -504,7 +555,7 @@ def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
         def gateway_files(target):
             target.mkdir()
             for name,expected in dependencies['gateway_code'].items():
-                source=ROOT/'tooling/scripts'/name
+                source=gateway_sources()[name]
                 if _tree_identity(source)!=expected: raise ValueError('native gateway source changed since selection')
                 shutil.copy2(source,target/name)
             if _tree_identity(ROOT/'materials/model-gateway.json')!=dependencies['gateway_catalog']:

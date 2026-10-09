@@ -1,0 +1,13 @@
+--- a/dist/modes/rpc/rpc-mode.js
++++ b/dist/modes/rpc/rpc-mode.js
+@@ -348,6 +348,10 @@
+             case "stop_owned_execution": {
+                 return success(id, "stop_owned_execution", managedRuntime ? await managedRuntime.cleanupOwnedExecution({ skipSelf: true }) : { status: "unknown", reason: "managed_runtime_unavailable" });
+             }
++            case "yield_stoppable_services": {
++                const state = managedRuntime ? await managedRuntime.yieldStoppableServices(session) : { status: "unknown", reason: "managed_runtime_unavailable" };
++                return success(id, "yield_stoppable_services", { managed_state: state });
++            }
+             case "get_state": {
+                 const state = {
+                     model: session.model,

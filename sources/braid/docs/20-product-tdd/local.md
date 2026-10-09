@@ -2,7 +2,7 @@
 
 `braid local request.json` 将一个已有本地 Git 仓库中的需求建立为根 Issue #1，沿现有 Context projector、SQLite queue、Agent Group、SessionManager 和 provider adapter 执行。它没有固定设计/实施阶段数，不调用 GitHub HTTP 服务，也不把 provider 单轮正常结束或工作项状态解释为应用完成。
 
-面向 Agent 的稳定入口只介绍熟悉的协作对象：使用 `braid` CLI 操作 Issue / PR，常用操作沿用 GitHub CLI 的形式；Issue 和 PR 可以指派给其他 Agent，成员通过正文、评论和回复协作。创建未指派的工作项不启动独立成员；指派才建立该项的成员与工作区，创建回执应明确显示实际负责人或未指派状态。维护者所需的 queue、session、provider 和 Context 生命周期仍记录在本文后续章节，但不作为使用 CLI 前必须理解的概念，稳定指令说明 Issue 负责需求、设计和验收依据，实施前指派关联 PR，由独立 PR 负责人承担计划、排障、实现与验收；它不规定这些工作的具体方法，也不指导原生子代理使用。
+面向 Agent 的稳定入口只介绍熟悉的协作对象：使用 `braid` CLI 操作 Issue / PR，常用操作沿用 GitHub CLI 的形式；Issue 和 PR 可以指派给其他 Agent，成员通过正文、评论和回复协作。创建未指派的工作项不启动独立成员；指派才建立该项的成员与工作区，创建回执应明确显示实际负责人或未指派状态。维护者所需的 queue、session、provider 和 Context 生命周期仍记录在本文后续章节，但不作为使用 CLI 前必须理解的概念，稳定指令说明 Issue 负责能力成果的解释、设计、验收与剩余义务，PR 承载实施候选，实施前指派关联 PR，由独立 PR 负责人承担候选的计划、排障、实现与自验；它不规定这些工作的具体方法，也不指导原生子代理使用。
 
 Braid将当前Issue/PR身份及职责、成员名、通用对象协议与调用方profile拼成一份instructions。通用协议按工作资料、讨论整理、通知与读取、指派交接和CLI差异组织；指派即启动独立成员、published head与在途工作不同、正文edit为全量替换、root resolve与分支hide、订阅和Closes语义只在此处说明。增量评论本身不要求公开回复；成员可在持续保留的clone文件中保存私有状态；交接依赖的共同文档和任务材料随适用提交发布，description 解释本工作项的目标、交付差异、依赖、仍欠义务与材料入口，讨论保留本次变化。调用方profile负责自身配方政策与交付条件，避免再复制通用协议或原生工具教程；具体工作事实归Context和事件消息。已有原生历史不因指令文案去重而改写。
 
@@ -49,7 +49,7 @@ braid issue list --state open --limit 30 --json number,title,state
 braid pr list --state all --limit 100 --json number,title,state,headRefName
 braid issue subscribe 1
 braid assignee list
-braid pr create --issue 1,2 --title "Implement design" --body-file request.txt --assignee glm-1 --json
+braid pr create --issue 1 --title "Implement design" --body-file request.txt --assignee glm-1 --json
 braid pr create --issue 1 --title "Review published work" --body "Already implemented" --head refs/heads/issue-1
 braid issue edit 2 --add-assignee deepseek-1
 braid comment hide 8 --reason "已由后续信息替代"
@@ -74,15 +74,22 @@ ready/merge 保留原 `head_commit`/`draft`、`merge_commit` JSON 字段，并�
 
 Issue/PR 的正文保存本项当前任务、交付与证据入口，不维护其他工作项或分支不断变化的全局状态镜像。当前集成状态由整合任务维护，并链接各项历史成果。
 
-Agent 通过 GitHub 式 assignee 认识协作者。`braid assignee list [--json]` 只列出当前可选择的具体成员名及职责。`issue/pr create --assignee MEMBER` 与 `issue/pr edit ID --add-assignee MEMBER` 直接选择目录中的成员，成功后公开负责人和联系地址都使用输入的同一个名字；裸前缀 `glm`、`deepseek` 不是合法的新指派输入。创建时省略 assignee 保持未指派。目录可变，实际指派在 SQLite immediate transaction 内重新核对并认领候选；已占用、过期和未知名字都拒绝并返回最新具体候选，不静默换人。
+Agent 通过 GitHub 式 assignee 认识协作者。`braid assignee list [--json]` 列出每类可指派职责的下一位可认领新成员及职责，而非现有全部成员名单或并发名额；成功指派后，其它工作项重新查询目录，可取得同类职责的下一位新成员。成功认领后同职责自然提供下一位成员，名称机制不设成员总数或并发名额；目录不解除本次运行的模型会话或执行资源约束。`issue/pr create --assignee MEMBER` 与 `issue/pr edit ID --add-assignee MEMBER` 认领该职责的成员。输入当次候选时采用该名字；输入本 run 已认领的旧名字时，从已有工作项或 assignment 事实唯一解析其 Profile，在 SQLite immediate transaction 内取得并认领该职责的当前新候选。该选择与对象写入同一事务，因此并发调用不会认领同一名字；不按前缀猜测未知或未来名字，不将 root/reviewer 等不符合当前操作资格的身份当作普通实施候选。成功回执的 `assignees` 给出实际负责人，后续联系和移除使用此实际名字。裸前缀 `glm`、`deepseek`、未知或历史职责歧义仍明确拒绝。创建时省略 assignee 保持未指派。
 
-`--remove-assignee MEMBER` 精确匹配当前具体成员。已有负责人时，选择另一候选必须在同一命令移除当前成员；remove 当前成员并 add 新候选是原子改派，即使两位成员来自同一配方也会更换负责人。重复 add 当前成员，或者同一命令 remove 并 add 同一当前成员，均视为指派无变更，不创建新会话、不递增 assignment revision；同一命令的标题、正文和父关系修改仍正常生效。错误 remove、不可用候选和无效组合在任何对象、revision、event 或 wake 写入前拒绝。PR request-id 重试直接返回首次实际创建结果及现有负责人，不因首次候选已被认领而失败，也不认领另一候选。
+`--remove-assignee MEMBER` 精确匹配当前具体成员。若当前已无负责人且命令仅移除，不替换为另一负责人，目标已经成立，返回无新增变更的自动回执；有不同当前负责人时仍拒绝。已有负责人时，选择另一候选必须在同一命令移除当前成员；remove 当前成员并 add 新候选是原子改派，即使两位成员来自同一配方也会更换负责人。重复 add 当前成员，或者同一命令 remove 并 add 同一当前成员，均视为指派无变更，不创建新会话、不递增 assignment revision；同一命令的标题、正文和父关系修改仍正常生效。错误 remove、不可用候选和无效组合在任何对象、revision、event 或 wake 写入前拒绝。PR request-id 重试直接返回首次实际创建结果及现有负责人，不因首次候选已被认领而失败，也不认领另一候选。
+
+自动采用、复用与恢复会在当次默认文本及 JSON 回执中明确说明。`automatic_result` 包含 action、requested、actual、reason、changed、additional_write；提交异常恢复还保留 original_error。只有从实际已认领成员的唯一职责选择另一当前候选才报告自动选择，普通名字正规化不冒充候选变化。该字段不持久化，后续 view 不投影此前自动动作。
 
 创建与改派回执给出已登记的具体负责人；Issue create 的 JSON 保留 id 并包含 assignees、assignment_note，PR create 同样返回负责人。回执只表示责任关系已登记，不表示模型已经开始或完成。工作完成或原生会话休眠不撤销指派；当前成员仍可通过明确地址收到后续消息。取消指派撤销责任，不能用于回收空闲执行资源，原成员名字不再作为新候选返回。
 
 重新指派的单个事务核对具体候选、保存目标、递增 assignment revision、fence 旧 writer 并排队一次 Assign/Wake。runtime 在事务外关闭自己持有的旧 provider 会话；关闭完成前新 owner 不能建立 assignment，provider 关闭失败时保持 stopping/pending。完成后把原工作项的 clone 交给新成员，更新其中的本地 Git 提交身份；讨论、未提交文件和既有提交继续保留。Context 重建及恢复保留逻辑成员身份，只有明确改派才更换成员。Issue 与 PR 的 canonical object、list/view JSON 投影当前具体 `assignees`；Agent 可见的 Context 和 instructions 给出当前成员，候选目录按需查询，界面只展示具体成员名和职责，不讲内部配方或 Profile。评论、reaction 和通知按当时写入者的成员名展示；原始 UUID 映射留给宿主证据。Agent runtime 隐藏 `profile list/view`、物理 session 状态及内部 profile/model/provider/digest/generation/revision 字段；无 runtime 标记的宿主诊断仍保留这些信息。
 
 在 Agent runtime 中，`status` 列出 Issue/PR 的编号、标题、状态、公开负责人及当前指派最近一次失败、结果未知或恢复暂不可用的执行事实；`status --json` 保留 `items` 外壳并为每项输出 `kind`、`id`、`title`、`state`、`assignees`、`execution`。`execution` 只含结果、发生时间和至多 200 字符的首条错误摘要；没有当前故障时为 null。Issue/PR view 提供同一事实，`--json execution_error` 可读取去除 UUID 的完整错误文本。原始错误持久保存在 `turns.error` 或已有恢复字段中，由宿主数据库诊断取得。失败事实查询不依赖 Profile 的通知开关；上下文压力及具体错误仍保存到既有状态记录。最近尝试是执行事实，不判断 Issue/PR 是否完成，也不自动改派或广播评论；后续成功终态或成功恢复会清除当前故障投影。无 runtime 标记时，宿主仍获得原有执行计数、物理 session 和诊断字段；内部 `local::status` 也继续为调度与结果判定生产同一摘要。
+
+Agent与宿主均可用 `braid execution issue ID`、`braid execution pr ID`、`braid execution review PR REQUEST` 查询工作项执行；`--json`输出紧凑JSON，默认输出完整缩进JSON。它是只读观察，不启动、恢复或停止成员，也不创建验收checkout。普通对象view中的execution故障字段保持原合同。新增查询从当前最后一个assignment取得member、generation和lifecycle，保留退任执行事实，再按该assignment的agent取得最新provider session、turn、reset、待处理wake batch和worktree；不会把前任会话冒充后任会话。保留具体turn及恢复错误。physical记录按provider session ID和agent身份匹配，只返回原生记录、指令与上下文路径，不默认展开rollout。
+
+review查询保留请求状态、责任版本、冻结base/head、latest_request、is_latest_request、候选checkout、实际execution_node和适用性，按review_view解析的责任对象查询执行，不读取历史pr_review_sessions。latest_request仅表示最后创建的请求；改派中的review.member与最后assignment.member可能不同，旧成员仍在停止不等于新成员已启动。observed_at表示查询时刻；状态来自Braid最后记录，不证明OS进程存活、模型正产生输出或产品取得进展。缺失session、turn、checkout或physical证据用null表示，不伪造健康状态。未发布改动通过worktree.path的只读Git及文件查询取得，原生具体动作与后台任务沿返回证据入口定向核查。此接口不依赖status.json的刷新，也不读取凭据或原生home中的配置。
+
 
 Issue 与 PR 的普通评论均支持 `comment ID --reply-to COMMENT_ID`（完整前缀是 `issue comment` 或 `pr comment`）。回复必须指向同一 work-item 中已有评论，跨项错误指出实际所属项和单条读取入口；删除只保留墓碑，不删除回复关系。`comment view ID` 直接读取指定评论时显示已解决讨论中仍可见的正文；`--thread` 浏览整段讨论时仍折叠已解决历史。自身或任一祖先隐藏的正文继续隐藏，输出给出 `--include-hidden` 的读取命令；该参数也可展开整串的隐藏及 resolved 历史，无法恢复已删除正文。 单条读取在 SQL 中直接限定 Comment ID，并从完整祖先链计算最近隐藏祖先，不依赖已筛选的评论切片。`comment view ID --json` 保持数组形状，精准单条含一项，`--thread` 是整串数组；支持 `--json database_id,body`、`--json deliveries` 等字段选择，未知字段报出合法字段。全文 body 不自动截断，`--thread` 仍受原可见性规则控制。
 
@@ -98,7 +105,7 @@ CLI 在同一 SQLite immediate transaction 内通过执行身份检查当前 gro
 
 ## 固定候选 review
 
-`pr ready` 只观察已发布 head 并切换 draft。PR 当前负责人通过 `pr request-review PR [--issue ISSUE] --request-id KEY` 另行请求验收；该动作不改 draft、PR assignee 或实施工作区。只有恰好一个关联 Issue 时才默认选它，零个或多个关联要求明确处理；所选 Issue 必须关联该 PR 且有当前可用负责人。同 key 重试读取首次请求，不冻结新候选或重新通知。
+`pr ready` 只观察已发布 head 并切换 draft。PR 当前负责人通过 `pr request-review PR [--issue ISSUE] --request-id KEY` 另行请求验收；该动作不改 draft、PR assignee 或实施工作区。只有恰好一个关联 Issue 时才默认选它，零个或多个关联要求明确处理；所选 Issue 必须关联该 PR 且有当前可用负责人。同 key 重试读取首次请求，不冻结新候选或重新通知。若 unlink 后请求所绑定 Issue 不再 active，该请求会明确不适用，不能依其结论合并；保存结论与原责任不改，Pending 请求仍沿原责任完成或取消。
 
 `review_requests` 是请求、责任和结论的权威。请求保存源 PR、验收 Issue、请求成员及实际 agent/turn（宿主明确输入标为 external），以及 origin 的规范 base/head ref、完整 commit、head tree、Issue 正文 revision、原文和内容 digest。正文中的材料入口一并冻结，但不宣称追踪入口指向的全部外部内容版本。Git 在创建请求时以 ref 事务核验 base/head，并保留 `refs/braid/reviews/ID/base|head`；强推或删除源分支后仍可取得原候选。Git 和 SQLite 不能原子提交，数据库失败可能留下可追溯的独立保留引用，重试不会静默覆盖它们。
 
@@ -106,7 +113,13 @@ CLI 在同一 SQLite immediate transaction 内通过执行身份检查当前 gro
 
 验收 Issue 当前负责人可用 `assignee list --reviewer` 选择下一位专门成员，并通过 `pr review assign PR REQUEST --assignee MEMBER` 只改变该请求的责任。`reviewer-only` Profile 从普通目录及 Issue/PR driver 排除，只进入 Review driver；根 Profile 另按 root-only 原契约处理。委派使用请求节点的 assignment、wake、队列、provider session、CLI 绑定与 Context reset，PR 实施者继续持有原节点。委派后结论只能由当前 review assignment 提交；Issue 当前负责人仍可查看、讨论、继续委派或明确 cancel。责任 revision 不匹配的在途 writer 被拒绝，Completed 不能重新提交结论或恢复成新候选，后续修复使用新请求。
 
-本地冻结 Profile 集合中任一 Profile 带 `single-reviewer-per-pr` tag 时，该 run 启用单 PR 串行 review。不同 PR 仍可并行。同一 PR 的 Pending 请求占据唯一 review 槽位；Completed/Cancelled 请求只有其 Braid assignment 到达 `retired` 后才释放执行槽位，`blocked`、`stopping` 或原生单轮结束不能代替物理 teardown。新 request、review assign 与实际 assignment 启动都检查此约束，冲突错误包含旧请求编号和 lifecycle，不自动取消旧工作。同 request、同成员的重复 assign 不创建第二责任；已有 assignment 尚未 retired 时不能改派给另一成员。候选变更应明确结束旧请求、等待 teardown，再冻结新请求并认领新成员名，不跨请求复用 login。该策略下 conclude/cancel 先持久化结论或原因，再清除当前责任并发送既有 Unassign；队列 debounce 后由原 SessionManager 停止旧会话，物理停止成功后才退休 assignment。显式结束时 blocked assignment 及其尚未退休的原生 session 同样进入停止路径，保留原错误而不将 blocked 当作停止证明。reviewer 应先清理自己启动的验收进程，再以 conclude 作为最后动作。debounce 不承诺 CLI stdout 已交付；结果以事务保存的结论为准，可用 review view 核实，随后原生 turn 被 interrupted 不回滚结论。没有该 tag 的既有 run 保留原行为。
+本地冻结 Profile 集合中任一 Profile 带 `single-reviewer-per-pr` tag 时，该 run 禁止同 PR 同时两个 reviewer Braid Agent Session 验收；不同 PR 仍可并行。reviewer 是具体 assignee，不是 Profile。每个候选保持独立 request、冻结引用、需求快照、责任、checkout 和结论。新请求默认交给验收 Issue 当前负责人，由其选择下一位具体 reviewer 指派；不会自动继承上一请求的 reviewer 或原生会话。
+
+conclude/cancel 终结本次候选并清除专门 reviewer 的指派，沿已有 Unassign 流程停止其 Session。完成或取消的请求仍占用该 PR 的评审槽，直到对应 assignment 实际退役；idle、sleeping、blocked 和 stopping 都不能提前放行下一候选。request、assign 与实际 materialization 三个边界都检查同 PR 其它 Pending 请求及未退役的 reviewer assignment。旧 request-id 重试仅返回保存的请求，不创建或恢复 Session。
+
+验收 Issue 负责人可对当前 Pending 请求用 `pr review assign` 改派。同成员重复指派幂等。尚未指派的请求允许已知旧 reviewer 名按其唯一历史 Profile 原子认领当前新候选，回执给出实际 member；已有 reviewer 的请求若输入已认领旧名，事实唯一确认同一 Profile、当前责任有效且无未解决执行失败时，自动保留当前 reviewer，并说明 retained_current_member；不新增改派、通知、关闭或责任代次，也不判断执行健康。不同 Profile、未知或歧义仍拒绝；显式选择当次新候选才改派。改派沿既有 replace_assignee 停止屏障撤销旧写者，旧执行停止后创建新的 assignment_id、agent_id 及原生会话，即使同 Profile 也不恢复前任 Session。新 reviewer 使用该请求、该责任版本的独立冻结 checkout，不接管前任脏工作树。canonical、reset/resume 和工作区校验均读取所属 request，不再通过 PR 锚切换候选或接受另一请求的历史 checkout。
+
+此前冻结材料已包含 schema 19，保留原迁移及 checksum 以免破坏历史数据库版本；`pr_review_sessions` 不再被运行逻辑读取或写入，不提供跨候选复用。旧材料及在途执行不热改；历史未退役 reviewer 仍受到同 PR 停止门控，不能绕过它启动另一 reviewer。没有该 tag 的 run 保持原有请求级行为。
 
 此约束只覆盖 Braid 登记的责任与原生会话。独立浏览器、应用服务及验收子进程的可写状态隔离和收口仍由 reviewer 执行并保留证据；Braid 不因此宣称管理了任意子进程生命周期。
 
@@ -180,7 +193,7 @@ PR 正文中可用 `Closes #N`、`Fixes #N`、`Resolves #N` 声明合并后关�
 旧 prepared intent 没有声明记录时不追溯推断，已关闭 Issue 不重复通知；普通 PR close、冲突、head/CAS 不匹配或非默认分支合并不关闭 Issue。
 子 PR 合入 develop 的关闭声明不随之后 develop→main 合并自动追溯，最终 PR 可明确列出所关闭的 Issue。
 
-Issue close 只要求原因，不检查其它工作项、已合入 PR 或交付树；close/merge 不打断当前执行，已关闭工作项的既有会话完成收尾后休眠。并行到达的评论保留在既有 batch，收尾后需要时重新激活当前成员。根 Issue 开放且其成员连续空闲五分钟时，Braid 以自己的名字发评论“请检查当前工作进展。”；调用方可通过可选 `root_check_messages` 文本列表轮换提醒，省略或空列表保持默认文字，空白成员被拒绝。每次提醒按已提交的根检查活动数选择下一条；同一事务隐藏此前所有仍可见的根检查提醒，再写入新评论、活动和一次投递。旧提醒由 issue:1 上 Braid 系统作者及对应 `commented / root progress check` 创建活动共同识别，不能只凭作者或正文判断。隐藏只改变旧提醒自身的 lifecycle、原因、revision 与更新时间，其后代正文由祖先可见性共同隐藏，并记录 Braid 的 hide 活动；保留原正文、回复和讨论解决边界，不触发额外通知。其它 Braid 状态评论与成员回复的持久态保持原状。事务任一步失败均回滚，不能先永久隐藏旧提醒却没有新提醒。重启接续、隐藏或删除评论不会重置轮换。提醒内容由调用方决定，Braid不内置工作方法。评论留在根 Issue 历史中，仅向当前根负责人投递，不唤醒其他关注者。已有输入、执行或恢复中不提醒。根开放且可继续执行时，local 等待后续检查，不因暂时静止而退出。根与所有 Issue 均关闭、所有 PR 均合并或关闭且没有未解决合并时，local 停止派发普通讨论输入；已经开始的执行、正在物化的会话与 reset continuation 自然收尾后才返回 quiescent。末轮可以更正状态或重开工作项，此时继续正常派发。边界后的普通通知保留在数据库，明确重开工作范围后可继续处理，不再延长本次执行；应用完成仍由调用方判断。启动恢复时同时核对对象范围与遗留执行，不能仅凭 CLOSED 跳过未完成执行。其它情况下，必要物化或恢复受阻返回 blocked。状态与工作树保留，可用相同请求恢复。
+Issue close 只要求原因，不检查其它工作项、已合入 PR 或交付树；close/merge 不打断当前执行，已关闭工作项的既有会话完成收尾后休眠。并行到达的评论保留在既有 batch，收尾后需要时重新激活当前成员。根 Issue 开放且其成员连续空闲十五分钟时，Braid 以自己的名字发评论“请检查当前工作进展。”；调用方可通过可选 `root_check_messages` 文本列表轮换提醒，省略或空列表保持默认文字，空白成员被拒绝。每次提醒按已提交的根检查活动数选择下一条；同一事务隐藏此前所有仍可见的根检查提醒，再写入新评论、活动和一次投递。旧提醒由 issue:1 上 Braid 系统作者及对应 `commented / root progress check` 创建活动共同识别，不能只凭作者或正文判断。隐藏只改变旧提醒自身的 lifecycle、原因、revision 与更新时间，其后代正文由祖先可见性共同隐藏，并记录 Braid 的 hide 活动；保留原正文、回复和讨论解决边界，不触发额外通知。其它 Braid 状态评论与成员回复的持久态保持原状。事务任一步失败均回滚，不能先永久隐藏旧提醒却没有新提醒。重启接续、隐藏或删除评论不会重置轮换。提醒内容由调用方决定，Braid不内置工作方法。评论留在根 Issue 历史中，仅向当前根负责人投递，不唤醒其他关注者。已有输入、执行或恢复中不提醒。根开放且可继续执行时，local 等待后续检查，不因暂时静止而退出。根与所有 Issue 均关闭、所有 PR 均合并或关闭且没有未解决合并时，local 停止派发普通讨论输入；已经开始的执行、正在物化的会话与 reset continuation 自然收尾后才返回 quiescent。末轮可以更正状态或重开工作项，此时继续正常派发。边界后的普通通知保留在数据库，明确重开工作范围后可继续处理，不再延长本次执行；应用完成仍由调用方判断。启动恢复时同时核对对象范围与遗留执行，不能仅凭 CLOSED 跳过未完成执行。其它情况下，必要物化或恢复受阻返回 blocked。状态与工作树保留，可用相同请求恢复。
 
 Braid 不因收敛而封存运行。每次退出时从当前 delivery ref 读取确切 commit，供调用方决定如何使用；失败时也尽可能记录该提交，但不以提交是否存在覆盖原始错误。旧版本已封存的状态仍保持只读且拒绝恢复。
 
@@ -224,6 +237,10 @@ Braid 撤销旧 CLI 身份，将来源 provider 标识记录为本次启动已�
 `offline-resumes/` 记录宿主断言和受影响的旧 provider 标识；这不冒充旧模型已处理重建通知。
 没有此断言的普通启动不把“没有本进程句柄”解释为“旧执行已停止”。
 
+首次Pi创建可能在会话身份返回前失败，没有provider session可供普通resume查询。离线接续还会检查当前OPEN工作项的最新blocked指派：成员、Profile及指派版本仍匹配，保留工作树存在，且没有后续会话或Context reset。物理记录须明确为无身份的失败；旧格式的unknown仅兼容明确的Pi `get_state`启动超时，不泛化为任意unknown。Braid保留原失败原因和工作树，退役失败代次，通过原激活输入重新物化。每次离线接续准备只产生一次对应的激活重放；再次失败仍返回blocked，不在同次执行中循环创建，也不把新创建称为已恢复原生历史。
+
+Pi适配记录RPC开始、提交、响应到达和完成／失败，附请求ID、方法、期限及耗时；提交与首条stdout还记录自进程启动以来的耗时。迟到或无pending request的响应单独记录。请求提交只证明已写入本地管道，不证明Pi已处理；首条stdout也不单独证明RPC就绪。诊断启动超时时应将这些外部时间与Pi内部扩展加载计时对照，而不是仅凭模块导入耗时延长期限。
+
 普通协作输入经既有 debounce 合并为 runnable 批次后，可通过原生 steer 进入仍在工作的成员，不必等待整段执行结束。
 原生拒收时保留待投递事实；接收回执只表示进入原生队列，不代表采样、理解或已处理。
 CLI文本将消息投递回执与评论正文分区，`delivered`展示为“会话已接受评论输入”，不将接收状态展示成成员的任务完成声明；JSON仍在`deliveries`中保留原状态和原因。
@@ -260,6 +277,13 @@ python3 -c 'import json; from pathlib import Path; print(json.loads(Path("/tmp/c
 ```
 不增加空正文禁令、内容长度阈值、写前确认或 shell 解析器。
 
-`braid assignee list [--json]` 是本地扩展，对应 GitHub repository assignees API 的用途。目录返回每个可指派配方的下一位具体候选成员及职责，排除 root-only和reviewer-only；`--reviewer`只返回专门reviewer目录；读取无写入，不附加到上下文或固定指令。实际输入须使用当次仍可认领的候选名字。
+`braid assignee list [--json]` 是本地扩展，对应 GitHub repository assignees API 的用途。目录返回每个可指派配方的下一位具体候选成员及职责，排除 root-only和reviewer-only；`--reviewer`只返回专门reviewer目录；读取无写入，不附加到上下文或固定指令。普通新指派和未指派review请求可使用当次候选，或职责可从本run历史事实唯一确定的旧已认领名字；实际身份以成功回执为准。
 
 Bub 的独立进程、指令插件、持久化首轮 Context、Deferred 忙时输入及 Unknown 取消边界见 [原生 ACP adapter](app-server.md#bub-原生-acp-adapter)。本地入口仍只组成一个 adapter 类型；不在本次接入中改变队列调度或增加跨 adapter 混用。
+
+Review 操作遇到已保存的同 request-id 请求或已登记 checkout 时返回原对象，并说明复用；不会新增候选或重置 checkout。已完成结论要求 verdict、正文、证据完全一致；已取消请求要求理由相同。能够从已有绑定与 turn 唯一确认同提交者时，返回原作者、时间与证据并说明 already_recorded；无法确认原作者时只返回可公开读取的保存结果，明确本次没有写入，不恢复旧 writer 的修改权限。不同结论或取消理由仍拒绝。
+
+请求与结论的数据库提交返回错误时，执行一次权威回读。请求须匹配 request-id、PR 与验收 Issue，结论还须匹配完整内容和提交者；匹配才返回 recovered_after_commit_error 与原错误，不重复写入。未匹配或回读失败保留具体提交错误及回读原因。
+
+Issue 承载能力成果的解释、设计、验收与剩余义务；PR 承载可实施、合入和验收的候选。Issue 负责人可创建并指派子 Issue 分担结果责任，组织本项责任，采用关联 PR 返回的实现候选与证据并判断完成。业务工作边界的方法由独立协作技能提供，Braid 的通用注入不重复该策略。
+

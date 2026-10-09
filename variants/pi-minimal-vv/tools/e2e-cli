@@ -2,7 +2,17 @@
 set -eu
 : "${E2E_RUNTIME:?E2E_RUNTIME must name the frozen addon}"
 : "${FACTORY26_TOOL_NODE:?FACTORY26_TOOL_NODE must name the tool Node}"
-PLAYWRIGHT_BROWSERS_PATH="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$E2E_RUNTIME/.cache}/factory26-playwright}"
-mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+if [ ! -f "$E2E_RUNTIME/node_modules/e2e/dist/cli/bin.js" ]; then
+  echo "E2E addon CLI missing: $E2E_RUNTIME/node_modules/e2e/dist/cli/bin.js" >&2
+  exit 1
+fi
+LD_LIBRARY_PATH="$E2E_RUNTIME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH
+# An explicit Playwright path may be a read-only preinstalled cache; "0" means
+# package-local browsers, not a directory named 0. Only create our fallback.
+if [ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" ]; then
+  PLAYWRIGHT_BROWSERS_PATH="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$E2E_RUNTIME/.cache}/factory26-playwright}"
+  if [ "$PLAYWRIGHT_BROWSERS_PATH" != "0" ]; then mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"; fi
+fi
 export PLAYWRIGHT_BROWSERS_PATH
 exec "$FACTORY26_TOOL_NODE" "$E2E_RUNTIME/node_modules/e2e/dist/cli/bin.js" "$@"

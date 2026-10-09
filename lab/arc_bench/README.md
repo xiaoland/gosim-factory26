@@ -2,6 +2,8 @@
 
 lab.arc_bench 是当前 `lab.run` 的 ARC 目标适配边界：每次生成或评测都是独立的 run，状态、原生会话、资源、费用和平台回执写回该 run。旧 `lab.exp` attempt 仍由历史 reader 消费，不会被新 run 隐式转换，也不再是新 run 的调度单位。
 
+公共参赛入口将内部生成失败与进入评测的退出码分开：安装、生成子进程普通非零退出或收尾异常保留原始诊断，入口返回 0，使 Runner 有机会评测输出中的现有应用。`.factory26/generation-entry.json` 保存入口退出码、实际生成子进程退出码和错误；返回 0 不表示需求完成、应用发布成功或获得评分。外部 SIGTERM/SIGINT、被信号终止的子进程以及 variant 的 130/143 终止出口保留非零状态，SIGKILL 无法捕获。清理和采集证据不可得不应自行终止整个生成入口；官方资源限制和外部停止仍由其实际执行方强制执行。旧冻结包不会自动取得这个出口行为。
+
 - arc_bench_adapter.py：调用官方 Runner，保存请求、响应和平台身份。
 - hosted_run.py：当前 Hosted run 的 upload/create/start、只读观察、取消和 workspace 保存；未知 POST 结果只查询确认，不自动重发。
 - hosted_monitor.py、local_monitor.py：旧 operation 的平台/容器采集器，保留历史生产者身份；当前 run 由 `lab.automation observe` 调用 `execution.observe/save`。
@@ -10,6 +12,7 @@ lab.arc_bench 是当前 `lab.run` 的 ARC 目标适配边界：每次生成或�
 - results.py、evaluate.py、arc_replay.py：解析结果、评价和重放；评分与生成 attempt 分开。
 - local_job.py、score_evidence.py：历史 lowering 与保存评分依据解释；当前 Local profile 直接装配宿主 SDK `local_submit.py`、不可变 image 和显式 runtime/package。
 - arc_matrix.py、official_matrix.py、package_arc_replay.py：显式组合、冻结和发布 ARC 评测材料，不自动启动下游评价。
+- package_incremental_replay.py、incremental_replay.py：为独立应用评分冻结官方基线到生成应用的文件差量；应用前核对基线哈希，保留未涉及文件。此包不调用模型，只能用于已授权的自费独立评分，不能作为正式参赛 Agent。
 
 新 run 的独立评测由 `lab.arc_bench.evaluate` 提供：
 

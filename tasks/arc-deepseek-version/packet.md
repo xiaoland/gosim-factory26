@@ -1,6 +1,8 @@
 # ARC DeepSeek Flash 版本调查
 
-状态：本次调查完成。当前证据明显支持 ARC 的 `deepseek-v4-flash` 是 2026-07-31 的 V4 Flash；这属于较强推断，尚无 ARC 实际路由及后端快照的直接确认。仅作公开资料核实与少量真实 API 取证，未修改 Harness、模型配置，未启动或恢复 benchmark。
+当前采用（2026-10-08）：用户明确“ARC的旧模型ID就是0731版本，这是早就确认的事情”。公共自费配方据此采用稳定 alias `deepseek-v4-flash-0731` → ARC wire ID `deepseek-v4-flash`，以 ARC 为第一道；本次没有重新发生成请求。以下调查结论和证据保留其 2026-10-01 历史身份。
+
+历史状态：本次调查完成。当前证据明显支持 ARC 的 `deepseek-v4-flash` 是 2026-07-31 的 V4 Flash；这属于较强推断，尚无 ARC 实际路由及后端快照的直接确认。仅作公开资料核实与少量真实 API 取证，未修改 Harness、模型配置，未启动或恢复 benchmark。
 
 追加状态：别名可用性调查完成，当前团队凭据不能调用 `deepseek-flash`。用户随后问“那也许Arc可以用deepseek-flash模型吗（应该就是 ds-v4.1-flash）？”，据此执行最小别名可用性取证。先向 ARC 请求一次 `deepseek-flash` 短文本（关闭思考、输出上限128、不重试）；原计划成功时用此前同一张图片追加一次请求。该授权只覆盖此次取证，不修改 Harness 或启动 benchmark。
 

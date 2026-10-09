@@ -49,7 +49,8 @@ def error_text(error):
 
 def docker(endpoint, args, *, timeout=60, **kwargs):
     confirm(endpoint)
-    return execute(endpoint, args, check=True, timeout=timeout, **kwargs)
+    kwargs.setdefault('check', True)
+    return execute(endpoint, args, timeout=timeout, **kwargs)
 
 
 def inspect(endpoint, kind, identifier):
@@ -125,7 +126,19 @@ def observe(path, *, cleanup=False):
     try:
         value = container_owned(resource)
         if value is None:
-            return {**record, 'status': 'absent'}
+            result = {**record, 'status': 'absent'}
+            if cleanup and resource.get('state') == 'not-started' and resource.get('exp_attempt_id'):
+                from lab.exp import admission, backends
+                authority = admission.query(target(resource), resource['exp_attempt_id'])
+                row = authority.get('resource')
+                if row and row['phase'] == 'reserved' and row['identity'] is None and not row.get('pending'):
+                    # A pre-create SDK failure has no execution to stop. Cancel
+                    # only this exact settled reservation through its authority.
+                    result['reservation'] = backends.managed(target(resource),
+                        {'authority_resource_id': resource['exp_attempt_id']}, 'cancel-reservation',
+                        resource['exp_request_id'] + '--confirmed-preentry-close',
+                        {'reason': 'confirmed-preentry-failure', 'volumes_preserved': True})
+            return result
         resource['container_id'] = value['Id']
         write_json(path, resource)
         record.update(container_id=value['Id'], status='owned', running=value['State']['Running'])
@@ -537,9 +550,12 @@ def _install_child_assets(resource, attempt, transport):
     asset_action('from lab.exp.artifacts import initialize;import json,sys;initialize("/assets",json.loads(sys.argv[1]))',
         json.dumps({'kind':'docker','daemon_id':endpoint['daemon_id'],'volume_id':transport.value['artifact_volume']}))
     from lab.exp.core import canonical
+    copied_tree = attempt['job'].get('arc_contract', {}).get('delivery_mode') == 'copied-tree'
+    if copied_tree and attempt['job'].get('definition'):
+        raise ValueError('copied-tree SDK input cannot also declare a component definition')
     asset_refs={}
     for name,reference in attempt['job']['inputs'].items():
-        if (name=='definition' or name.startswith('definition-') or name in {'application_seed','gateway_routes'}) and isinstance(reference,dict) and 'artifact_id' in reference:
+        if (name=='definition' or name.startswith('definition-') or name in {'application_seed','gateway_routes'} or (copied_tree and name=='agent')) and isinstance(reference,dict) and 'artifact_id' in reference:
             selected=attempt['job'].get('input_members',{}).get(name,'.')
             asset_refs[canonical([reference,selected])]=(reference,selected)
     asset_refs[canonical([code,'.'])]=(code,'.')
@@ -563,6 +579,27 @@ def _install_child_assets(resource, attempt, transport):
         elif available!='available':
             raise ValueError('SDK immutable input position could not be read back')
         asset_action('from lab.exp.artifacts import retain;import json,sys;retain("/assets",json.loads(sys.argv[1]),sys.argv[2],"sdk-input",sys.argv[3])',json.dumps(reference),resource['exp_attempt_id'],resource['exp_request_id']+'--retain-'+reference['artifact_id'])
+    if copied_tree:
+        reference = attempt['job']['inputs']['agent']
+        selected = attempt['job'].get('input_members', {}).get('agent', '.')
+        source_root = asset_action('from lab.exp.artifacts import member_payload;import json,sys;print(member_payload("/assets",json.loads(sys.argv[1]),sys.argv[2]))', json.dumps(reference), selected).stdout.strip()
+        # Frozen Pi changes permissions and creates pi-home in its package root.
+        # Keep its execution copy writable, with a separately retained RO source.
+        execution_root = '/transfer/' + Path(resource['workspace']).name + '/submission/agent'
+        verified = asset_action('from pathlib import Path;from lab.arc_bench.workspace_archive import output_inventory;import json,sys;root=Path(sys.argv[1]);manifest=json.loads((root/"package-manifest.json").read_text());print(json.dumps({"backend":manifest.get("backend"),"equal":output_inventory(root)==output_inventory(Path(sys.argv[2]))}))', source_root, execution_root).stdout
+        verification = json.loads(verified)
+        if verification != {'backend': 'pi', 'equal': True}:
+            raise ValueError('copied-tree SDK Pi execution copy differs from its actual frozen source: ' + verified)
+        volume = inspect(endpoint, 'volume', transport.value['artifact_volume'])
+        placement = {'reference': reference, 'member': selected, 'store': '/assets',
+            'root': '/inputs/frozen-harness-package',
+            'physical_root': str(Path(volume['Mountpoint']) / Path(source_root).relative_to('/assets'))}
+        proof = {'mode': 'copied-tree', 'source': placement,
+            'execution_root': '/workspace/submission/agent', 'verified_before_create': True,
+            'source_manifest_sha256': reference['manifest_sha256']}
+        write_json(Path(resource['resource_path']).with_suffix('.copied-tree.json'), proof)
+        return {'code': code, 'code_member': code_member, 'definitions': [],
+            'inputs': {'frozen_harness_package': placement}, 'delivery_mode': 'copied-tree', 'copy_readback': proof}
     # The official SDK receives a thin entry; Harness roles come only from actual RO assets.
     definition=attempt['job'].get('definition')
     if not definition:
@@ -646,7 +683,9 @@ def runner_main(resource_path, runner_path, argv):
             if any(expected_environment.get(key) != value for key, value in required.items()):
                 raise ValueError('SDK child environment differs from compiled model policy')
             bindings = json.loads(required.get('FACTORY26_MODEL_BINDINGS', '{}'))
-            if any(not expected_environment.get(binding['credential_env']) for binding in bindings.values()):
+            generated = set(attempt['job'].get('arc_contract', {}).get('prepared_delivery', {}).get('service_generated_credentials', []))
+            if any(not expected_environment.get(binding['credential_env']) and binding['credential_env'] not in generated
+                   for binding in bindings.values()):
                 raise ValueError('SDK child environment is missing a declared model credential variable')
         options = ['--cidfile', str(cidfile), '--pids-limit', str(limits['pids'])]
         if transport:
@@ -656,7 +695,7 @@ def runner_main(resource_path, runner_path, argv):
             write_json(resource_path, resource)
             command[command.index('--mount') + 1] = f"type=volume,source={resource['volume']},target=/workspace,volume-subpath={stage}"
         installed=None
-        if transport and attempt['job'].get('arc_contract'):
+        if transport and attempt['job'].get('arc_contract') and attempt['job'].get('arc_contract', {}).get('prepared_delivery', {}).get('mode') != 'hosted-prepared':
             installed=_install_child_assets(resource,attempt,transport)
             for row in installed['definitions']:
                 options+=['--mount','type=bind,source='+row['physical_root']+',target='+row['local_root']+',readonly']
@@ -709,10 +748,11 @@ def runner_main(resource_path, runner_path, argv):
                 'workspace':{'volume':transport.value['volume'],'subpath':stage,'logical_root':'/workspace'},
                 'executor_code':{'reference':code,'member':'.','volume':transport.value['volume'],'subpath':code_member+'/payload',
                     'image_id':value['Image'],'python':'python3'},
-                'records':{'source':'namespace-bootstrap-result'},
+                'delivery_mode': installed.get('delivery_mode', 'sdk-components'),
+                'records':{'source': 'copied-tree-execution' if installed.get('delivery_mode') == 'copied-tree' else 'namespace-bootstrap-result'},
                 'outer':{'attempt_id':attempt['attempt_id'],'incarnation':outer_incarnation,
                          'attempt_directory':resource['exp_attempt_dir']},
-                'capabilities':{'sdk_resume':False,'harness_state_capture':'explicit-bootstrap-state-member'}}
+                'capabilities':{'sdk_resume':False,'harness_state_capture': 'unsupported' if installed.get('delivery_mode') == 'copied-tree' else 'explicit-bootstrap-state-member'}}
             holder['capture_source']=capture_source
             atomic(resource_path.with_suffix('.capture-source.json'),capture_source)
             resource['state_binding']=holder

@@ -31,6 +31,20 @@ impl AgentProvider for Arc<dyn AgentProvider> {
         self.as_ref().can_accept_input(thread_id).await
     }
 
+    async fn managed_state(
+        &self,
+        thread_id: &str,
+    ) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        self.as_ref().managed_state(thread_id).await
+    }
+
+    async fn yield_stoppable_services(
+        &self,
+        thread_id: &str,
+    ) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        self.as_ref().yield_stoppable_services(thread_id).await
+    }
+
     async fn closed(&self) {
         self.as_ref().closed().await;
     }
@@ -78,7 +92,11 @@ impl AgentProvider for Arc<dyn AgentProvider> {
         self.as_ref().interrupt(thread_id, turn_id).await
     }
 
-    async fn message_was_processed(&self, thread_id: &str, message: &str) -> Result<bool, ProviderError> {
+    async fn message_was_processed(
+        &self,
+        thread_id: &str,
+        message: &str,
+    ) -> Result<bool, ProviderError> {
         self.as_ref().message_was_processed(thread_id, message).await
     }
 }
@@ -93,6 +111,20 @@ impl AgentProvider for Box<dyn AgentProvider> {
         self.as_ref().can_accept_input(thread_id).await
     }
 
+    async fn managed_state(
+        &self,
+        thread_id: &str,
+    ) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        self.as_ref().managed_state(thread_id).await
+    }
+
+    async fn yield_stoppable_services(
+        &self,
+        thread_id: &str,
+    ) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        self.as_ref().yield_stoppable_services(thread_id).await
+    }
+
     async fn closed(&self) {
         self.as_ref().closed().await;
     }
@@ -140,7 +172,11 @@ impl AgentProvider for Box<dyn AgentProvider> {
         self.as_ref().interrupt(thread_id, turn_id).await
     }
 
-    async fn message_was_processed(&self, thread_id: &str, message: &str) -> Result<bool, ProviderError> {
+    async fn message_was_processed(
+        &self,
+        thread_id: &str,
+        message: &str,
+    ) -> Result<bool, ProviderError> {
         self.as_ref().message_was_processed(thread_id, message).await
     }
 }

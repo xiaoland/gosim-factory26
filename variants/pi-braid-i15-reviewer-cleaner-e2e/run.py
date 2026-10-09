@@ -14,7 +14,7 @@ import tempfile
 import time
 import uuid
 
-from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace, validate_application,
+from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace, workspace_cleanup_stopped, validate_application,
                            copy_application, deliver, browser_executable, budgeted_pi,
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
@@ -24,15 +24,18 @@ from braid_runtime import (initialize_repository, read_runtime_result, load_deli
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
 from harness_layout import bind_layout
-from standalone_model_gateway import start_model_gateway, stop_model_gateway
+if (Path(__file__).resolve().parent/'support/model_gateway_service.py').is_file():
+    from model_gateway_service import start_model_gateway, stop_model_gateway
+else:
+    from standalone_model_gateway import start_model_gateway, stop_model_gateway
 
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i15-reviewer-cleaner-e2e'
 ROOT_PROFILE_ID = 'pi-glm-fast'
 ROOT_CHECK_MESSAGES = (
-    '请检查当前工作进展；没有新事实、决定或行动时结束处理，无需公开回执。',
-    '请检查当前工作进展；仅在变化影响当前判断、下一步或交接时维护已有 task packet 与相关 Issue/PR 入口，无变化无需重复整理或公开回执。',
+    '请核对当前负责Issue/PR的实际讨论与进展，采用适用协作技能处理变化、阻塞和下一步；没有新行动价值时不发重复回执。',
 )
+
 MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation',
                'svc-verification', 'hyperformula', 'handsontable', 'better-auth-best-practices',
                'organization-best-practices', 'fixing-accessibility', 'ponytail', 'impeccable',
@@ -43,7 +46,7 @@ REVIEWER_SKILLS = ('braid-collaboration', 'arc-bench', 'svc-verification', 'e2e'
 RUN_CONDITIONS = '''交付条件
 本次为人工介入研究运行；用户可通过Issue/PR评论提出澄清、纠正或工作请求，按对象中的明确输入协作。依据原始需求处理常规歧义并记录重要假设，遇到不可自行解决的阻塞时保留证据。当前工作项或委派决定你的职责和可修改范围，下列环境约定不扩大它。
 业务验收以本次run/input中的原始需求及允许参考附件为绝对权威，直接读取原文并引用路径、版本和条款；Issue摘录、PR说明、设计和自验不能降低标准。增量任务保留未取消的基线要求、已有功能和业务数据；歧义记录解释与证据，不从实现反推需求。
-同一PR最多一个当前Braid reviewer责任与执行，不限制该reviewer委派的原生验收角色数量。请求审阅前冻结base/head；审阅期间实施者、root和reviewer不得推进任一引用，包括packet-only提交。先结束旧请求并确认旧审阅执行实际收口，再修复或建立下一候选和新请求；不同PR可并行。
+本配方采用专门验收成员。每个PR同时只允许一个reviewer Braid Agent Session验收；不同PR可并行，reviewer可委派多个隔离的原生验收角色。请求前冻结base/head，审阅期间不推进任一引用，包括packet-only提交。验收Issue收到pr request-review后，从braid assignee list --reviewer选择具体成员，用pr review assign指派。每次候选使用独立request、checkout和新reviewer Session，不自动继承上一请求的assignee或会话。conclude/cancel终止本次reviewer责任；旧Session实际停止前不能开始新候选。改派当前Pending请求同样终止旧Session，停止后为新assignee创建新Session，即使同profile也不复用旧Session。Issue负责人组织原始需求覆盖、讨论和整合，独立reviewer提交结论，不以Issue自行验收代替。
 代码和数据修改限于本次临时工作区；不得向其它外部系统或开发源码仓库push、发布或修改。可以查询公开库/API文档；不得读取、搜索或下载外部验收测试、benchmark实现、参考应用或先前实验结果。
 JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写业务源码。按需求选择框架，使用所选框架的官方脚手架；SPA可优先评估Vite。选择并锁定兼容实际运行环境的依赖版本，不机械使用latest。
 
@@ -107,6 +110,7 @@ def native_files(work, runtime, skills, base_url, visual_url, route_bindings=Non
         settings_file = template/'settings.json'
         if settings_file.is_file():
             settings = json.loads(settings_file.read_text())
+            settings["compaction"] = {**settings.get("compaction", {}), "enabled": True, "thresholdTokens": 245000}
             bind_native_model_scope(settings, routes)
             save(settings_file, settings)
         save(template/'pi-fff.json', {'mode':'tools-only'})
@@ -144,7 +148,7 @@ def native_files(work, runtime, skills, base_url, visual_url, route_bindings=Non
         for skill in REVIEWER_SKILLS if is_reviewer else MAIN_SKILLS:
             flags += ['--skill', str(skills/skill/'SKILL.md')]
         launcher = folder/'pi'
-        launcher.write_text('#!/bin/sh\nexec '+shlex.join(flags)+' "$@"\n')
+        launcher.write_text('#!/bin/sh\nexport FACTORY26_SUBAGENT_CATALOG=1\nexec '+shlex.join(flags)+' "$@"\n')
         launcher.chmod(0o755)
         bindings[profile['id']] = dict(adapter_type='pi', executable=str(launcher),
             api_key_environment=profile_route['credential_env'], native_template=str(template),
@@ -215,24 +219,45 @@ def resume_routing_change(args, run, gateway_routes, desired_model):
 def retained_resume(args, output, requirements, context_bytes, routes, gateway_routes, desired_model):
     """Validate a stopped retained run before any gateway or native process starts."""
     run = args.resume_run_dir.resolve(strict=True)
-    if run.parent != output/'.factory26' or not run.is_dir():
-        raise ValueError('恢复目录必须是本 output/.factory26 下的确切 run')
+    lab_contract_path = output/'.factory26/lab-run.json'
+    lab_resume = lab_contract_path.is_file() and bool(json.loads(lab_contract_path.read_text()).get('native_resume'))
+    previous = json.loads((run/'run.json').read_text())
+    if lab_resume:
+        contract = json.loads(lab_contract_path.read_text())
+        if run != output/'.factory26/data/harness'/contract['native_scope_id']:
+            raise ValueError('Lab恢复只接受固定容器路径中的同scope状态')
+        receipt_path = HERE/'inputs'/contract['native_resume_receipt']
+        proof_bytes = receipt_path.read_bytes()
+        proof = json.loads(proof_bytes)
+        saved = proof.get('saved', {})
+        if (proof.get('kind') != 'lab.native-resume'
+                or proof.get('source_run') != contract.get('source_run')
+                or proof.get('native_scope_id') != run.name
+                or proof.get('requirements_version') != contract.get('requirements_version')
+                or proof.get('source_lifecycle') not in {'stopped', 'failed', 'completed'}
+                or saved.get('saved') is not True):
+            raise ValueError('Lab恢复需要来源执行已停止且完整data保存成功的同scope收据')
+        if str(output) != '/workspace/template' or str(HERE) != '/workspace/submission':
+            raise ValueError('Lab恢复仅支持固定容器路径，不支持任意历史路径迁移')
+        container = None
+    else:
+        if run.parent != output/'.factory26' or not run.is_dir():
+            raise ValueError('恢复目录必须是本 output/.factory26 下的确切 run')
+        receipt_path = args.resume_stopped_receipt.resolve(strict=True)
+        proof_bytes = receipt_path.read_bytes()
+        proof = json.loads(proof_bytes)
+        stopped = proof.get('container_state', {})
+        container = proof.get('container_id', '')
+        if (proof.get('run_id') != run.name or proof.get('stopped') is not True
+                or proof.get('owned_execution_stopped') is not True
+                or len(container) != 64 or any(c not in '0123456789abcdef' for c in container)
+                or stopped.get('Running') is not False or stopped.get('Pid') != 0
+                or type(stopped.get('ExitCode')) is not int
+                or not isinstance(proof.get('stopped_at'), (int, float))
+                or proof['stopped_at'] < previous.get('recovery_started_at', previous['started_at'])):
+            raise ValueError('停止收据须证明同 run 的旧 Docker/owned execution 已停止且时间晚于旧启动')
     if args.prepare_only or args.initial_application is not None:
         raise ValueError('同 run 恢复不能与 prepare-only/initial-application 混用')
-    receipt_path = args.resume_stopped_receipt.resolve(strict=True)
-    proof_bytes = receipt_path.read_bytes()
-    proof = json.loads(proof_bytes)
-    previous = json.loads((run/'run.json').read_text())
-    stopped = proof.get('container_state', {})
-    container = proof.get('container_id', '')
-    if (proof.get('run_id') != run.name or proof.get('stopped') is not True
-            or proof.get('owned_execution_stopped') is not True
-            or len(container) != 64 or any(c not in '0123456789abcdef' for c in container)
-            or stopped.get('Running') is not False or stopped.get('Pid') != 0
-            or type(stopped.get('ExitCode')) is not int
-            or not isinstance(proof.get('stopped_at'), (int, float))
-            or proof['stopped_at'] < previous.get('recovery_started_at', previous['started_at'])):
-        raise ValueError('停止收据须证明同 run 的旧 Docker/owned execution 已停止且时间晚于旧启动')
     proof_sha = hashlib.sha256(proof_bytes).hexdigest()
     for old in (run/'recovery').glob('*/resume-identity.json'):
         if json.loads(old.read_text()).get('stopped_receipt_sha256') == proof_sha:
@@ -286,7 +311,7 @@ def retained_resume(args, output, requirements, context_bytes, routes, gateway_r
     for path in run.iterdir():
         if path.is_file():
             shutil.copy2(path, attempt/path.name)
-    for name in ('model-gateway', 'native', 'native-config', 'maintenance', 'application', 'application-artifact'):
+    for name in ('model-gateway', 'native', 'native-config', 'maintenance', 'application', 'application-artifact', 'process-control'):
         path = run/name
         if path.exists():
             shutil.move(str(path), attempt/name)
@@ -295,7 +320,12 @@ def retained_resume(args, output, requirements, context_bytes, routes, gateway_r
         if path.is_file():
             (attempt/'braid-state').mkdir(exist_ok=True)
             shutil.copy2(path, attempt/'braid-state'/name)
-    (attempt/'stopped-receipt.json').write_bytes(proof_bytes)
+    (attempt/('lab-stop-save-receipt.json' if lab_resume else 'stopped-receipt.json')).write_bytes(proof_bytes)
+    if lab_resume:
+        for path in run.iterdir():
+            if path.is_file() and path.suffix in {'.log', '.jsonl'}:
+                path.unlink()
+
     metadata = dict(previous)
     for key in ('error','failed_phase','process_exit_code','braid','cleanup_errors','diagnostic_error',
                 'maintenance_diagnostic_error','archive_error','generation_finished_at','generation_seconds'):
@@ -306,7 +336,8 @@ def retained_resume(args, output, requirements, context_bytes, routes, gateway_r
         metadata['routing_change'] = routing_change
     save(attempt/'resume-identity.json', {'run_id':run.name, 'original_started_at':previous['started_at'],
         'stopped_receipt_source':str(receipt_path), 'stopped_receipt_sha256':proof_sha,
-        'source_container_id':container, 'seed_commit':stored['seed_commit'],
+        'source_container_id':container, 'stop_guarantee':'lab-stop-save' if lab_resume else 'manual-container',
+        'producer_run_id':contract['run_id'] if lab_resume else None, 'seed_commit':stored['seed_commit'],
         'input_sha256':digest(expected), 'model':desired_model, 'root_profile_id':root_id,
         'evolution':bool(args.evolution), 'work_and_native_state_reused':True})
     return run, work, app, native, skills, inputs, state, request, metadata, attempt
@@ -359,11 +390,21 @@ def generate(args):
     output.mkdir(parents=True, exist_ok=True)
     source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
     desired_model = os.environ.get('MODEL') or routes['factory26'].get('model')
+    lab_contract_path = output/'.factory26/lab-run.json'
+    lab_contract = json.loads(lab_contract_path.read_text()) if lab_contract_path.is_file() else {}
+    capacity = lab_contract.get('max_active_agents', 2)
+    if isinstance(capacity, bool) or not isinstance(capacity, int) or capacity < 1:
+        raise ValueError('max_active_agents必须为正整数')
     resuming = args.resume_run_dir is not None
     if resuming:
         run, work, app, native, skills, inputs, state, request, metadata, attempt = retained_resume(
             args, output, requirements, context_bytes, routes,
             gateway_routes if gateway_enabled else None, desired_model)
+        # Scheduling capacity belongs to this execution, not the inherited
+        # task/model/session identity. retained_resume already archived the
+        # source request before refreshing this explicit configuration.
+        request['max_active_agents'] = capacity
+        save(run/'braid-request.json', request)
         bind_layout(run, variant=VARIANT, definition_root=HERE, runtime=runtime,
                     skills_root=args.skills_root.resolve(strict=True), braid=source_braid,
                     extra_definitions={'e2e-runtime': e2e_runtime})
@@ -373,7 +414,17 @@ def generate(args):
             'runtime':str(runtime), 'e2e_runtime':str(e2e_runtime)})
     else:
         baseline_hashes = hashes(args.initial_application.resolve(strict=True)) if args.evolution else None
-        run = output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
+        lab_contract = output/'.factory26/lab-run.json'
+        if lab_contract.is_file():
+            contract = json.loads(lab_contract.read_text())
+            scope = contract['native_scope_id']
+            if not isinstance(scope, str) or Path(scope).name != scope or scope in {'.', '..'}:
+                raise ValueError('Lab native_scope_id必须为单个目录名')
+            run = output/'.factory26/data/harness'/scope
+            if (run/'run.json').exists():
+                raise FileExistsError('新任务不能覆盖已有I15原生状态：'+str(run))
+        else:
+            run = output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
         run.mkdir(parents=True,exist_ok=True)
         work = run/'work'; work.mkdir()
         skills_root = args.skills_root.resolve(strict=True)
@@ -388,7 +439,7 @@ def generate(args):
             if args.evolution:
                 # The injected output may also be the source. Never traverse the new run or old sessions.
                 source = args.initial_application.resolve(strict=True)
-                historical = {'.factory26', 'process-evidence', '.factory-e2e', '.arc'}
+                historical = {'.factory26', 'process-evidence', '.factory-e2e', '.e2e-evidence', '.arc', 'requirements'}
                 def omitted(folder, names):
                     excluded = {'.git', '.braid', 'node_modules', '__pycache__'}
                     if Path(folder) == source:
@@ -459,12 +510,48 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         state = run/'braid-state'
         pi = budgeted_pi(runtime, work.parent)
         request = dict(profiles=profiles, root_profile_id=root_profile_id, bindings=bindings,
+                       max_active_agents=capacity,
                        root_check_messages=ROOT_CHECK_MESSAGES,
                        prompt=prompt, state=str(state), run_id=run.name,
                        delivery_ref='refs/heads/main', codex=None,
                        pi=dict(executable=str(pi), home=str(native), api_key_environment=bindings[root_profile_id]['api_key_environment']))
         save(run/'braid-request.json', request)
         metadata = dict(config, started_at=time.time(), status='prepared' if args.prepare_only else 'generating')
+    substitution = lab_contract.get('native_model_substitution') if isinstance(lab_contract, dict) else None
+    if substitution is not None:
+        if not resuming or lab_contract.get('target_kind') != 'local' or lab_contract.get('competition'):
+            raise ValueError('临时模型替换必须为本地自费同scope原生接续')
+        text_alias, vision_alias = substitution['text_alias'], substitution['vision_alias']
+        e2e_model = vision_alias
+        original_model = json.loads((HERE/'agents/pi-glm-root/models.json').read_text())
+        actual = next(m for m in original_model['providers']['factory26']['models'] if m['id'] == 'glm-5.3')
+        model_files = [* (work/'capabilities').glob('*/native-template/models.json'),
+                       * (work/'native-homes').glob('*/models.json'), native/'models.json']
+        role_files = [* (work/'capabilities').glob('*/native-template/agents/*.md'),
+                      * (work/'native-homes').glob('*/agents/*.md'), * (native/'agents').glob('*.md')]
+        changed = []
+        for path in model_files:
+            if not path.is_file():
+                continue
+            models = json.loads(path.read_text())
+            for provider, config in models['providers'].items():
+                for index, model in enumerate(config['models']):
+                    if provider == 'factory26-visual' and model['id'] == text_alias:
+                        model['id'] = vision_alias
+                    elif provider == 'factory26' and model['id'] == text_alias:
+                        config['models'][index] = dict(actual, id=text_alias,
+                            name='GLM-5.3（本地临时；保留原会话逻辑alias）')
+            save(path, models)
+            changed.append(str(path.relative_to(work)))
+        for path in role_files:
+            if path.is_file():
+                text = path.read_text().replace('factory26-visual/'+text_alias, 'factory26-visual/'+vision_alias)
+                path.write_text(text)
+                changed.append(str(path.relative_to(work)))
+        metadata['native_model_substitution'] = dict(substitution, producer_run=lab_contract['run_id'],
+            applied_at=time.time(), logical_text_alias=text_alias, actual_text_model='glm-5.3',
+            changed_materials=changed, original_materials='source run and recovery/native-config retained')
+        save(run/'native-model-substitution.json', metadata['native_model_substitution'])
     phase(run/'run.json', metadata, 'prepared')
     print(run, flush=True)
     if args.prepare_only:
@@ -506,6 +593,10 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                FACTORY26_BASE_URL=base_url,
                PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
+    if (output/'.factory26/lab-run.json').is_file():
+        env['FACTORY26_APP_NODE'] = '/usr/local/bin/node'
+        env['PATH'] = os.pathsep.join((str(work/'bin'), '/usr/local/bin', str(runtime/'bin'),
+                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH', '')))
     collector = None
     begin = time.monotonic()
     error = None
@@ -592,6 +683,56 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             publish_history()
             history_stop.wait(5)
 
+    def publish_candidate(repository, ref):
+        delivery = load_delivery(repository, dict(request, delivery_ref=ref))
+        metadata['delivery'] = delivery
+        excluded_platform_paths = []
+        if args.evolution and metadata.get('initial_application_commit'):
+            seed = metadata['initial_application_commit']
+            injected = subprocess.run(['git', '-C', str(repository), 'cat-file', '-e', seed+':requirements'],
+                                      capture_output=True).returncode == 0
+            if injected:
+                # Older Lab seeds included the SDK's top-level input. Omit
+                # only that unchanged input from derived applications; keep
+                # the original seed and delivery commit as evidence.
+                subprocess.run(['git', '-C', str(repository), 'diff', '--exit-code', seed,
+                                delivery['delivery_commit'], '--', 'requirements'], check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                excluded_platform_paths.append('requirements')
+        metadata['excluded_platform_paths'] = excluded_platform_paths
+        if (run/'application').exists():
+            (run/'application').rename(run/('unpublished-application-'+uuid.uuid4().hex[:8]))
+        export_delivery(repository, delivery['delivery_commit'], run/'application',
+                        excluded_platform_paths=excluded_platform_paths)
+        validate_application(run/'application')
+        from braid_runtime import publish_application
+        try:
+            publish_application(repository, delivery['delivery_commit'], run/'application-artifact', inputs,
+                                {'attempt_id': os.environ.get('FACTORY26_EXP_ATTEMPT_ID', run.name), 'braid_run_id': run.name},
+                                excluded_platform_paths=excluded_platform_paths)
+        except Exception as exc:
+            metadata['application_artifact_error'] = f'{type(exc).__name__}: {exc}'
+        if args.evolution:
+            # Publish only application members; retain injected historical evidence in output.
+            validate_application(run/'application')
+            for entry in (run/'application').iterdir():
+                if entry.name in {'.factory26', 'process-evidence', '.factory-e2e', '.arc', '.git'}:
+                    continue
+                target = output/entry.name
+                if entry.is_dir():
+                    shutil.copytree(entry, target, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(entry, target)
+        else:
+            deliver(run/'application', output)
+        metadata['application_available'] = True
+        publish_history(preview=True, ref=delivery['delivery_commit'], source=repository)
+        save(run/'application-hashes.json', hashes(run/'application'))
+        save(run/'delivery.json', {'status':'delivered' if metadata.get('generation_result') == 'completed' else 'partial',
+             'source_commit':delivery['delivery_commit'], 'generation_result':metadata.get('generation_result'),
+             'application_sha256':digest(hashes(run/'application'))})
+        metadata['application_available'] = True
+
     shared_proxy = None
     model_gateway = None
     try:
@@ -623,7 +764,15 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             }
         phase(run/'run.json', metadata, 'prepared')
         # The existing collector owns resource sampling before gateway/browser startup.
-        collector, binding = start_local_telemetry(run)
+        if (output/'.factory26/lab-run.json').is_file():
+            collector = None
+            endpoint = os.environ.get('OTEL_EXPORTER_OTLP_ENDPOINT')
+            headers = os.environ.get('OTEL_EXPORTER_OTLP_HEADERS', '')
+            token = next((part.split('=', 1)[1] for part in headers.split(',')
+                          if part.startswith('x-experiment-token=')), None)
+            binding = {'endpoint': endpoint, 'token': token} if endpoint and token else {'status': 'disabled'}
+        else:
+            collector, binding = start_local_telemetry(run)
         collector_stopped = collector is None
         env.update(telemetry_environment(binding))
         env.update(runtime_resource_environment(runtime, run))
@@ -652,10 +801,18 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                 env.pop(name, None)
             env.update(E2E_API_KEY=env['FACTORY26_GATEWAY_TOKEN'], E2E_BASE_URL=model_gateway['endpoint'],
                        FACTORY26_BASE_URL=model_gateway['endpoint'])
+        # Vitest v4 reads this after config resolution, so child runner
+        # commands inherit one worker without rewriting application sources.
+        env['VITEST_MAX_WORKERS'] = '1'
+        metadata['execution_limits'] = {'max_active_agents': capacity,
+                                        'vitest_max_workers': 1, 'e2e_workers': 1}
         if not resuming:
             initialize_repository(app)
         if not resuming and args.initial_application is not None:
-            subprocess.run(['git', '-C', str(app), 'add', '-A'], check=True)
+            # The approved application input includes business state even when
+            # its own ignore rules exclude it. Version that complete input so
+            # every independent Braid checkout and delivery inherits it.
+            subprocess.run(['git', '-C', str(app), 'add', '--force', '-A'], check=True)
             subprocess.run(['git', '-C', str(app), 'commit', '-qm',
                             '冻结上一阶段应用作为本阶段起点'], check=True)
             metadata['initial_application_commit'] = subprocess.check_output(
@@ -690,42 +847,47 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         metadata['process_exit_code'] = code
         metadata['braid'] = read_runtime_result(state)
         metadata['cleanup_pids'] = cleanup_workspace(run)
-        workspace_cleanup_complete = True
-        # Quiescence describes the scheduler. The root's state is the team's completion report.
+        workspace_cleanup_complete = workspace_cleanup_stopped(run)
         result = metadata['braid']
-        if code != 0 or result.get('status') != 'quiescent':
-            raise RuntimeError(f'Braid 未正常结束：exit={code}；result={json.dumps(result, ensure_ascii=False)}')
-        if result.get('root_issue', {}).get('state') != 'CLOSED':
-            raise RuntimeError(f'当前无可执行工作，但根任务未关闭：{result.get("root_issue")}')
-        repository = Path(result['repository']).resolve(strict=True)
-        delivery = load_delivery(repository, request)
-        metadata['delivery'] = delivery
-        export_delivery(repository, delivery['delivery_commit'], run/'application')
-        from braid_runtime import publish_application
-        publish_application(repository, delivery['delivery_commit'], run/'application-artifact', inputs,
-                            {'attempt_id': os.environ.get('FACTORY26_EXP_ATTEMPT_ID', run.name), 'braid_run_id': run.name})
-        if args.evolution:
-            # Publish only application members; retain injected historical evidence in output.
-            validate_application(run/'application')
-            for entry in (run/'application').iterdir():
-                if entry.name in {'.factory26', 'process-evidence', '.factory-e2e', '.arc', '.git'}:
-                    continue
-                target = output/entry.name
-                if entry.is_dir():
-                    shutil.copytree(entry, target, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(entry, target)
-        else:
-            deliver(run/'application', output)
-        publish_history(preview=True, ref=delivery['delivery_commit'], source=repository)
-        metadata['status'] = 'generated'
-        save(run/'application-hashes.json', hashes(run/'application'))
-        save(run/'delivery.json', {'status':'delivered', 'application_sha256':digest(hashes(run/'application'))})
+        complete = code == 0 and result.get('status') == 'quiescent' and result.get('root_issue', {}).get('state') == 'CLOSED'
+        metadata['generation_result'] = 'completed' if complete else 'incomplete'
+        if not complete:
+            metadata['generation_diagnostic'] = {'exit_code':code, 'result':result}
+        repository = Path(result.get('repository') or origin).resolve(strict=True)
+        publish_candidate(repository, request['delivery_ref'])
+        metadata['status'] = 'generated' if complete else 'partial_delivery'
     except BaseException as exc:
         error = exc
-        metadata.update(status='interrupted' if isinstance(exc,KeyboardInterrupt) else 'generation_failed',
+        metadata.update(status='interrupted' if isinstance(exc,(KeyboardInterrupt, SystemExit)) else 'generation_failed',
                         error=str(exc) or type(exc).__name__, failed_phase=metadata.get('phase'))
-        save(run/'delivery.json', {'status':'failed','error':metadata['error']})
+        metadata['generation_result'] = 'interrupted' if isinstance(exc, (KeyboardInterrupt, SystemExit)) else 'failed'
+        if isinstance(exc, Exception) and not metadata.get('application_available'):
+            # Recover only committed application state from this run. Never
+            # promote uncommitted member work or another run's application.
+            candidates = [(origin, request['delivery_ref'])]
+            if metadata.get('initial_application_commit'):
+                candidates.append((app, metadata['initial_application_commit']))
+            for repository, ref in candidates:
+                try:
+                    publish_candidate(repository, ref)
+                    metadata['status'] = 'partial_delivery'
+                    metadata['fallback_delivery'] = {'repository':str(repository), 'ref':ref}
+                    break
+                except Exception as failure:
+                    metadata.setdefault('delivery_errors', []).append({
+                        'repository':str(repository), 'ref':ref,
+                        'type':type(failure).__name__, 'error':str(failure)})
+            else:
+                try:
+                    validate_application(output, allow_platform_paths=True)
+                    metadata['application_available'] = True
+                    retained_status = 'baseline_retained' if args.evolution else 'existing_output_retained'
+                except Exception as validation:
+                    metadata['application_available'] = False
+                    metadata['output_validation_error'] = str(validation)
+                    retained_status = 'unavailable'
+                save(run/'delivery.json', {'status':retained_status, 'error':metadata['error'],
+                     'output_preserved':True, 'generation_result':metadata['generation_result']})
     finally:
         if model_gateway is not None:
             try:
@@ -743,13 +905,11 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             metadata['history_diagnostic_error'] = str(exc)
         try:
             metadata.setdefault('cleanup_pids', []).extend(cleanup_workspace(run))
-            workspace_cleanup_complete = True
+            workspace_cleanup_complete = workspace_cleanup_stopped(run)
         except Exception as exc:
             metadata['cleanup_error'] = str(exc)
             workspace_cleanup_complete = False
-            if error is None:
-                error = exc
-                metadata.update(status='generation_failed', error=str(exc), failed_phase='cleanup')
+            # Cleanup diagnostics do not change the generation or delivery result.
         # Evidence failures stay separate from the generating process's original error.
         try:
             for maintenance in sorted((work/'native-homes').glob('*/.factory/maintenance')):
@@ -773,7 +933,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             metadata['recovery_generation_seconds'] = time.monotonic()-begin
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    recovery_required = (error is not None or metadata.get('process_exit_code') != 0 or
+    recovery_required = (error is not None or not workspace_cleanup_complete or metadata.get('process_exit_code') != 0 or
                          metadata.get('braid', {}).get('status') != 'quiescent' or
                          history.get('status') != 'completed' or
                          bool(metadata.get('maintenance_diagnostic_error')))
@@ -794,7 +954,11 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             'path':str(work), 'request':str(run/'braid-request.json'),
             'reason':'archive finalization failed', 'error':metadata['archive_error']})
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    if error is not None:
+    metadata['entry_exit_code'] = (error.code if isinstance(error, SystemExit) else
+                                   130 if isinstance(error, KeyboardInterrupt) else 0)
+    metadata.setdefault('generation_result', 'completed' if metadata.get('status') == 'generated' else 'failed')
+    save(run/'run.json', metadata)
+    if error is not None and not isinstance(error, Exception):
         raise error
     return run
 
@@ -816,13 +980,52 @@ def main():
     parser.add_argument('--base-url')
     parser.add_argument('--prepare-only', action='store_true', help='写出真实原生材料和 Braid 请求，不调用模型')
     args = parser.parse_args()
-    if (args.resume_run_dir is None) != (args.resume_stopped_receipt is None):
+    lab_resume = False
+    if (args.output_dir/'.factory26/lab-run.json').is_file():
+        lab_resume = bool(json.loads((args.output_dir/'.factory26/lab-run.json').read_text()).get('native_resume'))
+    if not lab_resume and (args.resume_run_dir is None) != (args.resume_stopped_receipt is None):
         parser.error('resume-run-dir 与 resume-stopped-receipt 必须同时提供')
     if args.resume_routing_change_receipt is not None and args.resume_run_dir is None:
         parser.error('路由变更收据只能用于同 run 恢复')
+    contract_file = args.output_dir/'.factory26/lab-run.json'
+    if contract_file.is_file():
+        contract = json.loads(contract_file.read_text())
+        if contract.get('native_resume'):
+            args.resume_run_dir = args.output_dir/'.factory26/data/harness'/contract['native_scope_id']
+            routing_change = HERE/'inputs/routing-change.json'
+            if routing_change.is_file():
+                args.resume_routing_change_receipt = routing_change
+        if contract.get('evolution'):
+            args.evolution = True
+        if contract.get('task_context'):
+            os.environ['TASK_CONTEXT_FILE'] = str(HERE/'inputs'/contract['task_context'])
     if args.evolution and args.initial_application is None and args.resume_run_dir is None:
         args.initial_application = args.output_dir
+    termination_signal = None
     def interrupted(signum, frame):
-        raise KeyboardInterrupt('运行终止信号')
+        nonlocal termination_signal
+        termination_signal = signum
+        raise SystemExit(128 + signum)
     signal.signal(signal.SIGTERM, interrupted)
-    generate(args)
+    signal.signal(signal.SIGINT, interrupted)
+    try:
+        generate(args)
+    except Exception as exc:
+        if termination_signal is not None:
+            raise SystemExit(128 + termination_signal) from exc
+        diagnostic = {'generation_result':'failed', 'entry_exit_code':0,
+                      'error':{'type':type(exc).__name__, 'message':str(exc)},
+                      'output_preserved':True, 'recorded_at':time.time()}
+        try:
+            validate_application(args.output_dir, allow_platform_paths=True)
+            diagnostic['application_available'] = True
+        except Exception as validation:
+            diagnostic['application_available'] = False
+            diagnostic['application_validation_error'] = str(validation)
+        location = args.output_dir/'.factory26'
+        try:
+            location.mkdir(parents=True, exist_ok=True)
+            save(location/'entry-result.json', diagnostic)
+        except Exception as evidence_error:
+            print(f'entry diagnostic unavailable: {evidence_error}', file=sys.stderr)
+        print(json.dumps(diagnostic, ensure_ascii=False), file=sys.stderr)

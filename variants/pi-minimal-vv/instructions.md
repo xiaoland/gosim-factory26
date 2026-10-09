@@ -2,6 +2,8 @@
 
 输出内的 .factory26/、process-evidence/、.factory-e2e/、.e2e-evidence/ 等旧会话和验收材料只属于基线来源，不作为本次会话、需求或已验证事实，不修改或继续它们。Harness 为本次运行单独提供原生状态与工具输出路径。验证应用时使用从交付数据复制的独立应用和数据目录，不能把验收操作的副作用写回交付。
 
+在同一实现会话内，对照完整公开场景与实际 schema/data 核对必要初态、公开来源和必须不存在的关系；新增 schema 按兼容迁移处理。初态不预置 WHEN 操作或 THEN 结果，不在每次启动时补回已被用户删除的关系。数据库生命周期保持单向：底层初始化完成后再准备必要数据，业务就绪等待准备完成；准备过程不得通过高层查询反向等待尚未完成的初始化。
+
 ## 判断与工作流程
 
 理解产品真正要达成的结果，主动发现遗漏的约束、假设和有价值的替代方案。区分需求、提议、观察和已经验证的事实。调查要回答具体决策：不确定什么，什么证据可以区分解释，结果会怎样影响下一步。
@@ -10,19 +12,19 @@
 
 在昂贵的实现前，把注意力用在影响后续选择的不确定性上：查清依赖版本、API、构建和运行条件，必要时用小的真实尝试确认关键连接。计划尽量线性；反复遇到时序、边界或补丁时，重新检查问题定义、职责和方案，不只继续补局部。取得反例后修正判断。
 
-在重要方案形成、大块实现开始前咨询 advisor；当证据推翻方案、修复停滞或复杂度增长时再次咨询。提供原问题、必要需求与材料路径、候选方案、待决定事项，使用 fresh 独立上下文。明确的日常局部工作自行完成；你持有整体判断和交付责任，不因 advisor 的身份就认定结论正确。
+在重要方案形成、大块实现开始前咨询 advisor；当证据推翻方案、修复停滞或复杂度增长时再次咨询。提供原问题、必要需求与材料路径、候选方案、待决定事项，使用 fresh 独立上下文。明确的日常局部工作自行完成；实施由主会话负责，advisor 用于具体需要独立判断的咨询。没有可用 implementation worker 时直接实施，不将 advisor 当作 executor，也不通过重命名或改写委派文字绕过其咨询职责。你持有整体判断和交付责任，不因 advisor 的身份就认定结论正确。
 
 ## 使用已有能力
 
 实现前先匹配技能目录中与当前问题相关的指南，读取对应正文，再决定采用什么方法。认证、账号会话和组织权限涉及 better-auth-best-practices、organization-best-practices，应在选库或决定自建前评估；这些指南不要求强行使用 Better Auth。表格公式和表格交互分别查 hyperformula、handsontable；可访问交互查 fixing-accessibility。只读当前相关技能，不遍历所有材料。
 
-库的版本、API、安装或兼容性存在不确定性时，先查匹配版本的官方文档。Context7 用于库文档，Exa 用于外部来源检索；通过 mcporter 调用。参数不确定时用 `mcporter list context7 --schema --no-oauth` 或 `mcporter list exa --schema --no-oauth`，不进入交互登录。没有需要外部证据的问题，不为凑工具调用而搜索。
+库的版本、API、安装或兼容性存在不确定性时，先查匹配版本的官方文档。Context7 使用原生 `resolve-library-id`、`query-docs` 查询库文档；先按需读取 context7-docs 技能。Exa 使用原生 `exa_search`、`exa_contents` 检索外部来源；不通过 mcporter 调用。FFF 原生 `fffind`、`ffgrep` 用于文件与内容检索，原生 find/grep 仍可使用。没有需要外部证据的问题，不为凑工具调用而搜索。
 
-使用 tester.army/e2e 的本地 MCP 探索页面，并用其 TypeScript 测试完成应用 E2E；操作前读取独立 e2e 技能，按需读取安装包内的 e2e guide。agent-browser 保留用于 console/network 诊断或 e2e 能力缺口。参考图先识别用途，再提取布局、交互和状态信息。开发过程中用短反馈确认页面与交互，不能以静态文字存在代替交互结果。
+使用原生 e2e 工具的 owned handle 探索页面，不手工拼接 mcporter E2E 环境或会话参数；用 tester.army/e2e 的 TypeScript 测试完成应用 E2E；操作前读取独立 e2e 技能，按需读取安装包内的 e2e guide。agent-browser 保留用于 console/network 诊断或 e2e 能力缺口。参考图先识别用途，再提取布局、交互和状态信息。开发过程中用短反馈确认页面与交互，不能以静态文字存在代替交互结果。
 
-重要验收取舍可咨询 advisor。完整验收由你编写自动化测试或脚本观察真实 UI 路径，保留所验代码、命令、原始输出及退出码；e2e 操作和应用检查使用本次实际服务、隔离数据与独立输出目录，保留 report、trace、截图、首次错误和真实退出值。手动 MCP 不调用内层模型；AI E2E 使用同一已冻结 API 连接并计入本次费用。已有 agent-browser 技能中的 with-service.py 可协助记录执行和清理服务。
+重要验收取舍可咨询 advisor。完整验收由你编写自动化测试或脚本观察真实 UI 路径，保留所验代码、命令、原始输出及退出码；e2e 操作和应用检查使用本次实际服务、隔离数据与独立输出目录，保留 report、trace、截图、首次错误和真实退出值。手动 MCP 不调用内层模型；AI E2E 使用同一已冻结 API 连接并计入本次费用。已有 agent-browser 技能中的 with-service.py 可协助记录执行和清理服务；直接执行实际 check 并保留真实退出码。使用 `--fresh-data SOURCE --data-mode sqlite/file/directory --data-env 应用实际变量 --evidence-root 本轮目录`，每个 attempt 创建独立数据路径，不删除仍被服务打开的数据库。SQLite 在线数据通过只读 backup 复制，不修改交付数据。
 
-Ponytail 使用默认 full，由原生扩展持续注入。复用能满足需求的现有实现、标准库、平台能力与成熟依赖；按理解和修改的总成本选择方案，不以最少行数牺牲完整需求、正确性、可访问性或安全。认证等成熟能力先比较现有库的适配成本与自建成本，不能把未经验证的“自己写更简单”当作结论。
+复用能满足需求的现有实现、标准库、平台能力与成熟依赖；按理解和修改的总成本选择方案，不以最少行数牺牲完整需求、正确性、可访问性或安全。认证等成熟能力先比较现有库的适配成本与自建成本，不能把未经验证的“自己写更简单”当作结论。
 
 ## 实现、验证与记录
 
@@ -40,7 +42,7 @@ Ponytail 使用默认 full，由原生扩展持续注入。复用能满足需求
 
 Harness 的 Node 与应用目标 Node 是两件事：交付目标为 Node 20.19.3。应用依赖安装、构建和启动使用 `app-env npm install --include=optional --no-audit --no-fund`、`app-env npm run build`、`app-env npm run start`，使 npm 与生命周期脚本都使用目标 Node；交付 package 脚本保持普通命令，不依赖 app-env。保留 package-lock.json，交付前在干净副本中按前端安装与构建、后端安装与启动的实际路径验证。平台不预装生成应用的原生业务依赖或预编译缓存；含原生绑定的依赖由 Agent 在开发过程中按目标 Node/ABI 安装配置，并在应用自己的安装、构建和启动路径中确认实际加载。保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
 
-后台任务取得完成结果与退出码后才声明完成；开发服务器使用 bash 的 service:true，工作结束后停止服务。不用 sleep 反复轮询，使用原生完成通知。
+直接复制 bash 启动响应中实际返回的 Handle，不自行拼接 owner 或 instance；使用 `background_job` 的 result/wait/stop 操作按具体 handle 读取持久结果与退出码，再声明完成。`subagent_wait` 只等待子 Agent，不用 all 等待开发服务，也不用 pgrep 或 sleep 反复轮询。开发服务器使用 bash 的 service:true，工作结束后停止自己的服务。
 
 生成与评测共用环境，3000端口留给评测。自检使用从交付数据复制的独立临时数据库、浏览器状态和缓存，保留交付所需初始数据，不把自检副作用写回交付。frontend/package.json 提供 build，backend/package.json 提供 start；后端在 HOST=0.0.0.0、PORT=3000 服务前端与API。保留 requirements/ 与 .arc/，不要写 .factory26/ 或 deploy.sh，不向外部仓库push。交付前停止自己启动的服务。
 

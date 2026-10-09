@@ -29,6 +29,9 @@ MAIN_SKILLS = ('svc-task-packet', 'svc-investigation', 'svc-design', 'svc-implem
 BACKGROUND_COMPLETION_RULE = ('后台命令若承担当前工作项的交付或验收，取得其完成结果和退出码后才报告完成；'
                               '需要常驻的服务在使用结束后主动停止。')
 
+UI_CONDITIONS = '''新建应用的UI使用适合所选框架的成熟组件库和图标库，样式统一使用Tailwind CSS；接续既有应用时沿用基线技术栈，不为样式工具偏好迁移。按需求组合、定制已有控件，核对实际role、可访问名称、状态、键盘和焦点行为。统一少量视觉变量，图标随应用打包；动态样式采用所选Tailwind CSS版本可静态提取的完整类名映射或适当的CSS变量。
+采用Tailwind CSS时，按所选版本的官方方式配置构建集成和CSS导入，确认应用入口实际加载该CSS。使用正式构建产物和正式启动路径，在实际页面核对代表性布局、颜色和字体的计算样式；不能仅凭构建成功声明样式生效。'''
+
 
 def native_files(work, runtime, skills, base_url, visual_url):
     """返回供 Braid 使用的 profiles/bindings，并写出 Pi 消费的原生材料。
@@ -48,7 +51,7 @@ def native_files(work, runtime, skills, base_url, visual_url):
         (template/'profile.json').unlink()
         (template/'instructions.md').unlink()
         profile.update(user_instructions=(source/'instructions.md').read_text().rstrip() +
-                       '\n\n' + BACKGROUND_COMPLETION_RULE + '\n',
+                       '\n\n' + BACKGROUND_COMPLETION_RULE + '\n\n' + UI_CONDITIONS + '\n',
                        workspace=str(work/'application'))
         providers = json.loads((template/'models.json').read_text())
         providers['providers']['factory26']['baseUrl'] = base_url

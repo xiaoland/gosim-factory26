@@ -309,7 +309,7 @@ def status(run=None, *, include_all=False):
 
 def _background(run, module, args, name):
     target = run_layout.manifest(run).get('target_config') or {}
-    if name != 'relay' and target.get('kind') == 'local' and target.get('executor') != 'local':
+    if name not in {'relay', 'stages'} and target.get('kind') == 'local' and target.get('executor') != 'local':
         from .arc_bench.local_run import spawn
         receipt = spawn(run, module, args, name=name)
         write_json(run / 'records' / f'{name}.json', receipt)
@@ -367,11 +367,27 @@ def publish(path):
 def start(variant, target, task, *, route=None, competition=False, script=None):
     """Assemble inputs, directly dispatch, then detach observation and automation."""
     from .arc_bench import execution
+    task_config = execution._task_config({'task': str(task)})
+    stage_tasks = task_config.get('stages')
+    requested_task = str(task)
+    if stage_tasks is not None:
+        if not isinstance(stage_tasks, list) or not stage_tasks or any(
+                not isinstance(item, str) or not item.strip() for item in stage_tasks):
+            raise ValueError('task stages must be a non-empty list of task names or directories')
+        # Directory-based task packets can refer to sibling requirement directories.
+        base = Path(task_config['path']) if task_config.get('path') else ROOT
+        stage_tasks = [str((base / item).resolve()) if (base / item).is_dir() else item
+                       for item in stage_tasks]
+        task = stage_tasks[0]
     if script:
         import shutil
         source = Path(script).resolve(strict=True)
     path = run_layout.create_run(run_root(), variant, target, str(task), route=route,
                                  competition=competition)
+    if stage_tasks is not None:
+        state = run_layout.manifest(path)
+        state['stage_plan'] = {'task': requested_task, 'tasks': stage_tasks}
+        run_layout.write_manifest(path, state)
     try:
         if script:
             destination = path / "records/automation.py"
@@ -402,6 +418,10 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
                              stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
             write_json(path / "records/automation.json", {**process_identity(process.pid),
                         "source": str(destination), "started_at": time.time()})
+    if stage_tasks is not None:
+        # Restart assembles current source/configuration, available on the
+        # initiating host, not necessarily on a remote execution host.
+        _background(path, 'lab.automation', ['stages', path], 'stages')
     return status(path)
 
 
@@ -430,10 +450,13 @@ def save(run, *, output=None):
     return create(resolve(run), output=output)
 
 
-def restart(run, *, target=None, task=None, route=None, snapshot=None, keep_data=False):
+def restart(run, *, target=None, task=None, route=None, snapshot=None, keep_data=False,
+            allow_route_change=False, route_change_reason=None, model_catalog=None):
     from .arc_bench.restart import restart as restart_run
     result = restart_run(resolve(run), target=target, task=task, route=route,
-                         snapshot=snapshot, keep_data=keep_data)
+                         snapshot=snapshot, keep_data=keep_data,
+                         allow_route_change=allow_route_change, route_change_reason=route_change_reason,
+                         model_catalog=model_catalog)
     path = resolve(result["path"] if isinstance(result, dict) else result)
     _background(path, "lab.automation", ["observe", path], "supervisor")
     _background(path, "lab.automation", ["default", path], "automation")

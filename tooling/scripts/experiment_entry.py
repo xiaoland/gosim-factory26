@@ -37,7 +37,7 @@ def main(root=None):
     deployment=json.loads(namespace.read_text()) if namespace.is_file() else {}
     if layout['mode']=='sdk-components':
         support=next(Path(row['local_root']) for row in deployment['definition_bindings'] if row['role']=='support')
-    elif layout['mode']=='hosted-self-contained':
+    elif layout['mode'] in ('hosted-self-contained', 'hosted-prepared'):
         support=root/'support'
     else:
         raise ValueError('unsupported delivery entry mode')

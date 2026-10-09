@@ -43,7 +43,7 @@ def polling_interval(run, *, steady=480):
 
 
 def api_key():
-    path = Path.home() / ".config/factory26/llm.env"
+    path = CONFIG / 'llm.env'
     for line in path.read_text().splitlines():
         if line.startswith("FACTORY26_API_KEY="):
             value = line.split("=", 1)[1].strip().strip('"').strip("'")
@@ -52,11 +52,24 @@ def api_key():
     raise RuntimeError(f"请先在 {path} 填写 FACTORY26_API_KEY")
 
 API = 'https://arc-bench.com/api'
-CONFIG = Path.home()/'.config/factory26'
+CONFIG = Path(os.environ.get('FACTORY26_ARC_CONFIG_ROOT', ROOT/'.secrets/legacy-home-config')).resolve()
 COOKIE = CONFIG/'playground.cookies.txt'
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
 OBSERVATION_MAX_AGE = 360
 PRIVATE = {'api_key', 'password', 'access_token', 'refresh_token', 'authorization', 'cookie', 'apikey', 'access_key', 'accesskey', 'token'}
+
+
+def private_storage(path):
+    """Keep HTTP scratch and platform control files on the project's physical disk."""
+    path = Path(path).resolve()
+    mount = Path('/Volumes/WorkSSD').resolve(strict=True)
+    ancestor = path
+    while not ancestor.exists():
+        ancestor = ancestor.parent
+    if not path.is_relative_to(mount) or ancestor.stat().st_dev != mount.stat().st_dev:
+        raise ValueError(f'Factory platform storage must physically use WorkSSD: {path}')
+    path.mkdir(parents=True, exist_ok=True, mode=0o700)
+    return path
 
 
 def redact(value):
@@ -80,7 +93,7 @@ class Client:
 
     def request(self, path, method='GET', body=None, fields=None, package=None, secret=None, login=False):
         """No automatic retry of writes: an uncertain POST may already have succeeded."""
-        with tempfile.TemporaryDirectory(prefix='factory26-http-') as temp:
+        with tempfile.TemporaryDirectory(prefix='factory26-http-', dir=private_storage(self.cookie.parent/'.http-tmp')) as temp:
             response = Path(temp)/'response'
             command = ['curl', '-q', '--http1.1', '--silent', '--show-error', '--proto', '=https',
                        '--connect-timeout', '30', '--max-time', '1200' if package is not None else '180',
@@ -117,6 +130,24 @@ class Client:
                 raise ApiError(status, detail)
             return json.loads(response.read_bytes()) if status != 204 else None
 
+    def download(self, path, target):
+        """Download one read-only workspace observation, preserving failed responses."""
+        target = Path(target)
+        private_storage(target.parent)
+        temporary = target.with_name(target.name + '.' + uuid.uuid4().hex + '.partial')
+        result = subprocess.run(['curl', '-q', '--http1.1', '--silent', '--show-error',
+            '--proto', '=https', '--connect-timeout', '30', '--max-time', '600',
+            '--cookie', str(self.cookie), '--output', str(temporary), '--write-out', '%{http_code}',
+            API + path], capture_output=True, text=True, timeout=630)
+        if temporary.exists():
+            temporary.chmod(0o600)
+        if result.returncode or result.stdout != '200':
+            detail = {'curl_exit': result.returncode, 'stderr': result.stderr,
+                      'response_path': str(temporary)}
+            raise ApiError(int(result.stdout or '0'), detail)
+        temporary.replace(target)
+        return target
+
 
 def login(credentials=None):
     if credentials:
@@ -128,7 +159,7 @@ def login(credentials=None):
         values = {'email': input('网站邮箱: ').strip(), 'password': getpass.getpass('网站密码: ')}
     if not values.get('email') or not values.get('password'):
         raise ValueError('请填写网站 email 和 password；比赛 LLM key 不是这里的登录输入')
-    CONFIG.mkdir(parents=True, exist_ok=True)
+    private_storage(CONFIG)
     descriptor, name = tempfile.mkstemp(prefix='.playground-cookie-', dir=CONFIG)
     os.close(descriptor)
     temporary = Path(name)

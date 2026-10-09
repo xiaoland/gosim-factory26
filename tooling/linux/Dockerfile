@@ -1,3 +1,8 @@
+FROM rust:1.93-bookworm AS resource-monitor
+WORKDIR /build/resource-monitor
+COPY sources/resource-monitor/ ./
+RUN cargo build --locked --release
+
 FROM node:24.10.0-bookworm-slim AS node
 WORKDIR /runtime
 COPY harness/npm/package.json harness/npm/package-lock.json ./
@@ -26,18 +31,10 @@ RUN mkdir /runtime/python && \
     PYTHONPATH=/runtime/python python -m pip freeze --path /runtime/python > /runtime/python-requirements.lock
 COPY --from=node /usr/local/bin/node /runtime/bin/node
 COPY harness/npm/patches/ /build/patches/
-COPY harness/npm/native-managed.mjs /runtime/native-managed.mjs
-RUN patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-background-bash -i /build/patches/pi-background-bash-1.0.5.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-completion-boundary.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-model-exclusion-boundary.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-open-tools.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-acceptance-off.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/@earendil-works/pi-coding-agent -i /build/patches/pi-coding-agent-0.85.1-braid-boundary.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/@upstash/context7-pi -i /build/patches/context7-pi-0.1.2.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/@ff-labs/pi-fff -i /build/patches/pi-fff-0.11.0.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/@earendil-works/pi-coding-agent -i /build/patches/pi-coding-agent-0.85.1-i13-2-managed.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-background-bash -i /build/patches/pi-background-bash-1.0.5-i13-2-managed.patch && \
-    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-i13-2-managed.patch
+COPY harness/npm/native-managed.mjs harness/npm/v8-observation.mjs /runtime/
+COPY --from=resource-monitor /build/resource-monitor/target/release/factory26-resource-monitor /runtime/bin/factory26-resource-monitor
+COPY apply-native-patches.sh /build/apply-native-patches.sh
+RUN sh /build/apply-native-patches.sh
 COPY build.py /build/build.py
 COPY browser_runtime.py /build/browser_runtime.py
 RUN python /build/build.py "$BACKEND"

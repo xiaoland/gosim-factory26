@@ -14,8 +14,8 @@ use tokio::{
 use super::{
     SessionManager,
     provider::{
-        issue_system_prompt, materialized_profile_with_binding,
-        operational_status_unknown_profile, pr_system_prompt, review_system_prompt,
+        issue_system_prompt, materialized_profile_with_binding, operational_status_unknown_profile,
+        pr_system_prompt, review_system_prompt,
     },
 };
 use crate::{
@@ -121,7 +121,9 @@ impl GroupDriver<'_> {
         self.sessions.retain(&retained).await?;
         let mut unavailable = None;
         for candidate in candidates {
-            if !candidate.needs_resume { continue; }
+            if !candidate.needs_resume {
+                continue;
+            }
             if active_sessions.contains(&candidate.provider_session_id)
                 || self.sessions.is_live(&candidate.provider_session_id).await
             {
@@ -130,11 +132,20 @@ impl GroupDriver<'_> {
             if self.sessions.is_managed(&candidate.provider_session_id).await {
                 self.sessions.remove(&candidate.provider_session_id).await?;
             }
-            if candidate.session_lifecycle == "unknown" && !self.sessions.allow_uncertain_recovery(
-                &candidate.provider_session_id, &candidate.new_input_ids,
-            ).await {
+            if candidate.session_lifecycle == "unknown"
+                && !self
+                    .sessions
+                    .allow_uncertain_recovery(
+                        &candidate.provider_session_id,
+                        &candidate.new_input_ids,
+                    )
+                    .await
+            {
                 let error = crate::agent_session::SessionError::Deferred("automatic Unknown recovery already used; awaiting completed execution or new work input".into());
-                store.record_provider_resume_error(candidate.provider_session_id.clone(), error.to_string())?;
+                store.record_provider_resume_error(
+                    candidate.provider_session_id.clone(),
+                    error.to_string(),
+                )?;
                 unavailable = Some(error);
                 continue;
             }
@@ -186,7 +197,12 @@ impl GroupDriver<'_> {
                     head_ref,
                     candidate.member_login.as_deref(),
                 ),
-                None if self.spec.kind==GroupKind::Review => review_system_prompt(self.config,profile,candidate.number,candidate.member_login.as_deref()),
+                None if self.spec.kind == GroupKind::Review => review_system_prompt(
+                    self.config,
+                    profile,
+                    candidate.number,
+                    candidate.member_login.as_deref(),
+                ),
                 None => issue_system_prompt(
                     self.config,
                     profile,
@@ -227,19 +243,47 @@ impl GroupDriver<'_> {
                 unavailable = Some(crate::agent_session::SessionError::Failed(message.into()));
                 continue;
             }
-            if self.spec.kind==GroupKind::Review {
-                if let Err(error)=self.github.verify_reviewer_checkout(candidate.number as i64,&worktree_path,candidate.member_login.as_deref().unwrap_or(""),&self.config.tools.git) {
-                    store.block_provider_session(candidate.provider_session_id.clone(),error.to_string())?;
-                    unavailable=Some(crate::agent_session::SessionError::Failed(error.to_string()));
+            if self.spec.kind == GroupKind::Review {
+                if let Err(error) = self.github.verify_reviewer_checkout(
+                    candidate.number as i64,
+                    &worktree_path,
+                    candidate.member_login.as_deref().unwrap_or(""),
+                    &self.config.tools.git,
+                ) {
+                    store.block_provider_session(
+                        candidate.provider_session_id.clone(),
+                        error.to_string(),
+                    )?;
+                    unavailable =
+                        Some(crate::agent_session::SessionError::Failed(error.to_string()));
                     continue;
                 }
             }
             let mut effective_profile = profile.clone();
             effective_profile.workspace = Some(worktree_path);
+            let slot = match self.sessions.reserve().await {
+                Ok(slot) => slot,
+                Err(error) if error.is_deferred() => {
+                    unavailable = Some(error);
+                    break;
+                }
+                Err(error) => return Err(error.into()),
+            };
             store.clear_provider_binding(candidate.provider_session_id.clone())?;
-            let result = self.sessions.resume(candidate.provider_session_id.clone(), effective_profile, instructions).await;
+            let result = self
+                .sessions
+                .resume(
+                    candidate.provider_session_id.clone(),
+                    effective_profile,
+                    instructions,
+                    slot,
+                )
+                .await;
             if let Err(error) = &result {
-                store.record_provider_resume_error(candidate.provider_session_id.clone(), error.to_string())?;
+                store.record_provider_resume_error(
+                    candidate.provider_session_id.clone(),
+                    error.to_string(),
+                )?;
             }
             match result {
                 Ok(binding_id) => {
@@ -251,7 +295,9 @@ impl GroupDriver<'_> {
                             instruction_revision.clone(),
                         )?;
                         if candidate.session_lifecycle == "unknown" {
-                            self.sessions.note_uncertain_recovery(&candidate.provider_session_id).await;
+                            self.sessions
+                                .note_uncertain_recovery(&candidate.provider_session_id)
+                                .await;
                         }
                     }
                     tracing::info!(
@@ -264,15 +310,21 @@ impl GroupDriver<'_> {
                 Err(crate::agent_session::SessionError::HistoryUnavailable(reason)) => {
                     // This path is allowed only after resume's stop proof and
                     // the adapter's positive evidence of missing native history.
-                    store.begin_provider_replacement(candidate.provider_session_id.clone(), self.spec.profile_record.clone())?;
+                    store.begin_provider_replacement(
+                        candidate.provider_session_id.clone(),
+                        self.spec.profile_record.clone(),
+                    )?;
                     tracing::warn!(provider_session = %candidate.provider_session_id, %reason, "native history missing; requesting fresh Context");
                 }
                 Err(error @ crate::agent_session::SessionError::ResourceDeferred(_)) => {
-                    if unavailable.is_none() { unavailable = Some(error); }
+                    if unavailable.is_none() {
+                        unavailable = Some(error);
+                    }
                 }
-                Err(error @ (crate::agent_session::SessionError::Unavailable | crate::agent_session::SessionError::Deferred(_))) => {
-                    unavailable = Some(error)
-                }
+                Err(
+                    error @ (crate::agent_session::SessionError::Unavailable
+                    | crate::agent_session::SessionError::Deferred(_)),
+                ) => unavailable = Some(error),
                 Err(error) => {
                     store.block_provider_session(
                         candidate.provider_session_id.clone(),
@@ -289,21 +341,41 @@ impl GroupDriver<'_> {
         Ok(())
     }
 
-    pub(super) async fn start_materialized_assignment(&self,candidate:&crate::store::AssignmentCandidate,materialization:crate::store::AgentMaterialization,
-        profile:Profile,instructions:String,rendered:crate::context::RenderedContext)->Result<()> {
-        let instruction_revision=hex::encode(Sha256::digest(instructions.as_bytes()));
-        match self.sessions.start(profile,instructions,rendered.text).await {
-            Ok((thread_id,binding_id))=>{
-                if let Err(error)=self.store.complete_agent_assignment(materialization,thread_id.clone(),binding_id,rendered.revision,instruction_revision) {
+    pub(super) async fn start_materialized_assignment(
+        &self,
+        candidate: &crate::store::AssignmentCandidate,
+        materialization: crate::store::AgentMaterialization,
+        profile: Profile,
+        instructions: String,
+        rendered: crate::context::RenderedContext,
+        slot: Arc<super::session_manager::ExecutionSlot>,
+    ) -> Result<()> {
+        let instruction_revision = hex::encode(Sha256::digest(instructions.as_bytes()));
+        match self.sessions.start(profile, instructions, rendered.text, slot).await {
+            Ok((thread_id, binding_id)) => {
+                if let Err(error) = self.store.complete_agent_assignment(
+                    materialization,
+                    thread_id.clone(),
+                    binding_id,
+                    rendered.revision,
+                    instruction_revision,
+                ) {
                     self.sessions.remove(&thread_id).await?;
                     return Err(error.into());
                 }
                 Ok(())
             }
-            Err(error)=>{
+            Err(error) => {
                 if error.is_deferred() {
-                    self.store.defer_agent_assignment(materialization.assignment_id,candidate.event_id.clone(),error.to_string())?;
-                } else {self.store.fail_agent_assignment(materialization.assignment_id,error.to_string())?;}
+                    self.store.defer_agent_assignment(
+                        materialization.assignment_id,
+                        candidate.event_id.clone(),
+                        error.to_string(),
+                    )?;
+                } else {
+                    self.store
+                        .fail_agent_assignment(materialization.assignment_id, error.to_string())?;
+                }
                 Err(error.into())
             }
         }
@@ -324,6 +396,7 @@ pub(crate) async fn agent_group_worker(
     config: Config,
     spec: GroupSpec,
     factory: Arc<dyn SessionFactory>,
+    execution_pool: super::session_manager::ExecutionPool,
     reports: tokio::sync::mpsc::Sender<crate::health::ProviderHealthUpdate>,
     fatal_stops: tokio::sync::mpsc::Sender<String>,
     mut shutdown: watch::Receiver<bool>,
@@ -333,7 +406,12 @@ pub(crate) async fn agent_group_worker(
         github: &github,
         config: &config,
         spec: &spec,
-        sessions: SessionManager::new(factory, config.runtime.root().to_path_buf(), config.runtime.offline_stopped_sessions.clone()),
+        sessions: SessionManager::new(
+            factory,
+            config.runtime.root().to_path_buf(),
+            config.runtime.offline_stopped_sessions.clone(),
+            execution_pool,
+        ),
     };
     let drive_error = driver.drive(&reports, &fatal_stops, &mut shutdown).await;
     let retain_error = if drive_error.is_none() {
@@ -362,7 +440,9 @@ impl GroupDriver<'_> {
         error: Option<String>,
     ) -> Result<(), crate::agent_session::SessionError> {
         active.telemetry.finish(lifecycle);
-        if lifecycle == "completed" { self.sessions.note_completed(&active.claim.provider_session_id).await; }
+        if lifecycle == "completed" {
+            self.sessions.note_completed(&active.claim.provider_session_id).await;
+        }
         let result = if let Some(reset_id) = &active.reset_id {
             let reset = self.store.refresh_context_reset(reset_id.clone());
             let expected = reset.as_ref().map(super::provider::render_context_reset_notice);
@@ -370,37 +450,57 @@ impl GroupDriver<'_> {
                 match (self.sessions.get(&active.claim.provider_session_id).await, &expected) {
                     (Some(session), Ok(message)) => session.message_was_processed(message).await,
                     (None, _) => Err(crate::agent_session::SessionError::Unavailable),
-                    (_, Err(error)) => Err(crate::agent_session::SessionError::Failed(error.to_string())),
+                    (_, Err(error)) => {
+                        Err(crate::agent_session::SessionError::Failed(error.to_string()))
+                    }
                 }
-            } else { Ok(false) };
+            } else {
+                Ok(false)
+            };
             match (lifecycle, observed) {
                 ("completed", Ok(true)) => {
                     // The durable reset stays interrupting until native teardown
                     // is proved; a failed stop cannot enable a replacement.
                     self.sessions.remove(&active.claim.provider_session_id).await?;
                     self.store.mark_context_reset_turn_terminal(
-                        reset_id.clone(), active.claim.turn_id.clone(), lifecycle.into(),
+                        reset_id.clone(),
+                        active.claim.turn_id.clone(),
+                        lifecycle.into(),
                     )
                 }
                 ("completed", _) if active.claim.trigger_kind != "context_reset_notice" => {
                     self.store.defer_context_reset_notice(
-                        reset_id.clone(), active.claim.turn_id.clone(), lifecycle.into(), None,
+                        reset_id.clone(),
+                        active.claim.turn_id.clone(),
+                        lifecycle.into(),
+                        None,
                     )
                 }
-                ("completed", Ok(false)) if active.notice_text.as_deref()
-                    != expected.as_ref().ok().map(String::as_str) => {
+                ("completed", Ok(false))
+                    if active.notice_text.as_deref()
+                        != expected.as_ref().ok().map(String::as_str) =>
+                {
                     self.store.defer_context_reset_notice(
-                        reset_id.clone(), active.claim.turn_id.clone(), lifecycle.into(), None,
+                        reset_id.clone(),
+                        active.claim.turn_id.clone(),
+                        lifecycle.into(),
+                        None,
                     )
                 }
                 ("completed", evidence) => {
                     let reason = match evidence {
-                        Ok(false) => "Pi did not record the reset notice followed by assistant work".to_string(),
+                        Ok(false) => {
+                            "Pi did not record the reset notice followed by assistant work"
+                                .to_string()
+                        }
                         Err(error) => error.to_string(),
                         Ok(true) => unreachable!(),
                     };
                     let result = self.store.defer_context_reset_notice(
-                        reset_id.clone(), active.claim.turn_id.clone(), lifecycle.into(), None,
+                        reset_id.clone(),
+                        active.claim.turn_id.clone(),
+                        lifecycle.into(),
+                        None,
                     );
                     if result.is_ok() {
                         let _ = self.store.fail_context_reset(reset_id.clone(), reason);
@@ -408,9 +508,14 @@ impl GroupDriver<'_> {
                     result
                 }
                 (_, _) => {
-                    let result = self.store.mark_turn_terminal(active.claim.turn_id.clone(), lifecycle.into(), error.clone());
+                    let result = self.store.mark_turn_terminal(
+                        active.claim.turn_id.clone(),
+                        lifecycle.into(),
+                        error.clone(),
+                    );
                     let _ = self.store.fail_context_reset(
-                        reset_id.clone(), format!("old session ended {lifecycle} before reset notice was processed"),
+                        reset_id.clone(),
+                        format!("old session ended {lifecycle} before reset notice was processed"),
                     );
                     result
                 }
@@ -461,20 +566,32 @@ impl GroupDriver<'_> {
                         break Some((outcome.lifecycle(), error));
                     }
                     Err(TryRecvError::Empty) => break None,
-                    Err(TryRecvError::Closed) => break Some(("unknown", Some("provider event stream closed before terminal receipt".into()))),
+                    Err(TryRecvError::Closed) => {
+                        break Some((
+                            "unknown",
+                            Some("provider event stream closed before terminal receipt".into()),
+                        ));
+                    }
                     Err(TryRecvError::Lagged(skipped)) => {
                         tracing::warn!(
                             skipped,
                             provider_session = id,
                             "session event consumer lagged"
                         );
-                        break Some(("unknown", Some(format!("provider event stream lagged by {skipped} events"))));
+                        break Some((
+                            "unknown",
+                            Some(format!("provider event stream lagged by {skipped} events")),
+                        ));
                     }
                 }
             };
             if let Some((lifecycle, error)) = terminal {
-                self.finish_running(running.remove(&id).expect("owned active session"), lifecycle, error)
-                    .await?;
+                self.finish_running(
+                    running.remove(&id).expect("owned active session"),
+                    lifecycle,
+                    error,
+                )
+                .await?;
             }
         }
         Ok(())
@@ -572,6 +689,8 @@ impl GroupDriver<'_> {
             }
             let materialize = tokio::time::Instant::now() >= recovery;
             if materialize {
+                self.sessions.begin_admission_cycle();
+                let mut unload_error = None;
                 if let Err(error) =
                     self.unload_idle_sessions(&running.keys().cloned().collect()).await
                 {
@@ -580,6 +699,7 @@ impl GroupDriver<'_> {
                         return Some(error.to_string());
                     }
                     tracing::warn!(%error, "cannot unload idle native session");
+                    unload_error = Some(error);
                 }
                 let readiness = self.sessions.check().await;
                 available = readiness.is_ok();
@@ -587,7 +707,7 @@ impl GroupDriver<'_> {
                     Ok(()) => self.resume(&running.keys().cloned().collect()).await,
                     Err(error) => Err(error.into()),
                 };
-                recovery_error = result.err();
+                recovery_error = result.err().or(unload_error);
                 if let Some(error) = &recovery_error {
                     tracing::warn!(%error, kind = self.spec.kind.as_str(), "session recovery unavailable");
                 }
@@ -599,37 +719,43 @@ impl GroupDriver<'_> {
             }
             if available {
                 if tokio::time::Instant::now() >= reactivation_retry {
-                    let (_, lifecycle_turn, retryable_error) = Box::pin(self.handle_next_work_item_lifecycle()).await;
+                    let (_, lifecycle_turn, retryable_error) =
+                        Box::pin(self.handle_next_work_item_lifecycle()).await;
                     if let Some(active) = lifecycle_turn {
                         running.insert(active.claim.provider_session_id.clone(), active);
                     }
                     if let Some(error) = retryable_error {
                         reactivation_retry = recovery;
                         reactivation_error = Some(error);
-                    } else { reactivation_error = None; }
-                }
-                if materialize {
-                match Box::pin(self.materialize_next_context_reset()).await {
-                    Ok(_) => {}
-                    Err(error) => {
-                        let stop_failure = self.sessions.take_stop_failure().await;
-                        let message = error.to_string();
-                        if let Some(error) = stop_failure {
-                            let _ = fatal_stops.send(error).await;
-                        }
-                        let _ = reports
-                            .send(crate::health::ProviderHealthUpdate {
-                                group: self.spec.group_id(),
-                                error: Some(message.clone()),
-                                can_progress: false,
-                                waiting_for_resources: false,
-                            })
-                            .await;
-                        return Some(message);
+                    } else {
+                        reactivation_error = None;
                     }
                 }
-                self.materialize_next_assignment().await;
+                if materialize {
+                    match Box::pin(self.materialize_next_context_reset()).await {
+                        Ok(_) => {}
+                        Err(error) => {
+                            let stop_failure = self.sessions.take_stop_failure().await;
+                            let message = error.to_string();
+                            if let Some(error) = stop_failure {
+                                let _ = fatal_stops.send(error).await;
+                            }
+                            let _ = reports
+                                .send(crate::health::ProviderHealthUpdate {
+                                    group: self.spec.group_id(),
+                                    error: Some(message.clone()),
+                                    can_progress: false,
+                                    waiting_for_resources: false,
+                                })
+                                .await;
+                            return Some(message);
+                        }
+                    }
+                    self.materialize_next_assignment().await;
                 }
+            }
+            if materialize {
+                self.sessions.end_admission_cycle().await;
             }
             if let Some(active) = self.start_next_agent_turn().await {
                 running.insert(active.claim.provider_session_id.clone(), active);
@@ -648,9 +774,10 @@ impl GroupDriver<'_> {
             }
             if materialize {
                 let deferred = self.sessions.take_deferred().await.map(anyhow::Error::from);
+                let admission_waiting = self.sessions.admission_waiting().await;
                 let can_progress =
                     match self.can_progress(&running, available, deferred.is_some()).await {
-                        Ok(can_progress) => can_progress,
+                        Ok(can_progress) => can_progress || admission_waiting,
                         Err(error) => {
                             recovery_error = Some(error);
                             false
@@ -663,7 +790,10 @@ impl GroupDriver<'_> {
                 // indefinitely; the supervisor retains the exact error and
                 // performs any bounded remediation before closing the run.
                 let error = errors.iter().copied().flatten().next();
-                let waiting_for_resources = false;
+                // A bounded execution pool is normal queued work, distinct
+                // from a provider startup/resource failure. All workers report
+                // health even when no physical session has been admitted.
+                let waiting_for_resources = admission_waiting;
                 if reports
                     .send(crate::health::ProviderHealthUpdate {
                         group: self.spec.group_id(),
@@ -682,41 +812,97 @@ impl GroupDriver<'_> {
 }
 
 impl GroupDriver<'_> {
-    async fn can_progress(&self, running: &HashMap<String, RunningAgentTurn>, available: bool, deferred: bool) -> Result<bool> {
-        if !running.is_empty() { return Ok(true); }
+    async fn can_progress(
+        &self,
+        running: &HashMap<String, RunningAgentTurn>,
+        available: bool,
+        deferred: bool,
+    ) -> Result<bool> {
+        if !running.is_empty() {
+            return Ok(true);
+        }
         // Native streaming can continue between Braid turns. A service merely
         // remaining resident does not by itself count as work making progress.
         for id in self.sessions.managed_ids().await {
             if let Some(session) = self.sessions.get(&id).await {
-                if matches!(session.can_accept_input().await, Ok(false)) { return Ok(true); }
+                if matches!(session.can_accept_input().await, Ok(false)) {
+                    return Ok(true);
+                }
             }
         }
-        let candidates = self.store.provider_resume_candidates(self.spec.profile.id.clone(), self.spec.kind.as_str().into())?;
+        let candidates = self.store.provider_resume_candidates(
+            self.spec.profile.id.clone(),
+            self.spec.kind.as_str().into(),
+        )?;
         for candidate in candidates {
-            if !candidate.needs_resume { continue; }
-            if candidate.session_lifecycle == "unknown" && !self.sessions.allow_uncertain_recovery(
-                &candidate.provider_session_id, &candidate.new_input_ids,
-            ).await { continue; }
+            if !candidate.needs_resume {
+                continue;
+            }
+            if candidate.session_lifecycle == "unknown"
+                && !self
+                    .sessions
+                    .allow_uncertain_recovery(
+                        &candidate.provider_session_id,
+                        &candidate.new_input_ids,
+                    )
+                    .await
+            {
+                continue;
+            }
             if self.sessions.is_live(&candidate.provider_session_id).await {
-                if !self.sessions.session_deferred(&candidate.provider_session_id).await { return Ok(true); }
-            } else if available && !deferred && !self.sessions.session_deferred(&candidate.provider_session_id).await {
+                if !self.sessions.session_deferred(&candidate.provider_session_id).await {
+                    return Ok(true);
+                }
+            } else if available
+                && !deferred
+                && !self.sessions.session_deferred(&candidate.provider_session_id).await
+            {
                 return Ok(true);
             }
         }
-        if !available || deferred { return Ok(false); }
-        if self.store.ready_context_reset(self.spec.kind.as_str().into(), self.spec.profile.id.clone())?.is_some() { return Ok(true); }
-        if !self.store.assignment_candidates(self.spec.kind.as_str().into(), self.spec.profile.id.clone())?.is_empty() { return Ok(true); }
-        Ok(!self.store.work_item_lifecycle_candidates(self.spec.kind.as_str().into(), 1)?.is_empty())
+        if !available || deferred {
+            return Ok(false);
+        }
+        if self
+            .store
+            .ready_context_reset(self.spec.kind.as_str().into(), self.spec.profile.id.clone())?
+            .is_some()
+        {
+            return Ok(true);
+        }
+        if !self
+            .store
+            .assignment_candidates(self.spec.kind.as_str().into(), self.spec.profile.id.clone())?
+            .is_empty()
+        {
+            return Ok(true);
+        }
+        Ok(!self
+            .store
+            .work_item_lifecycle_candidates(self.spec.kind.as_str().into(), 1)?
+            .is_empty())
     }
 
     async fn unload_idle_sessions(&self, active: &HashSet<String>) -> Result<()> {
         for id in self.sessions.managed_ids().await {
-            if active.contains(&id) { continue; }
-            let Some(session) = self.sessions.get(&id).await else { continue; };
-            if !matches!(session.managed_state().await, Ok(crate::agent_session::ManagedState::Quiescent)) { continue; }
+            if active.contains(&id) {
+                continue;
+            }
+            let Some(session) = self.sessions.get(&id).await else {
+                continue;
+            };
+            let mut managed = session.managed_state().await?;
+            let pool_pressure = self.sessions.pool_waiting();
+            if pool_pressure && managed == crate::agent_session::ManagedState::Busy {
+                managed = session.yield_stoppable_services().await?;
+            }
+            if managed != crate::agent_session::ManagedState::Quiescent {
+                continue;
+            }
             // Fencing and input inspection share a Store transaction. Inputs
             // arriving after this boundary remain queued for the next resume.
-            if self.store.fence_idle_provider(id.clone())? {
+            let resource_deferred = self.sessions.session_resource_deferred(&id).await;
+            if self.store.fence_idle_provider(id.clone(), resource_deferred || pool_pressure)? {
                 self.sessions.remove(&id).await?;
                 tracing::info!(provider_session = %id, "unloaded quiescent OPEN member; logical session retained");
             }

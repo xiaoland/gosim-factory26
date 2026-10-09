@@ -48,7 +48,7 @@ PR #2 已合入 develop，基础能力总体可消费：Node 20 ABI 路径、see
 
 **决定、动作与后果。** 错误子命令和失效写入调用没有改变源码、候选或最终测试结果；context reset 的“execution failed”也不能直接当作代码失败。正确处理是保留原错误、确认写入是否生效，再用当前有效会话重读 board/PR/branch 状态。当前材料完成了这条区分，但工具输出仍曾在多个会话中反复复制，增加了审计成本。
 
-**下一轮判别证据。** 任何“失败”通知都应同时给出 operation、candidate/revision、exit code 或 provider lifecycle；只有能落到应用进程/测试进程和对应候选的失败才升级为应用缺陷。开发侧 run-monitor 可以帮助编排这类证据，但不应作为参赛运行时依赖。
+**下一轮判别证据。** 任何“失败”通知都应同时给出 operation、candidate/revision、exit code 或 provider lifecycle；只有能落到应用进程/测试进程和对应候选的失败才升级为应用缺陷。开发侧的旧监控说明已删除，不能作为参赛运行时依赖。
 
 ## 发现 FND-6：基础交付卫生没有覆盖 core dump，后续模块可能把运行崩溃变成大体积交付污染（中影响，跨单元已暴露）
 

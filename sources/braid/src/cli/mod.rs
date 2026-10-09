@@ -1,9 +1,12 @@
-mod review;
+mod execution;
 mod maintenance;
+mod review;
 
 use crate::{
     context::CommentSnapshot,
-    objects::{CommentResolution, IssueCreateResult, Item, ItemEditResult, LocalObjects, PrCreateResult},
+    objects::{
+        CommentResolution, IssueCreateResult, Item, ItemEditResult, LocalObjects, PrCreateResult,
+    },
 };
 use anyhow::{Context as _, Result, ensure};
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -46,6 +49,11 @@ enum Command {
     Status {
         #[arg(long)]
         json: bool,
+    },
+    /// 按工作项查询负责人、实际执行状态、工作区与原生证据入口；不判断产品进展。
+    Execution {
+        #[command(subcommand)]
+        command: execution::ExecutionCommand,
     },
     #[command(hide = true)]
     Profile {
@@ -95,6 +103,9 @@ enum TelemetryCommand {
     Reconstruct {
         #[arg(long)]
         input: PathBuf,
+        /// Previously decoded JSON from cumulative OTLP cutoffs.
+        #[arg(long)]
+        decoded: Option<PathBuf>,
         #[arg(long)]
         output: PathBuf,
         #[arg(long)]
@@ -169,17 +180,35 @@ struct JsonFields {
 }
 
 #[derive(Clone, Copy, ValueEnum)]
-enum IssueListState { Open, Closed, All }
+enum IssueListState {
+    Open,
+    Closed,
+    All,
+}
 
 #[derive(Clone, Copy, ValueEnum)]
-enum PrListState { Open, Closed, Merged, All }
+enum PrListState {
+    Open,
+    Closed,
+    Merged,
+    All,
+}
 
 #[derive(Clone, Copy, ValueEnum)]
-enum IssueCloseReason { Completed, #[value(name = "not planned")] NotPlanned, Duplicate }
+enum IssueCloseReason {
+    Completed,
+    #[value(name = "not planned")]
+    NotPlanned,
+    Duplicate,
+}
 
 impl IssueCloseReason {
     fn value(self) -> &'static str {
-        match self { Self::Completed => "completed", Self::NotPlanned => "not planned", Self::Duplicate => "duplicate" }
+        match self {
+            Self::Completed => "completed",
+            Self::NotPlanned => "not planned",
+            Self::Duplicate => "duplicate",
+        }
     }
 }
 
@@ -202,7 +231,13 @@ struct CommentArgs {
 enum IssueCommand {
     /// 默认最多 30 项，按编号倒序；输出说明 has_more，JSON 数组的截断提示写入 stderr。
     List {
-        #[arg(short = 's', long = "state", value_name = "STATE", value_enum, default_value = "open")]
+        #[arg(
+            short = 's',
+            long = "state",
+            value_name = "STATE",
+            value_enum,
+            default_value = "open"
+        )]
         filter_state: IssueListState,
         #[arg(short = 'L', long, default_value_t = 30)]
         limit: usize,
@@ -296,11 +331,28 @@ enum IssueCommand {
 #[derive(Subcommand)]
 enum PrCommand {
     /// 请求固定候选验收；不改变draft或PR实施责任。
-    RequestReview { id:i64, #[arg(long)] issue:Option<i64>, #[arg(long)] request_id:String, #[arg(long)] json:bool },
-    Review { #[command(subcommand)] command:review::ReviewCommand },
+    RequestReview {
+        id: i64,
+        #[arg(long)]
+        issue: Option<i64>,
+        #[arg(long)]
+        request_id: String,
+        #[arg(long)]
+        json: bool,
+    },
+    Review {
+        #[command(subcommand)]
+        command: review::ReviewCommand,
+    },
     /// 默认最多 30 项，按编号倒序；输出说明 has_more，JSON 数组的截断提示写入 stderr。
     List {
-        #[arg(short = 's', long = "state", value_name = "STATE", value_enum, default_value = "open")]
+        #[arg(
+            short = 's',
+            long = "state",
+            value_name = "STATE",
+            value_enum,
+            default_value = "open"
+        )]
         filter_state: PrListState,
         #[arg(short = 'L', long, default_value_t = 30)]
         limit: usize,
@@ -517,8 +569,18 @@ enum CommentCommand {
 
 #[derive(Subcommand)]
 enum ReactionCommand {
-    Add { id: i64, expression: String, #[arg(long)] json: bool },
-    Remove { id: i64, expression: String, #[arg(long)] json: bool },
+    Add {
+        id: i64,
+        expression: String,
+        #[arg(long)]
+        json: bool,
+    },
+    Remove {
+        id: i64,
+        expression: String,
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 fn output(value: impl serde::Serialize) -> Result<()> {
@@ -553,7 +615,8 @@ fn public_item_fields(map: &mut Map<String, Value>) {
         map.insert(public.into(), map[legacy].clone());
     }
     for (public, legacy) in [("headRefName", "head_ref"), ("baseRefName", "base_ref")] {
-        let value = map[legacy].as_str().map(|name| name.strip_prefix("refs/heads/").unwrap_or(name));
+        let value =
+            map[legacy].as_str().map(|name| name.strip_prefix("refs/heads/").unwrap_or(name));
         map.insert(public.into(), value.into());
     }
 }
@@ -594,7 +657,10 @@ fn comment_json(comment: &CommentSnapshot) -> Result<Value> {
     };
     value.insert("lifecycle".into(), lifecycle.into());
     if comment.body.is_none() && !comment.deleted {
-        value.insert("read_body_with".into(), format!("braid comment view {} --include-hidden", comment.database_id).into());
+        value.insert(
+            "read_body_with".into(),
+            format!("braid comment view {} --include-hidden", comment.database_id).into(),
+        );
     }
     Ok(Value::Object(value))
 }
@@ -630,7 +696,11 @@ fn print_item(
     }
     let label = if item.kind == "pr" { "PR" } else { "Issue" };
     let draft = if item.kind == "pr" && item.draft { " - draft" } else { "" };
-    let assignee = item.assignees.first().map(|actor| format!("@{}", actor.login)).unwrap_or_else(|| "未指派".into());
+    let assignee = item
+        .assignees
+        .first()
+        .map(|actor| format!("@{}", actor.login))
+        .unwrap_or_else(|| "未指派".into());
     println!("# {label} {} - {} - {}{draft} - {assignee}", item.id, item.title, item.state);
     if let Some(reason) = &item.reason {
         println!("reason: {reason}");
@@ -642,7 +712,10 @@ fn print_item(
         println!("last ready observation: {commit}");
     }
     if let Some(fact) = &item.execution {
-        println!("最近执行尝试：{} 于 {}；{}（错误详情：braid {} view {} --json execution_error）", fact.outcome, fact.at, fact.summary, item.kind, item.id);
+        println!(
+            "最近执行尝试：{} 于 {}；{}（错误详情：braid {} view {} --json execution_error）",
+            fact.outcome, fact.at, fact.summary, item.kind, item.id
+        );
     }
     if !item.body.is_empty() {
         let mut text = String::from("\n## Description\n");
@@ -653,29 +726,106 @@ fn print_item(
     Ok(())
 }
 
-const ISSUE_VIEW_FIELDS: &[&str] = &["review_requests","parent_issue", "sub_issues", "associated_prs", "subscriptions", "execution_error"];
-const PR_VIEW_FIELDS: &[&str] = &["review_requests","associated_issues", "closing_issues", "base_commit", "head_commit", "base_error", "head_error", "merge_commit", "subscriptions", "execution_error", "assignee_activity", "assignee_deliveries", "headRefOid", "baseRefOid"];
-const COMMENT_FIELDS: &[&str] = &["node_id", "database_id", "repository", "work_item_number", "author", "created_at", "updated_at", "body", "minimized", "minimized_reason", "hidden_by", "hidden_by_reason", "pinned", "deleted", "reply_to", "thread_root", "resolved", "folded", "reactions", "lifecycle", "read_body_with", "deliveries"];
+const ISSUE_VIEW_FIELDS: &[&str] = &[
+    "review_requests",
+    "parent_issue",
+    "sub_issues",
+    "associated_prs",
+    "subscriptions",
+    "execution_error",
+];
+const PR_VIEW_FIELDS: &[&str] = &[
+    "review_requests",
+    "associated_issues",
+    "closing_issues",
+    "base_commit",
+    "head_commit",
+    "base_error",
+    "head_error",
+    "merge_commit",
+    "subscriptions",
+    "execution_error",
+    "assignee_activity",
+    "assignee_deliveries",
+    "headRefOid",
+    "baseRefOid",
+];
+const COMMENT_FIELDS: &[&str] = &[
+    "node_id",
+    "database_id",
+    "repository",
+    "work_item_number",
+    "author",
+    "created_at",
+    "updated_at",
+    "body",
+    "minimized",
+    "minimized_reason",
+    "hidden_by",
+    "hidden_by_reason",
+    "pinned",
+    "deleted",
+    "reply_to",
+    "thread_root",
+    "resolved",
+    "folded",
+    "reactions",
+    "lifecycle",
+    "read_body_with",
+    "deliveries",
+];
 
 fn view_fields<'a>(kind: &str, fields: &'a str) -> Result<Vec<&'a str>> {
     let extra = if kind == "pr" { PR_VIEW_FIELDS } else { ISSUE_VIEW_FIELDS };
-    if fields == "all" { return Ok(ITEM_FIELDS.iter().copied().chain(extra.iter().copied()).chain(["comments"]).collect()); }
+    if fields == "all" {
+        return Ok(ITEM_FIELDS
+            .iter()
+            .copied()
+            .chain(extra.iter().copied())
+            .chain(["comments"])
+            .collect());
+    }
     let fields = fields.split(',').map(str::trim).collect::<Vec<_>>();
     for field in &fields {
-        ensure!(ITEM_FIELDS.contains(field) || extra.contains(field) || *field == "comments", "unknown {kind} view field {field:?}; available fields: {}", ITEM_FIELDS.iter().chain(extra).copied().chain(["comments"]).collect::<Vec<_>>().join(","));
+        ensure!(
+            ITEM_FIELDS.contains(field) || extra.contains(field) || *field == "comments",
+            "unknown {kind} view field {field:?}; available fields: {}",
+            ITEM_FIELDS
+                .iter()
+                .chain(extra)
+                .copied()
+                .chain(["comments"])
+                .collect::<Vec<_>>()
+                .join(",")
+        );
     }
     Ok(fields)
 }
 
-fn read_view(objects: &LocalObjects, kind: &str, id: i64, fields: Option<&str>, comments: bool, timeline: bool, after: i64, limit: i64) -> Result<()> {
+fn read_view(
+    objects: &LocalObjects,
+    kind: &str,
+    id: i64,
+    fields: Option<&str>,
+    comments: bool,
+    timeline: bool,
+    after: i64,
+    limit: i64,
+) -> Result<()> {
     if timeline {
         ensure!(!comments, "--timeline conflicts with --comments");
-        ensure!(fields.is_none_or(|fields| fields == "all"), "--timeline supports bare --json only; field selection applies to object view");
+        ensure!(
+            fields.is_none_or(|fields| fields == "all"),
+            "--timeline supports bare --json only; field selection applies to object view"
+        );
         return print_timeline(objects, kind, id, after, limit, fields.is_some());
     }
     let selected = fields.map(|fields| view_fields(kind, fields)).transpose()?;
     if comments && let Some(selected) = &selected {
-        ensure!(selected.contains(&"comments"), "--comments requires comments in the JSON field selection; use --json comments or omit --comments");
+        ensure!(
+            selected.contains(&"comments"),
+            "--comments requires comments in the JSON field selection; use --json comments or omit --comments"
+        );
     }
     let wants = |field| selected.as_ref().is_none_or(|fields| fields.contains(&field));
     let include_comments = if selected.is_some() { wants("comments") } else { comments };
@@ -684,9 +834,27 @@ fn read_view(objects: &LocalObjects, kind: &str, id: i64, fields: Option<&str>, 
     print_view(objects, &item, selected.as_deref(), comments.as_deref())
 }
 
-fn print_view(objects: &LocalObjects, item: &Item, fields: Option<&[&str]>, comments: Option<&[CommentSnapshot]>) -> Result<()> {
-    let detail_fields = fields.map(|fields| fields.iter().map(|field| match *field { "headRefOid" => "head_commit", "baseRefOid" => "base_commit", field => field }).collect::<Vec<_>>());
-    let details = if fields.is_none() { objects.view_details(&item.kind, item.id)? } else { objects.view_details_for_fields(&item.kind, item.id, detail_fields.as_deref())? };
+fn print_view(
+    objects: &LocalObjects,
+    item: &Item,
+    fields: Option<&[&str]>,
+    comments: Option<&[CommentSnapshot]>,
+) -> Result<()> {
+    let detail_fields = fields.map(|fields| {
+        fields
+            .iter()
+            .map(|field| match *field {
+                "headRefOid" => "head_commit",
+                "baseRefOid" => "base_commit",
+                field => field,
+            })
+            .collect::<Vec<_>>()
+    });
+    let details = if fields.is_none() {
+        objects.view_details(&item.kind, item.id)?
+    } else {
+        objects.view_details_for_fields(&item.kind, item.id, detail_fields.as_deref())?
+    };
     if let Some(fields) = fields {
         let mut all = serde_json::to_value(item)?;
         let map = all.as_object_mut().expect("item is an object");
@@ -696,8 +864,16 @@ fn print_view(objects: &LocalObjects, item: &Item, fields: Option<&[&str]>, comm
             map.insert("headRefOid".into(), map.get("head_commit").cloned().unwrap_or(Value::Null));
             map.insert("baseRefOid".into(), map.get("base_commit").cloned().unwrap_or(Value::Null));
         }
-        if let Some(comments) = comments { map.insert("comments".into(), Value::Array(comments.iter().map(comment_json).collect::<Result<Vec<_>>>()?)); }
-        let selected = fields.iter().map(|field| ((*field).to_owned(), map[*field].clone())).collect::<Map<_, _>>();
+        if let Some(comments) = comments {
+            map.insert(
+                "comments".into(),
+                Value::Array(comments.iter().map(comment_json).collect::<Result<Vec<_>>>()?),
+            );
+        }
+        let selected = fields
+            .iter()
+            .map(|field| ((*field).to_owned(), map[*field].clone()))
+            .collect::<Map<_, _>>();
         return output(selected);
     }
     print_item(item, None, comments)?;
@@ -712,12 +888,19 @@ fn print_view(objects: &LocalObjects, item: &Item, fields: Option<&[&str]>, comm
             let agent = activity["agent"].as_str().unwrap_or("unknown");
             let session = activity["session"].as_str().unwrap_or("none");
             let turn = activity["turn"].as_str().unwrap_or("none");
-            let status = if turn == "running" { "正在执行" }
-                else if turn == "starting" { "正在投递" }
-                else if assignment == "blocked" || agent == "blocked" || session == "blocked" { "执行受阻" }
-                else if matches!(session, "idle" | "sleeping") { "等待调度" }
-                else if session == "none" && matches!(assignment, "materializing" | "active") { "尚未启动" }
-                else { "状态待确认" };
+            let status = if turn == "running" {
+                "正在执行"
+            } else if turn == "starting" {
+                "正在投递"
+            } else if assignment == "blocked" || agent == "blocked" || session == "blocked" {
+                "执行受阻"
+            } else if matches!(session, "idle" | "sleeping") {
+                "等待调度"
+            } else if session == "none" && matches!(assignment, "materializing" | "active") {
+                "尚未启动"
+            } else {
+                "状态待确认"
+            };
             if let Some(started) = activity["turn_started_at"].as_str() {
                 println!("Braid 观察到的负责人执行状态：{status}（本轮开始于 {started}）");
             } else {
@@ -736,30 +919,74 @@ fn print_view(objects: &LocalObjects, item: &Item, fields: Option<&[&str]>, comm
             }
         }
         println!("head 仅是已发布提交；Braid 未观测未提交或未推送的工作。");
-        if let Some(commit) = details["merge_commit"].as_str() { println!("merged: {commit}"); }
+        if let Some(commit) = details["merge_commit"].as_str() {
+            println!("merged: {commit}");
+        }
         if let Some(issues) = details["closing_issues"].as_array() {
-            for issue in issues { println!("closing issue: #{issue}"); }
+            for issue in issues {
+                println!("closing issue: #{issue}");
+            }
         }
     }
-    for (field,label) in [("parent_issue","parent"),("sub_issues","sub-issue"),("associated_prs","PR"),("associated_issues","issue")] {
-        let values = if details[field].is_array() { details[field].as_array().cloned().unwrap_or_default() } else if details[field].is_object() { vec![details[field].clone()] } else { Vec::new() };
+    for (field, label) in [
+        ("parent_issue", "parent"),
+        ("sub_issues", "sub-issue"),
+        ("associated_prs", "PR"),
+        ("associated_issues", "issue"),
+    ] {
+        let values = if details[field].is_array() {
+            details[field].as_array().cloned().unwrap_or_default()
+        } else if details[field].is_object() {
+            vec![details[field].clone()]
+        } else {
+            Vec::new()
+        };
         for value in values {
-            println!("{label}: #{} [{}] {}", value["number"].as_u64().unwrap_or_default(), value["state"].as_str().unwrap_or("unknown"), value["title"].as_str().unwrap_or(""));
+            println!(
+                "{label}: #{} [{}] {}",
+                value["number"].as_u64().unwrap_or_default(),
+                value["state"].as_str().unwrap_or("unknown"),
+                value["title"].as_str().unwrap_or("")
+            );
         }
     }
     if let Some(activity) = details["activity"].as_array() {
-        for entry in activity { println!("{} {}", entry["at"].as_str().unwrap_or(""), entry["message"].as_str().unwrap_or("")); }
+        for entry in activity {
+            println!(
+                "{} {}",
+                entry["at"].as_str().unwrap_or(""),
+                entry["message"].as_str().unwrap_or("")
+            );
+        }
     }
     Ok(())
 }
-fn print_timeline(objects: &LocalObjects, kind: &str, id: i64, after: i64, limit: i64, as_json: bool) -> Result<()> {
+fn print_timeline(
+    objects: &LocalObjects,
+    kind: &str,
+    id: i64,
+    after: i64,
+    limit: i64,
+    as_json: bool,
+) -> Result<()> {
     let (rows, has_more) = objects.timeline(kind, id, after, limit)?;
     let next_after = rows.last().and_then(|row| row["ordinal"].as_i64());
-    if as_json { return output(json!({"items":rows,"after":after,"limit":limit,"has_more":has_more,"next_after":has_more.then_some(next_after).flatten()})); }
-    println!("协作历史：{} 条；{}。", rows.len(), if has_more { "后面还有记录" } else { "已到末尾" });
+    if as_json {
+        return output(
+            json!({"items":rows,"after":after,"limit":limit,"has_more":has_more,"next_after":has_more.then_some(next_after).flatten()}),
+        );
+    }
+    println!(
+        "协作历史：{} 条；{}。",
+        rows.len(),
+        if has_more { "后面还有记录" } else { "已到末尾" }
+    );
     for row in rows {
-        let author = row["author"].as_str().filter(|value| !value.is_empty())
-            .map(|value| format!("@{value}")).unwrap_or_else(|| "未记录成员".to_owned());
+        let author = row["author"]
+            .as_str()
+            .filter(|value| !value.is_empty())
+            .map(|value| format!("@{value}"))
+            .unwrap_or_else(|| "未记录成员".to_owned());
         let action = row["action"].as_str().unwrap_or("");
         let detail = row["detail"].as_str().unwrap_or("");
         if let Some(comment) = row["comment"].as_i64() {
@@ -773,7 +1000,9 @@ fn print_timeline(objects: &LocalObjects, kind: &str, id: i64, after: i64, limit
         }
     }
     if has_more && let Some(next_after) = next_after {
-        println!("下一页：braid {kind} view {id} --timeline --after {next_after} --limit {limit}（每页最多 100 条）");
+        println!(
+            "下一页：braid {kind} view {id} --timeline --after {next_after} --limit {limit}（每页最多 100 条）"
+        );
     }
     Ok(())
 }
@@ -800,17 +1029,42 @@ fn print_change(kind: &str, id: i64, action: &str, changed: bool, as_json: bool)
         "deleted" => "正文不可恢复，回复保留",
         _ => "",
     };
-    if as_json { return mutation_json(id, json!({"kind":kind,"action":action,"changed":changed,"effect":effect})); }
-    println!("{kind} #{id}：{action}；{}{}", if changed { "已改变" } else { "无变化" }, if effect.is_empty() { String::new() } else { format!("；{effect}") });
+    if as_json {
+        return mutation_json(
+            id,
+            json!({"kind":kind,"action":action,"changed":changed,"effect":effect}),
+        );
+    }
+    println!(
+        "{kind} #{id}：{action}；{}{}",
+        if changed { "已改变" } else { "无变化" },
+        if effect.is_empty() { String::new() } else { format!("；{effect}") }
+    );
     Ok(())
 }
 
-fn print_comment_resolution(results: &[CommentResolution], resolved: bool, as_json: bool) -> Result<()> {
-    if as_json { return output(results); }
+fn print_comment_resolution(
+    results: &[CommentResolution],
+    resolved: bool,
+    as_json: bool,
+) -> Result<()> {
+    if as_json {
+        return output(results);
+    }
     for result in results {
-        let cutoff = result.resolved_through.map_or_else(|| "无（已展开）".to_owned(), |id| format!("评论 #{id}"));
-        let previous = result.previous_resolved_through.map_or_else(|| "无".to_owned(), |id| format!("评论 #{id}"));
-        println!("讨论根 #{}：{}；折叠截至 {cutoff}（此前 {previous}）；本次前缀范围改变 {} 条记录；{}；新回复可见，独立 hide/delete 保留", result.thread_root, if resolved { "resolve" } else { "unresolve" }, result.affected_comments, if result.changed { "已改变" } else { "无变化" });
+        let cutoff = result
+            .resolved_through
+            .map_or_else(|| "无（已展开）".to_owned(), |id| format!("评论 #{id}"));
+        let previous = result
+            .previous_resolved_through
+            .map_or_else(|| "无".to_owned(), |id| format!("评论 #{id}"));
+        println!(
+            "讨论根 #{}：{}；折叠截至 {cutoff}（此前 {previous}）；本次前缀范围改变 {} 条记录；{}；新回复可见，独立 hide/delete 保留",
+            result.thread_root,
+            if resolved { "resolve" } else { "unresolve" },
+            result.affected_comments,
+            if result.changed { "已改变" } else { "无变化" }
+        );
     }
     Ok(())
 }
@@ -818,56 +1072,156 @@ fn print_comment_resolution(results: &[CommentResolution], resolved: bool, as_js
 fn print_list(items: &[Item], has_more: bool, limit: usize, fields: Option<&str>) -> Result<()> {
     if let Some(fields) = fields {
         selected_fields(fields, false)?;
-        output(items.iter().map(|item| json_item(item, fields, None)).collect::<Result<Vec<_>>>()?)?;
-        eprintln!("list：返回 {} 项，limit={limit}，has_more={has_more}{}", items.len(), if has_more { "；增大 --limit 读取更多" } else { "" });
+        output(
+            items.iter().map(|item| json_item(item, fields, None)).collect::<Result<Vec<_>>>()?,
+        )?;
+        eprintln!(
+            "list：返回 {} 项，limit={limit}，has_more={has_more}{}",
+            items.len(),
+            if has_more { "；增大 --limit 读取更多" } else { "" }
+        );
     } else {
-        for item in items { println!("#{}\t{}\t{}\t{}", item.id, item.state, item.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login)), item.title); }
-        println!("list：返回 {} 项，limit={limit}，has_more={has_more}{}", items.len(), if has_more { "；增大 --limit 读取更多" } else { "" });
+        for item in items {
+            println!(
+                "#{}\t{}\t{}\t{}",
+                item.id,
+                item.state,
+                item.assignees
+                    .first()
+                    .map_or("未指派".into(), |actor| format!("@{}", actor.login)),
+                item.title
+            );
+        }
+        println!(
+            "list：返回 {} 项，limit={limit}，has_more={has_more}{}",
+            items.len(),
+            if has_more { "；增大 --limit 读取更多" } else { "" }
+        );
     }
     Ok(())
 }
 
 fn print_issue_created(result: &IssueCreateResult, as_json: bool) -> Result<()> {
-    if as_json { return mutation_json(result.id, json!({"kind":"issue","action":"created","changed":true,"assignees":result.assignees})); }
-    println!("issue #{}：已创建；负责人 {}", result.id, result.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login)));
+    if as_json {
+        return mutation_json(
+            result.id,
+            json!({"kind":"issue","action":"created","changed":true,"assignees":result.assignees,"automatic_result":result.automatic_result,"execution_dispatch": if result.assignees.is_empty() { None } else { Some("queued") }}),
+        );
+    }
+    println!(
+        "issue #{}：已创建；负责人 {}",
+        result.id,
+        result.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login))
+    );
+    if !result.assignees.is_empty() {
+        println!(
+            "执行 queued：已登记指派，实际启动等待执行槽；用 braid execution issue {} 查询。",
+            result.id
+        );
+    }
+    if let Some(result) = &result.automatic_result {
+        println!("自动处理：{} → {}；{}", result.requested, result.actual, result.reason);
+    }
     Ok(())
 }
 
 fn print_edit(kind: &str, id: i64, result: &ItemEditResult, as_json: bool) -> Result<()> {
-    if as_json { return mutation_json(id, json!({"kind":kind,"action":"edited","changed":!result.changed_fields.is_empty(),"changed_fields":result.changed_fields,"assignees":result.assignees})); }
-    println!("{kind} #{id}：{}；负责人 {}", if result.changed_fields.is_empty() { "无变化".into() } else { format!("已修改 {}", result.changed_fields.join(",")) }, result.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login)));
+    if as_json {
+        return mutation_json(
+            id,
+            json!({"kind":kind,"action":"edited","changed":!result.changed_fields.is_empty(),"changed_fields":result.changed_fields,"assignees":result.assignees,"automatic_result":result.automatic_result,"execution_dispatch":if result.changed_fields.contains(&"assignees") && !result.assignees.is_empty() { Some("queued") } else { None }}),
+        );
+    }
+    println!(
+        "{kind} #{id}：{}；负责人 {}",
+        if result.changed_fields.is_empty() {
+            "无变化".into()
+        } else {
+            format!("已修改 {}", result.changed_fields.join(","))
+        },
+        result.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login))
+    );
+    if result.changed_fields.contains(&"assignees") && !result.assignees.is_empty() {
+        println!(
+            "执行 queued：已登记指派，实际启动等待执行槽；用 braid execution {kind} {id} 查询。"
+        );
+    }
+    if let Some(result) = &result.automatic_result {
+        println!("自动处理：{} → {}；{}", result.requested, result.actual, result.reason);
+    }
     Ok(())
 }
 
-fn write_comment(objects: &LocalObjects, turn: Option<&str>, kind: &str, id: i64, reply_to: Option<i64>, comment: CommentArgs, as_json: bool) -> Result<()> {
+fn write_comment(
+    objects: &LocalObjects,
+    turn: Option<&str>,
+    kind: &str,
+    id: i64,
+    reply_to: Option<i64>,
+    comment: CommentArgs,
+    as_json: bool,
+) -> Result<()> {
     let CommentArgs { body, edit_last, delete_last, yes } = comment;
     if edit_last || delete_last {
         ensure!(reply_to.is_none(), "--reply-to cannot be combined with last-comment operations");
         if delete_last {
             ensure!(yes, "--delete-last requires --yes");
-            ensure!(body.body.is_none() && body.body_file.is_none(), "--delete-last does not accept a body");
+            ensure!(
+                body.body.is_none() && body.body_file.is_none(),
+                "--delete-last does not accept a body"
+            );
         }
         let last = objects.last_comment_by_current_member(turn, kind, id)?;
-        let (action, changed) = if delete_last { ("deleted", objects.comment_lifecycle(turn, last, "delete")?) } else { ("edited", objects.edit_comment(turn, last, &body.required()?)?) };
+        let (action, changed) = if delete_last {
+            ("deleted", objects.comment_lifecycle(turn, last, "delete")?)
+        } else {
+            ("edited", objects.edit_comment(turn, last, &body.required()?)?)
+        };
         print_change("comment", last, action, changed, as_json)
     } else {
         let comment = objects.comment_reply(turn, kind, id, &body.required()?, reply_to)?;
-        if as_json { return mutation_json(comment, json!({"kind":"comment","action":"created","changed":true,"work_item_kind":kind,"work_item_number":id,"reply_to":reply_to})); }
-        println!("comment #{comment}：已创建于 {kind} #{id}；不代表收件人已处理。投递详情：braid comment view {comment} --json deliveries");
+        if as_json {
+            return mutation_json(
+                comment,
+                json!({"kind":"comment","action":"created","changed":true,"work_item_kind":kind,"work_item_number":id,"reply_to":reply_to}),
+            );
+        }
+        println!(
+            "comment #{comment}：已创建于 {kind} #{id}；不代表收件人已处理。投递详情：braid comment view {comment} --json deliveries"
+        );
         Ok(())
     }
 }
 
-fn print_lifecycle_result(kind: &str, id: i64, reopen: bool, changed: bool, comment: Option<i64>, as_json: bool) -> Result<()> {
+fn print_lifecycle_result(
+    kind: &str,
+    id: i64,
+    reopen: bool,
+    changed: bool,
+    comment: Option<i64>,
+    as_json: bool,
+) -> Result<()> {
     let state = if reopen { "OPEN" } else { "CLOSED" };
-    if as_json { return mutation_json(id, json!({"kind":kind,"action":if reopen { "reopened" } else { "closed" },"state":state,"changed":changed,"comment":comment})); }
-    println!("{kind} #{id}：{state}；{}（仅记录对象状态）", if changed { "已改变" } else { "无变化" });
-    if let Some(comment) = comment { println!("comment #{comment}：已创建；不代表收件人已处理"); }
+    if as_json {
+        return mutation_json(
+            id,
+            json!({"kind":kind,"action":if reopen { "reopened" } else { "closed" },"state":state,"changed":changed,"comment":comment}),
+        );
+    }
+    println!(
+        "{kind} #{id}：{state}；{}（仅记录对象状态）",
+        if changed { "已改变" } else { "无变化" }
+    );
+    if let Some(comment) = comment {
+        println!("comment #{comment}：已创建；不代表收件人已处理");
+    }
     Ok(())
 }
 
 fn print_message_receipts(comment_id: i64, deliveries: &[Value]) {
-    if deliveries.is_empty() { return }
+    if deliveries.is_empty() {
+        return;
+    }
     // Keep transport acknowledgements outside authored text and task outcomes.
     println!("\n消息投递回执 — 评论 #{comment_id}（仅表示评论输入的接收状态）");
     for delivery in deliveries {
@@ -877,7 +1231,11 @@ fn print_message_receipts(comment_id: i64, deliveries: &[Value]) {
             "unreachable" => "评论无法送达 (unreachable)",
             other => other,
         };
-        println!("收件人 @{}: {status}{}", delivery["recipient"].as_str().unwrap_or(""), delivery["reason"].as_str().map_or(String::new(), |reason| format!(" ({reason})")));
+        println!(
+            "收件人 @{}: {status}{}",
+            delivery["recipient"].as_str().unwrap_or(""),
+            delivery["reason"].as_str().map_or(String::new(), |reason| format!(" ({reason})"))
+        );
     }
 }
 
@@ -887,9 +1245,30 @@ fn print_pr_created(result: &PrCreateResult, as_json: bool) -> Result<()> {
         value["kind"] = "pr".into();
         value["action"] = if result.created { "created" } else { "reused" }.into();
         value["changed"] = result.created.into();
+        if result.created && !result.assignees.is_empty() {
+            value["execution_dispatch"] = "queued".into();
+        }
         return mutation_json(result.id, value);
     }
-    println!("pr #{}：{}；head {} ({})；base {} ({})；负责人 {}", result.id, if result.created { "已创建" } else { "复用已有 request-id，无变化" }, result.head_ref, result.head_commit, result.base_ref, result.base_commit, result.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login)));
+    println!(
+        "pr #{}：{}；head {} ({})；base {} ({})；负责人 {}",
+        result.id,
+        if result.created { "已创建" } else { "复用已有 request-id，无变化" },
+        result.head_ref,
+        result.head_commit,
+        result.base_ref,
+        result.base_commit,
+        result.assignees.first().map_or("未指派".into(), |actor| format!("@{}", actor.login))
+    );
+    if result.created && !result.assignees.is_empty() {
+        println!(
+            "执行 queued：已登记指派，实际启动等待执行槽；用 braid execution pr {} 查询。",
+            result.id
+        );
+    }
+    if let Some(result) = &result.automatic_result {
+        println!("自动处理：{} → {}；{}", result.requested, result.actual, result.reason);
+    }
     Ok(())
 }
 
@@ -914,9 +1293,21 @@ pub async fn run() -> Result<()> {
                 let state = state.context("--state is required for telemetry export")?;
                 output(crate::telemetry::export(state, native_manifest, portable).await?)
             }
-            TelemetryCommand::Reconstruct { input, output: destination, run_id } => {
+            TelemetryCommand::Reconstruct { input, decoded, output: destination, run_id } => {
                 crate::telemetry::local_logging();
-                output(crate::evidence::reconstruct(&input, &destination, run_id.as_deref())?)
+                if let Some(decoded) = decoded {
+                    let value: Value = serde_json::from_reader(fs::File::open(decoded)?)?;
+                    let batches =
+                        value["batches"].as_array().context("decoded JSON has no batches")?;
+                    output(crate::evidence::reconstruct_from_decoded(
+                        batches,
+                        &destination,
+                        run_id.as_deref(),
+                        Vec::new(),
+                    )?)
+                } else {
+                    output(crate::evidence::reconstruct(&input, &destination, run_id.as_deref())?)
+                }
             }
         };
     }
@@ -927,8 +1318,10 @@ pub async fn run() -> Result<()> {
         "当前 Agent 环境已自动绑定执行身份，不接受 --state、--writer-turn 或 --external"
     );
     let (state, binding_id) = if agent_runtime {
-        (std::env::var_os("BRAID_STATE").map(PathBuf::from).context("BRAID_STATE is missing")?,
-         Some(std::env::var("BRAID_CLI_BINDING_ID").context("BRAID_CLI_BINDING_ID is missing")?))
+        (
+            std::env::var_os("BRAID_STATE").map(PathBuf::from).context("BRAID_STATE is missing")?,
+            Some(std::env::var("BRAID_CLI_BINDING_ID").context("BRAID_CLI_BINDING_ID is missing")?),
+        )
     } else {
         (state.context("--state is required")?, None)
     };
@@ -940,6 +1333,7 @@ pub async fn run() -> Result<()> {
     let reading = matches!(
         &command,
         Command::Status { .. }
+            | Command::Execution { .. }
             | Command::Maintenance { command: maintenance::MaintenanceCommand::Receipt { .. } }
             | Command::Context { .. }
             | Command::Assignee { .. }
@@ -953,6 +1347,7 @@ pub async fn run() -> Result<()> {
     );
     let turn = writer_turn.as_deref();
     match command {
+        Command::Execution { command } => execution::execute(&objects, command),
         Command::Maintenance { command } => maintenance::run(&objects, turn, command),
         Command::Local { .. } | Command::Telemetry { .. } => unreachable!(),
         Command::Status { json: as_json } => {
@@ -965,7 +1360,9 @@ pub async fn run() -> Result<()> {
                 if as_json {
                     let items = items
                         .iter()
-                        .map(|item| json_item(item, "kind,id,number,title,state,assignees,execution", None))
+                        .map(|item| {
+                            json_item(item, "kind,id,number,title,state,assignees,execution", None)
+                        })
                         .collect::<Result<Vec<_>>>()?;
                     output(json!({"items": items}))
                 } else {
@@ -983,7 +1380,10 @@ pub async fn run() -> Result<()> {
                             item.title
                         );
                         if let Some(fact) = &item.execution {
-                            println!("  最近执行尝试：{} 于 {}；{}", fact.outcome, fact.at, fact.summary);
+                            println!(
+                                "  最近执行尝试：{} 于 {}；{}",
+                                fact.outcome, fact.at, fact.summary
+                            );
                         }
                     }
                     Ok(())
@@ -1024,11 +1424,21 @@ pub async fn run() -> Result<()> {
                 }
             }
         }
-        Command::Assignee { command: AssigneeCommand::List { json,reviewer } } => {
-            let directory = if reviewer {objects.reviewer_directory()?} else {objects.assignee_directory()?};
-            if json { return output(directory); }
+        Command::Assignee { command: AssigneeCommand::List { json, reviewer } } => {
+            let directory = if reviewer {
+                objects.reviewer_directory()?
+            } else {
+                objects.assignee_directory()?
+            };
+            if json {
+                return output(directory);
+            }
             for member in directory {
-                println!("{}：{}", member["login"].as_str().expect("login"), member["description"].as_str().expect("description"));
+                println!(
+                    "{}：{}",
+                    member["login"].as_str().expect("login"),
+                    member["description"].as_str().expect("description")
+                );
             }
             Ok(())
         }
@@ -1039,31 +1449,60 @@ pub async fn run() -> Result<()> {
             } else {
                 crate::context::render_complete(&context, 0.8, usize::MAX)
             };
-            eprintln!("context: {:?}, estimated_tokens={}", rendered.tier, rendered.estimated_tokens);
+            eprintln!(
+                "context: {:?}, estimated_tokens={}",
+                rendered.tier, rendered.estimated_tokens
+            );
             println!("{}", rendered.text);
             Ok(())
         }
         Command::Issue { command } => match command {
             IssueCommand::List { filter_state, limit, assignee, json } => {
-                let state = match filter_state { IssueListState::Open => "open", IssueListState::Closed => "closed", IssueListState::All => "all" };
-                let fields = json.json.as_deref().map(|fields| selected_fields(fields, false)).transpose()?;
+                let state = match filter_state {
+                    IssueListState::Open => "open",
+                    IssueListState::Closed => "closed",
+                    IssueListState::All => "all",
+                };
+                let fields = json
+                    .json
+                    .as_deref()
+                    .map(|fields| selected_fields(fields, false))
+                    .transpose()?;
                 let wants = |field| fields.as_ref().is_some_and(|fields| fields.contains(&field));
-                let (items, has_more) = objects.list_for_cli("issue", state, limit, assignee.as_deref(), None, None, wants("body"), wants("execution"))?;
+                let (items, has_more) = objects.list_for_cli(
+                    "issue",
+                    state,
+                    limit,
+                    assignee.as_deref(),
+                    None,
+                    None,
+                    wants("body"),
+                    wants("execution"),
+                )?;
                 print_list(&items, has_more, limit, json.json.as_deref())
             }
-            IssueCommand::View { id, comments, timeline, after, limit, json } => {
-                read_view(&objects, "issue", id, json.json.as_deref(), comments, timeline, after, limit)
-            }
+            IssueCommand::View { id, comments, timeline, after, limit, json } => read_view(
+                &objects,
+                "issue",
+                id,
+                json.json.as_deref(),
+                comments,
+                timeline,
+                after,
+                limit,
+            ),
             IssueCommand::Subscribe { id } => {
                 objects.set_subscription(turn, "issue", id, true)?;
                 println!("issue #{id}：已恢复自动讨论通知");
                 Ok(())
-            },
+            }
             IssueCommand::Unsubscribe { id } => {
                 objects.set_subscription(turn, "issue", id, false)?;
-                println!("issue #{id}：已退出自动讨论通知；单次 @ 仍送达，主动 subscribe 才恢复关注");
+                println!(
+                    "issue #{id}：已退出自动讨论通知；单次 @ 仍送达，主动 subscribe 才恢复关注"
+                );
                 Ok(())
-            },
+            }
             IssueCommand::Create { title, body, parent, assignee, json } => {
                 let result = objects.create_issue_with_parent_and_profile(
                     turn,
@@ -1101,38 +1540,89 @@ pub async fn run() -> Result<()> {
                 write_comment(&objects, turn, "issue", id, reply_to, comment, json)
             }
             IssueCommand::Close { id, reason, comment, json } => {
-                let (changed, posted) = objects.lifecycle_with_comment(turn, "issue", id, false, reason.map(IssueCloseReason::value), comment.as_deref())?;
+                let (changed, posted) = objects.lifecycle_with_comment(
+                    turn,
+                    "issue",
+                    id,
+                    false,
+                    reason.map(IssueCloseReason::value),
+                    comment.as_deref(),
+                )?;
                 print_lifecycle_result("issue", id, false, changed, posted, json)
             }
             IssueCommand::Reopen { id, comment, json } => {
-                let (changed, posted) = objects.lifecycle_with_comment(turn, "issue", id, true, None, comment.as_deref())?;
+                let (changed, posted) = objects.lifecycle_with_comment(
+                    turn,
+                    "issue",
+                    id,
+                    true,
+                    None,
+                    comment.as_deref(),
+                )?;
                 print_lifecycle_result("issue", id, true, changed, posted, json)
-            },
+            }
         },
         Command::Pr { command } => match command {
-            PrCommand::RequestReview{id,issue,request_id,json}=>review::print(&objects.request_review(turn,id,issue,&request_id)?,json),
-            PrCommand::Review{command}=>review::execute(&objects,turn,command),
-            PrCommand::List { filter_state, limit, assignee, base, head, json } => {
-                let state = match filter_state { PrListState::Open => "open", PrListState::Closed => "closed", PrListState::Merged => "merged", PrListState::All => "all" };
-                let fields = json.json.as_deref().map(|fields| selected_fields(fields, false)).transpose()?;
-                let wants = |field| fields.as_ref().is_some_and(|fields| fields.contains(&field));
-                let (items, has_more) = objects.list_for_cli("pr", state, limit, assignee.as_deref(), base.as_deref(), head.as_deref(), wants("body"), wants("execution"))?;
-                print_list(&items, has_more, limit, json.json.as_deref())
-            },
-            PrCommand::View { id, comments, timeline, after, limit, json } => {
-                read_view(&objects, "pr", id, json.json.as_deref(), comments, timeline, after, limit)
+            PrCommand::RequestReview { id, issue, request_id, json } => {
+                review::print(&objects.request_review(turn, id, issue, &request_id)?, json)
             }
+            PrCommand::Review { command } => review::execute(&objects, turn, command),
+            PrCommand::List { filter_state, limit, assignee, base, head, json } => {
+                let state = match filter_state {
+                    PrListState::Open => "open",
+                    PrListState::Closed => "closed",
+                    PrListState::Merged => "merged",
+                    PrListState::All => "all",
+                };
+                let fields = json
+                    .json
+                    .as_deref()
+                    .map(|fields| selected_fields(fields, false))
+                    .transpose()?;
+                let wants = |field| fields.as_ref().is_some_and(|fields| fields.contains(&field));
+                let (items, has_more) = objects.list_for_cli(
+                    "pr",
+                    state,
+                    limit,
+                    assignee.as_deref(),
+                    base.as_deref(),
+                    head.as_deref(),
+                    wants("body"),
+                    wants("execution"),
+                )?;
+                print_list(&items, has_more, limit, json.json.as_deref())
+            }
+            PrCommand::View { id, comments, timeline, after, limit, json } => read_view(
+                &objects,
+                "pr",
+                id,
+                json.json.as_deref(),
+                comments,
+                timeline,
+                after,
+                limit,
+            ),
             PrCommand::Subscribe { id } => {
                 objects.set_subscription(turn, "pr", id, true)?;
                 println!("pr #{id}：已恢复自动讨论通知");
                 Ok(())
-            },
+            }
             PrCommand::Unsubscribe { id } => {
                 objects.set_subscription(turn, "pr", id, false)?;
                 println!("pr #{id}：已退出自动讨论通知；单次 @ 仍送达，主动 subscribe 才恢复关注");
                 Ok(())
-            },
-            PrCommand::Create { issue, title, body, request_id, assignee, base, head, draft, json } => {
+            }
+            PrCommand::Create {
+                issue,
+                title,
+                body,
+                request_id,
+                assignee,
+                base,
+                head,
+                draft,
+                json,
+            } => {
                 let result = objects.create_pr_with_options(
                     turn,
                     &issue,
@@ -1165,14 +1655,34 @@ pub async fn run() -> Result<()> {
             }
             PrCommand::Link { id, issue, json } => {
                 let changed = objects.link(turn, id, issue, true)?;
-                if json { mutation_json(id, json!({"kind":"pr","action":"linked","issue":issue,"changed":changed})) }
-                else { println!("pr #{id}：Issue #{issue} 背景关联；{}；关联不声明合并后关闭", if changed { "已改变" } else { "无变化" }); Ok(()) }
-            },
+                if json {
+                    mutation_json(
+                        id,
+                        json!({"kind":"pr","action":"linked","issue":issue,"changed":changed}),
+                    )
+                } else {
+                    println!(
+                        "pr #{id}：Issue #{issue} 背景关联；{}；关联不声明合并后关闭",
+                        if changed { "已改变" } else { "无变化" }
+                    );
+                    Ok(())
+                }
+            }
             PrCommand::Unlink { id, issue, json } => {
                 let changed = objects.link(turn, id, issue, false)?;
-                if json { mutation_json(id, json!({"kind":"pr","action":"unlinked","issue":issue,"changed":changed})) }
-                else { println!("pr #{id}：Issue #{issue} 背景关联；{}；正文关闭意图仍由 Closes/Fixes/Resolves 决定", if changed { "已移除" } else { "无变化" }); Ok(()) }
-            },
+                if json {
+                    mutation_json(
+                        id,
+                        json!({"kind":"pr","action":"unlinked","issue":issue,"changed":changed}),
+                    )
+                } else {
+                    println!(
+                        "pr #{id}：Issue #{issue} 背景关联；{}；正文关闭意图仍由 Closes/Fixes/Resolves 决定",
+                        if changed { "已移除" } else { "无变化" }
+                    );
+                    Ok(())
+                }
+            }
             PrCommand::Ready { id, undo } => {
                 let result = objects.ready_with_undo(turn, id, undo)?;
                 let mut value = serde_json::to_value(result)?;
@@ -1180,10 +1690,23 @@ pub async fn run() -> Result<()> {
                 value["state"] = "OPEN".into();
                 value["effect"] = "仅观察已发布 head；不证明实现完成或收件人已处理".into();
                 mutation_json(id, value)
-            },
-            PrCommand::Merge { id, match_head_commit, review, merge: _, squash, rebase, auto, disable_auto } => {
-                ensure!(!squash && !rebase && !auto && !disable_auto, "当前只支持即时本地 merge；--squash、--rebase、--auto 和 --disable-auto 尚未实现");
-                let result = objects.merge_with_review(turn, id, match_head_commit.as_deref(),review)?;
+            }
+            PrCommand::Merge {
+                id,
+                match_head_commit,
+                review,
+                merge: _,
+                squash,
+                rebase,
+                auto,
+                disable_auto,
+            } => {
+                ensure!(
+                    !squash && !rebase && !auto && !disable_auto,
+                    "当前只支持即时本地 merge；--squash、--rebase、--auto 和 --disable-auto 尚未实现"
+                );
+                let result =
+                    objects.merge_with_review(turn, id, match_head_commit.as_deref(), review)?;
                 let mut value = serde_json::to_value(result)?;
                 value["kind"] = "pr".into();
                 value["state"] = "MERGED".into();
@@ -1191,32 +1714,80 @@ pub async fn run() -> Result<()> {
                 mutation_json(id, value)
             }
             PrCommand::Close { id, comment, json } => {
-                let (changed, posted) = objects.lifecycle_with_comment(turn, "pr", id, false, None, comment.as_deref())?;
+                let (changed, posted) = objects.lifecycle_with_comment(
+                    turn,
+                    "pr",
+                    id,
+                    false,
+                    None,
+                    comment.as_deref(),
+                )?;
                 print_lifecycle_result("pr", id, false, changed, posted, json)
             }
             PrCommand::Reopen { id, comment, json } => {
-                let (changed, posted) = objects.lifecycle_with_comment(turn, "pr", id, true, None, comment.as_deref())?;
+                let (changed, posted) = objects.lifecycle_with_comment(
+                    turn,
+                    "pr",
+                    id,
+                    true,
+                    None,
+                    comment.as_deref(),
+                )?;
                 print_lifecycle_result("pr", id, true, changed, posted, json)
-            },
+            }
         },
         Command::Comment { command } => match command {
             CommentCommand::View { id, thread, include_hidden, json } => {
-                let selected = json.json.as_deref().map(|fields| {
-                    if fields == "all" { return Ok(COMMENT_FIELDS.to_vec()); }
-                    let selected = fields.split(',').map(str::trim).collect::<Vec<_>>();
-                    for field in &selected { ensure!(COMMENT_FIELDS.contains(field), "unknown comment view field {field:?}; available fields: {}", COMMENT_FIELDS.join(",")); }
-                    Ok(selected)
-                }).transpose()?;
+                let selected = json
+                    .json
+                    .as_deref()
+                    .map(|fields| {
+                        if fields == "all" {
+                            return Ok(COMMENT_FIELDS.to_vec());
+                        }
+                        let selected = fields.split(',').map(str::trim).collect::<Vec<_>>();
+                        for field in &selected {
+                            ensure!(
+                                COMMENT_FIELDS.contains(field),
+                                "unknown comment view field {field:?}; available fields: {}",
+                                COMMENT_FIELDS.join(",")
+                            );
+                        }
+                        Ok(selected)
+                    })
+                    .transpose()?;
                 let wants = |field| selected.as_ref().is_none_or(|fields| fields.contains(&field));
-                let comments = objects.view_comment_for_fields(id, thread, include_hidden, wants("body") || wants("read_body_with"), wants("reactions"))?;
+                let comments = objects.view_comment_for_fields(
+                    id,
+                    thread,
+                    include_hidden,
+                    wants("body") || wants("read_body_with"),
+                    wants("reactions"),
+                )?;
                 if let Some(selected) = selected {
-                    output(comments.iter().map(|comment| {
-                        let mut value = comment_json(comment)?;
-                        let id: i64 = comment.database_id.parse()?;
-                        if selected.contains(&"deliveries") { value["deliveries"] = serde_json::to_value(objects.comment_deliveries(id)?)?; }
-                        let map = selected.iter().map(|field| ((*field).to_owned(), value.get(*field).cloned().unwrap_or(Value::Null))).collect::<Map<_, _>>();
-                        Ok(map)
-                    }).collect::<Result<Vec<_>>>()?)
+                    output(
+                        comments
+                            .iter()
+                            .map(|comment| {
+                                let mut value = comment_json(comment)?;
+                                let id: i64 = comment.database_id.parse()?;
+                                if selected.contains(&"deliveries") {
+                                    value["deliveries"] =
+                                        serde_json::to_value(objects.comment_deliveries(id)?)?;
+                                }
+                                let map = selected
+                                    .iter()
+                                    .map(|field| {
+                                        (
+                                            (*field).to_owned(),
+                                            value.get(*field).cloned().unwrap_or(Value::Null),
+                                        )
+                                    })
+                                    .collect::<Map<_, _>>();
+                                Ok(map)
+                            })
+                            .collect::<Result<Vec<_>>>()?,
+                    )
                 } else {
                     print_comments(&comments);
                     for comment in &comments {
@@ -1229,29 +1800,49 @@ pub async fn run() -> Result<()> {
             CommentCommand::Edit { id, body, json } => {
                 let changed = objects.edit_comment(turn, id, &body.required()?)?;
                 print_change("comment", id, "edited", changed, json)
-            },
+            }
             CommentCommand::Hide { ids, reason, json } => {
                 let results = objects.hide_comments(turn, &ids, reason.as_deref())?;
                 if json {
                     #[derive(serde::Serialize)]
-                    struct HiddenComment { id: i64, changed: bool, action: &'static str, effect: &'static str }
-                    output(results.iter().map(|(id, changed)| HiddenComment { id: *id, changed: *changed, action: "hidden", effect: "本条及现有、未来后代正文隐藏，各条自身状态保留" }).collect::<Vec<_>>())
-                }
-                else {
-                    for (id, changed) in results { print_change("comment", id, "hidden", changed, false)?; }
+                    struct HiddenComment {
+                        id: i64,
+                        changed: bool,
+                        action: &'static str,
+                        effect: &'static str,
+                    }
+                    output(
+                        results
+                            .iter()
+                            .map(|(id, changed)| HiddenComment {
+                                id: *id,
+                                changed: *changed,
+                                action: "hidden",
+                                effect: "本条及现有、未来后代正文隐藏，各条自身状态保留",
+                            })
+                            .collect::<Vec<_>>(),
+                    )
+                } else {
+                    for (id, changed) in results {
+                        print_change("comment", id, "hidden", changed, false)?;
+                    }
                     Ok(())
                 }
             }
             CommentCommand::Unhide { id, json } => {
                 let changed = objects.comment_lifecycle(turn, id, "unhide")?;
                 print_change("comment", id, "unhidden", changed, json)
-            },
+            }
             CommentCommand::Delete { id, json } => {
                 let changed = objects.comment_lifecycle(turn, id, "delete")?;
                 print_change("comment", id, "deleted", changed, json)
-            },
-            CommentCommand::Resolve { ids, json } => print_comment_resolution(&objects.resolve_comments(turn, &ids, true)?, true, json),
-            CommentCommand::Unresolve { ids, json } => print_comment_resolution(&objects.resolve_comments(turn, &ids, false)?, false, json),
+            }
+            CommentCommand::Resolve { ids, json } => {
+                print_comment_resolution(&objects.resolve_comments(turn, &ids, true)?, true, json)
+            }
+            CommentCommand::Unresolve { ids, json } => {
+                print_comment_resolution(&objects.resolve_comments(turn, &ids, false)?, false, json)
+            }
             CommentCommand::Reaction { command } => match command {
                 ReactionCommand::Add { id, expression, json } => {
                     let changed = objects.react(turn, id, &expression, false)?;

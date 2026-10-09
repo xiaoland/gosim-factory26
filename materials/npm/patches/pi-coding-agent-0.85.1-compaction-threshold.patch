@@ -1,0 +1,60 @@
+--- a/dist/core/compaction/compaction.js
++++ b/dist/core/compaction/compaction.js
+@@ -160,7 +160,8 @@
+ export function shouldCompact(contextTokens, contextWindow, settings) {
+     if (!settings.enabled)
+         return false;
+-    return contextTokens > contextWindow - settings.reserveTokens;
++    const capacityThreshold = Math.max(0, contextWindow - settings.reserveTokens);
++    return contextTokens > Math.min(settings.thresholdTokens ?? Infinity, capacityThreshold);
+ }
+ // ============================================================================
+ // Cut point detection
+--- a/dist/core/compaction/compaction.d.ts
++++ b/dist/core/compaction/compaction.d.ts
+@@ -29,6 +29,8 @@
+     enabled: boolean;
+     reserveTokens: number;
+     keepRecentTokens: number;
++    /** Optional operational trigger; the real model capacity remains an upper bound. */
++    thresholdTokens?: number;
+ }
+ export declare const DEFAULT_COMPACTION_SETTINGS: CompactionSettings;
+ /**
+--- a/dist/core/settings-manager.js
++++ b/dist/core/settings-manager.js
+@@ -563,10 +563,15 @@
+         return this.settings.compaction?.keepRecentTokens ?? 20000;
+     }
+     getCompactionSettings() {
++        const thresholdTokens = this.settings.compaction?.thresholdTokens;
++        if (thresholdTokens !== undefined && (!Number.isSafeInteger(thresholdTokens) || thresholdTokens <= 0)) {
++            throw new Error("compaction.thresholdTokens must be a positive safe integer");
++        }
+         return {
+             enabled: this.getCompactionEnabled(),
+             reserveTokens: this.getCompactionReserveTokens(),
+             keepRecentTokens: this.getCompactionKeepRecentTokens(),
++            thresholdTokens,
+         };
+     }
+     getBranchSummarySettings() {
+--- a/dist/core/settings-manager.d.ts
++++ b/dist/core/settings-manager.d.ts
+@@ -5,6 +5,8 @@
+     enabled?: boolean;
+     reserveTokens?: number;
+     keepRecentTokens?: number;
++    /** Optional positive token trigger, bounded by the actual model capacity. */
++    thresholdTokens?: number;
+ }
+ export interface BranchSummarySettings {
+     reserveTokens?: number;
+@@ -224,6 +226,7 @@
+         enabled: boolean;
+         reserveTokens: number;
+         keepRecentTokens: number;
++        thresholdTokens: number | undefined;
+     };
+     getBranchSummarySettings(): {
+         reserveTokens: number;

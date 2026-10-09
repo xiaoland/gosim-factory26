@@ -1,0 +1,30 @@
+{
+  "kind": "factory26.exp.environment",
+  "schema_version": 1,
+  "id": "pi-sequential-workssd-wsl-20261006",
+  "cache_root": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/sequential-stage2-stage3-20261006/lab-cache",
+  "python": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+  "harness": {},
+  "arc": {
+    "sdk_source": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
+    "target": {
+      "endpoint": {
+        "context": "development-1",
+        "daemon_id": "0c1d4a2e-b921-49be-a075-1e30571f0995",
+        "host": "ssh://wsl.win-ws.localhost",
+        "argv": [
+          "docker",
+          "--context",
+          "development-1"
+        ],
+        "remote": true
+      },
+      "image_id": "sha256:9dc80d04d9fef7972a4fc3123392b4d2f6246cab5b028820084fd7fbeb25a2ba",
+      "slots": 2,
+      "admission_volume": "exp-admission-70a80f6f8b1937c5b6f6af09",
+      "authority_handoff": {
+        "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/development-1-first-use/root-authority-handoff.json"
+      }
+    }
+  }
+}

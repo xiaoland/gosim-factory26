@@ -37,8 +37,11 @@ def load_delivery(app, request):
             'delivery_ref': delivery_ref, 'delivery_commit': commit}
 
 
-def export_delivery(app, commit, output):
+def export_delivery(app, commit, output, *, excluded_platform_paths=()):
     """Export the selected commit, independently of worktree contents."""
+    excluded = set(excluded_platform_paths)
+    if excluded - {'.arc', '.git', 'requirements', '.factory26'}:
+        raise ValueError('应用投影只能显式排除平台保留根路径')
     files = subprocess.check_output(
         ['git', '-C', str(app), 'ls-tree', '-r', '--name-only', commit])
     if not files.strip():
@@ -47,7 +50,11 @@ def export_delivery(app, commit, output):
     proc = subprocess.Popen(['git', '-C', str(app), 'archive', '--format=tar', commit], stdout=subprocess.PIPE)
     try:
         with tarfile.open(fileobj=proc.stdout, mode='r|') as archive:
-            archive.extractall(output, filter='data')
+            def application_member(member, destination):
+                if member.name.split('/', 1)[0] in excluded:
+                    return None
+                return tarfile.data_filter(member, destination)
+            archive.extractall(output, filter=application_member)
     finally:
         proc.stdout.close()
         code = proc.wait()
@@ -177,11 +184,13 @@ def export_telemetry(output, work, archived_manifest, env=None, *, portable=Fals
     return result
 
 
-def publish_application(app, commit, output, requirements, source_identity, delivery_kind='final'):
+def publish_application(app, commit, output, requirements, source_identity, delivery_kind='final', *, excluded_platform_paths=()):
     """Produce the public application contract; evaluation remains a separate effect."""
-    producer = Path(__file__).resolve().parents[1]/'exp_checkpoint.py'
+    producer = Path(__file__).resolve().parent/'exp_checkpoint.py'
+    if not producer.exists(): producer = Path(__file__).resolve().parents[1]/'exp_checkpoint.py'
     if not producer.exists(): producer = Path(__file__).resolve().parents[2]/'tooling/linux/exp_checkpoint.py'
     import importlib.util
     spec = importlib.util.spec_from_file_location('harness_application',producer)
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    return module.application(app,output,requirements,source_identity,delivery_kind,commit)
+    return module.application(app,output,requirements,source_identity,delivery_kind,commit,
+                              excluded_platform_paths=excluded_platform_paths)

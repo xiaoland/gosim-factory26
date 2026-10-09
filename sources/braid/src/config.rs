@@ -34,6 +34,7 @@ pub struct RuntimeConfig {
     pub root: PathBuf,
     pub worktrees: PathBuf,
     pub offline_stopped_sessions: Vec<String>,
+    pub max_active_agents: Option<usize>,
 }
 impl RuntimeConfig {
     pub fn root(&self) -> &Path {
@@ -105,13 +106,22 @@ impl BubConfig {
         if let Some(path) = &self.api_key_file {
             return load_provider_secret_file(path).map(Some);
         }
-        self.api_key_environment.as_ref().map(|name| std::env::var(name).map_err(|_| {
-            ConfigError::Invalid(format!("environment variable {name:?} for bub.api_key_environment is not set"))
-        })).transpose()
+        self.api_key_environment
+            .as_ref()
+            .map(|name| {
+                std::env::var(name).map_err(|_| {
+                    ConfigError::Invalid(format!(
+                        "environment variable {name:?} for bub.api_key_environment is not set"
+                    ))
+                })
+            })
+            .transpose()
     }
 }
 
-fn default_pi_startup_timeout() -> u64 { 180 }
+fn default_pi_startup_timeout() -> u64 {
+    180
+}
 
 /// The runtime material used by one ordinary Braid profile. Model and
 /// reasoning intentionally live on `Profile`; this binding owns process and
@@ -189,7 +199,9 @@ pub struct Profile {
     pub context_hard_bytes: usize,
 }
 
-fn default_context_window_tokens() -> usize { 128_000 }
+fn default_context_window_tokens() -> usize {
+    128_000
+}
 
 impl Profile {
     pub fn workspace(&self) -> &Path {

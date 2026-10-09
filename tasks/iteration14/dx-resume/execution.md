@@ -1,5 +1,7 @@
 # I14 GitHub 实际启动闭环
 
+本页仅保存历史执行事实。用户已授权清理不完整 I14，旧运行目录及系统盘 `~/.codex/factory26-i14-runs/20261002` 已删除；系统盘迁移违反用户最新的 WorkSSD 绝对规则，不是可沿用方案。当前状态和设计复核归 [夜间 packet](../overnight-plan/packet.md)。
+
 2026-10-02。执行 owner 为本主线委派的 i14_launch。用户要求“I13 我会另外去推进。现在的重点是让 I14 运行起来”，随后明确“baseline 继续暂停，只运行另外三个”。范围为 cleaner/reviewer/e2e GitHub 原冻结需求；不迁移新版平台需求，不运行 Sheet，不操作 I13 或 baseline。
 
 实际材料与原错保留于 `runs/iteration14/dx-launch-20261002/`。Development-2 沿真实 first-use authority，2 GiB/2 CPU、同 daemon 五槽，不接管 WSL 旧资源域。模型为普通 Qwen Flash 精确 wire ID `ZHIPU/GLM-5.3-Flash`、GLM-5.3、K3；内部 DS0731 为 Token Plan，不可成为 Braid 成员；昂贵模型合计仅一个 Braid session。凭据只读 `.secrets/models.env`，私有制品不输出值。

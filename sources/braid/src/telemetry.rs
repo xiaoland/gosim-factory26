@@ -418,11 +418,17 @@ pub struct EvidenceWorker {
 fn capture_memory() -> Value {
     match fs::read_to_string("/proc/self/status") {
         Ok(status) => {
-            let fields: serde_json::Map<String, Value> = status.lines().filter_map(|line| {
-                let (key, value) = line.split_once(':')?;
-                matches!(key, "VmRSS" | "VmHWM" | "RssAnon" | "RssFile" | "RssShmem" | "Threads")
+            let fields: serde_json::Map<String, Value> = status
+                .lines()
+                .filter_map(|line| {
+                    let (key, value) = line.split_once(':')?;
+                    matches!(
+                        key,
+                        "VmRSS" | "VmHWM" | "RssAnon" | "RssFile" | "RssShmem" | "Threads"
+                    )
                     .then(|| (key.to_owned(), json!(value.trim())))
-            }).collect();
+                })
+                .collect();
             Value::Object(fields)
         }
         Err(error) => json!({"error":error.to_string()}),
@@ -430,7 +436,9 @@ fn capture_memory() -> Value {
 }
 
 fn capture_observation(state: &Path, observation: &Value) {
-    if let Err(error) = crate::local::write_json(&state.join("evidence-capture-latest.json"), observation) {
+    if let Err(error) =
+        crate::local::write_json(&state.join("evidence-capture-latest.json"), observation)
+    {
         tracing::warn!(%error, "cannot preserve evidence capture memory observation");
     }
 }
@@ -450,23 +458,37 @@ impl EvidenceWorker {
                 if state.join("braid.sqlite3").is_file() {
                     let started = Instant::now();
                     let before = capture_memory();
-                    let observed_at = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap_or_default().as_nanos().to_string();
-                    capture_observation(&state, &json!({"phase":"started", "observed_at_unix_nanos":observed_at,
-                        "pid":std::process::id(), "final_capture":final_capture, "memory_before":before}));
+                    let observed_at = SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_nanos()
+                        .to_string();
+                    capture_observation(
+                        &state,
+                        &json!({"phase":"started", "observed_at_unix_nanos":observed_at,
+                        "pid":std::process::id(), "final_capture":final_capture, "memory_before":before}),
+                    );
                     let result = collector
-                        .capture(&state, None, final_capture, crate::evidence::CaptureMode::Summary,
-                                 &mut |v| writer.emit(v))
+                        .capture(
+                            &state,
+                            None,
+                            final_capture,
+                            crate::evidence::CaptureMode::Summary,
+                            &mut |v| writer.emit(v),
+                        )
                         .and_then(|summary| {
                             writer.flush()?;
                             collector.flush_succeeded();
                             record_usage(&summary);
                             Ok(())
                         });
-                    capture_observation(&state, &json!({"phase":"finished", "observed_at_unix_nanos":observed_at,
+                    capture_observation(
+                        &state,
+                        &json!({"phase":"finished", "observed_at_unix_nanos":observed_at,
                         "pid":std::process::id(), "final_capture":final_capture,
                         "elapsed_ms":started.elapsed().as_millis(), "memory_before":before,
-                        "memory_after":capture_memory(), "error":result.as_ref().err().map(ToString::to_string)}));
+                        "memory_after":capture_memory(), "error":result.as_ref().err().map(ToString::to_string)}),
+                    );
                     if let Err(error) = result {
                         diagnostic(
                             &state,
@@ -513,7 +535,11 @@ pub async fn initialize(state: &Path, run_id: &str) -> Option<TelemetryGuard> {
     }
 }
 
-pub async fn export(state: PathBuf, native_manifest: Option<PathBuf>, portable: bool) -> Result<Value> {
+pub async fn export(
+    state: PathBuf,
+    native_manifest: Option<PathBuf>,
+    portable: bool,
+) -> Result<Value> {
     ensure!(configured(), "OTEL_EXPORTER_OTLP_ENDPOINT is required");
     let connection = rusqlite::Connection::open_with_flags(
         state.join("braid.sqlite3"),
@@ -526,8 +552,11 @@ pub async fn export(state: PathBuf, native_manifest: Option<PathBuf>, portable: 
         let guard = TelemetryGuard::install(state.clone(), &run_id)?;
         let mut operation = Operation::new("braid.telemetry.export", vec![]);
         let mut writer = guard.evidence_writer();
-        let mode = if portable { crate::evidence::CaptureMode::Portable }
-                   else { crate::evidence::CaptureMode::Summary };
+        let mode = if portable {
+            crate::evidence::CaptureMode::Portable
+        } else {
+            crate::evidence::CaptureMode::Summary
+        };
         let result = crate::evidence::EvidenceCollector::new(run_id)
             .capture(&state, native_manifest.as_deref(), true, mode, &mut |v| writer.emit(v))
             .and_then(|summary| {

@@ -1,6 +1,6 @@
 ---
 name: svc-verification
-description: Design and use verification and validation throughout software development; clarify requirements and acceptance criteria, design tests and measurements, choose useful implementation feedback, interpret results, and assess delivery and behavior in actual use.
+description: "Use before changing shared entry points or behavior, when first forming acceptance checks, changing their criteria, assessing coverage, or judging delivery. Identify affected journeys, compare actual checks with original scenario obligations, and distinguish passing checks from verified requirements."
 metadata:
   version: "16.0.0"
 ---
@@ -43,6 +43,7 @@ These are connected questions, not mandatory phases or a reading sequence.
 
 | Current question | Read directly |
 | --- | --- |
+| Which journeys can a shared change affect, and do the first checks preserve their obligations? | [Check design](references/check-design.md), including shared-change impact and independent translation review |
 | What counts as correct, and how can an observation represent the requirement? | [Check design](references/check-design.md) |
 | Which cases, measurements, and boundaries provide useful evidence at reasonable cost? | [Evidence design](references/evidence-design.md), including the [check pyramid](references/evidence-design.md#a-check-pyramid) |
 | How can the conditions, execution, result, and reset be made reproducible? | [Repeatable checks](references/repeatable-checks.md) |

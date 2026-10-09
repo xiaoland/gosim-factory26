@@ -9,11 +9,36 @@
          }
          finally {
              this._resolveIdleWaitIfIdle();
-@@ -771,13 +771,35 @@
+@@ -380,10 +380,10 @@
+                 }
+             }
+         }
+-        // Emit to extensions first
+-        await this._emitExtensionEvent(event);
+-        // Notify all listeners
+-        this._emit(event.type === "agent_end" ? { ...event, willRetry: this._willRetryAfterAgentEnd(event) } : event);
++        // Decide once before any awaited end hook; extensions and RPC observe the same retry intent.
++        const lifecycleEvent = event.type === "agent_end" ? { ...event, willRetry: this._willRetryAfterAgentEnd(event) } : event;
++        await this._emitExtensionEvent(lifecycleEvent);
++        this._emit(lifecycleEvent);
+         // Handle session persistence
+         if (event.type === "message_end") {
+             // Check if this is a custom message from extensions
+@@ -471,7 +471,7 @@
+             await this._extensionRunner.emit({ type: "agent_start" });
+         }
+         else if (event.type === "agent_end") {
+-            await this._extensionRunner.emit({ type: "agent_end", messages: event.messages });
++            await this._extensionRunner.emit({ type: "agent_end", messages: event.messages, willRetry: event.willRetry });
+         }
+         else if (event.type === "turn_start") {
+             const extensionEvent = {
+@@ -771,13 +771,36 @@
      // =========================================================================
      async _runAgentPrompt(messages) {
          this._isAgentRunActive = true;
 +        this._braidCallCancelled = false;
++        this._terminalAgentError = false;
 +        let agentEndFailed = false;
 +        const unsubscribe = process.env.BRAID_AGENT_RUNTIME === "1"
 +            ? this._extensionRunner.onError((error) => { if (error.event === "agent_end") agentEndFailed = true; })
@@ -28,7 +53,7 @@
          }
          finally {
 +            unsubscribe();
-+            if (process.env.BRAID_AGENT_RUNTIME === "1" && (agentEndFailed || this._braidCallCancelled)) {
++            if (this._terminalAgentError || (process.env.BRAID_AGENT_RUNTIME === "1" && (agentEndFailed || this._braidCallCancelled))) {
 +                const queued = [...this.agent.steeringQueue.drain(), ...this.agent.followUpQueue.drain()];
 +                this._steeringMessages = [];
 +                this._followUpMessages = [];
@@ -46,7 +71,19 @@
              this._systemPromptOverride = undefined;
              this._flushPendingBashMessages();
              this._flushPendingCustomMessages();
-@@ -1117,7 +1139,7 @@
+@@ -804,6 +827,11 @@
+         }
+         if (await this._checkCompaction(msg)) {
+             return true;
++        }
++        // Completed background results must remain durable, not start another inference after a final model error.
++        if (msg.stopReason === "error") {
++            this._terminalAgentError = true;
++            return false;
+         }
+         // The agent loop drains both queues before emitting agent_end. Any messages
+         // here were queued by agent_end extension handlers and need a continuation.
+@@ -1117,7 +1145,7 @@
                  this.agent.steer(appMessage);
              }
          }
@@ -55,7 +92,7 @@
              await this._runAgentPrompt(appMessage);
          }
          else if (this.isStreaming) {
-@@ -1220,6 +1242,7 @@
+@@ -1220,6 +1248,7 @@
       * Abort current operation and wait for agent to become idle.
       */
      async abort() {
@@ -155,3 +192,14 @@
              break;
          currentDir = parentDir;
      }
+--- a/dist/core/extensions/types.d.ts
++++ b/dist/core/extensions/types.d.ts
+@@ -553,6 +553,8 @@
+ }
+ /** Fired when an agent loop ends */
+ export interface AgentEndEvent {
++    /** Native retry intent, decided before awaited end handlers. */
++    willRetry: boolean;
+     type: "agent_end";
+     messages: AgentMessage[];
+ }

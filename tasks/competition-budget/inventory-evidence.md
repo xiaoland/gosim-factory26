@@ -140,7 +140,7 @@ Braid
    └─ [待验证] 流式、工具、视觉、统一网关和完整 Hackathon 仍无证据
 ```
 
-证据：`tasks/hackathon-team-baseline/packet.md`、`results/interface-official-lite.md`；`tasks/local-run-analysis/packet.md`、`reports/2026-09-23-local-agent-process.md`；`tasks/k3-root-experiment/packet.md`、`results/7b533d7bd71b.md`；`tasks/braid-collaboration/results/model-validation-probe-20260926.md`；`tasks/external-model-providers/packet.md` 与 `runs/external-api-check/20260924T041240Z/`。
+证据：`tasks/hackathon-team-baseline/packet.md`、`results/interface-official-lite.md`；`tasks/local-run-analysis/packet.md`、`runs/reports/2026-09-23-local-agent-process.md`；`tasks/k3-root-experiment/packet.md`、`results/7b533d7bd71b.md`；`tasks/braid-collaboration/results/model-validation-probe-20260926.md`；`tasks/external-model-providers/packet.md` 与 `runs/external-api-check/20260924T041240Z/`。
 
 关键遗漏：没有在同一干净基线隔离 root 模型、skill、runtime、部署、协作和最终验收的单变量对照；没有把“模型实际请求成功”与“模型完成产品任务”分开统计；模型额度/计费字段曾与请求 credential_mode 不一致，必须保留请求模式和平台返回模式两列。
 

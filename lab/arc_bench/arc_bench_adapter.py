@@ -157,6 +157,10 @@ collector=None
 resource_evidence=None
 try:
     environment=dict(os.environ)
+    monitor=next((path for path in (Path(__file__).parent/'agent/runtime/bin/factory26-resource-monitor',
+                                  Path(__file__).parent/'agent/native/bin/factory26-resource-monitor')
+                  if path.is_file()),None)
+    if monitor: os.environ['FACTORY_RESOURCE_MONITOR']=str(monitor)
     environment.pop('FACTORY26_EXP_SERVICES',None)
     environment.pop('FACTORY26_EXP_RESOURCE_SAMPLE',None)
     services={}
@@ -215,6 +219,7 @@ try:
         sys.path.insert(0,str(support))
         from resource_support import ResourceEvidence
         resource_root=args.output_dir/'.arc/adapter-resources'
+        resource_root.mkdir(parents=True,exist_ok=True)
         resource_evidence=ResourceEvidence(resource_root,root_pid=os.getpid())
         if resource_evidence.cgroup is None:
             raise RuntimeError('ARC child namespace cgroup-v2 resource evidence is unavailable')
@@ -251,7 +256,10 @@ finally:
         except ProcessLookupError:
             cleanup='already-exited'
     if resource_evidence is not None:
-        resource_evidence.sample('runner-payload-exited')
+        try:
+            resource_evidence.sample('runner-payload-exited')
+        finally:
+            resource_evidence.close()
     if collector is not None:
         collector.terminate()
         try: collector.wait(timeout=20)
@@ -309,6 +317,14 @@ def record_capture_layout(workspace, stage, entry, resource_path, delivery):
             transport = read(Path(resource['transport']))
             if transport['stages'][resource['stage']].get('recovery') != 'verified':
                 raise ValueError('SDK capture requires verified output reception')
+        if resource.get('capture_source') and read(Path(resource['capture_source'])).get('delivery_mode') == 'copied-tree':
+            # The legacy Pi package is a writable execution copy, not an immutable
+            # definition and not a bootstrap-declared resumable Harness state.
+            value.setdefault('execution_copies', []).append({'stage': stage.relative_to(workspace).as_posix(),
+                'source': binding['reference'], 'container_id': resource['container_id'],
+                'capture': 'complete-sdk-workspace', 'sdk_resume': False})
+            atomic(path, value)
+            return value
         if resource.get('capture_source'):
             logical_binding=Path(entry.get('capture_binding') or '')
             if not logical_binding.is_absolute() or not logical_binding.is_relative_to('/workspace'):
@@ -443,11 +459,12 @@ def model_environment(base, output, host):
                     raise ValueError('child model environment conflicts with compiled public policy: ' + key)
                 values[key] = value
             bindings = json.loads(job.get('environment', {}).get('FACTORY26_MODEL_BINDINGS', '{}'))
+            generated = set(job.get('arc_contract', {}).get('prepared_delivery', {}).get('service_generated_credentials', []))
             for binding in bindings.values():
                 key = binding['credential_env']
                 if key not in values and os.environ.get(key):
                     values[key] = os.environ[key]
-                if not values.get(key):
+                if not values.get(key) and key not in generated:
                     raise ValueError('child model environment lacks declared credential variable: ' + key)
             if any('\n' in value or '\r' in value for value in values.values()):
                 raise ValueError('child model environment values cannot contain line breaks')
@@ -537,7 +554,7 @@ def execute_run(args, endpoint, owner_token):
         external_backend = read_json(Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR']) / 'attempt.json')['job']['backend']['external_docker']
         facts['authority_handoff'] = external_backend['authority_handoff']
         facts.update(exp_attempt_id=stage_id, exp_incarnation=incarnation + '--' + name,
-                     exp_request_id=stage_id + '--dispatch', exp_attempt_dir=os.environ['FACTORY26_EXP_ATTEMPT_DIR'],
+                     exp_request_id='sdk-' + hashlib.sha256(stage_id.encode()).hexdigest()[:16], exp_attempt_dir=os.environ['FACTORY26_EXP_ATTEMPT_DIR'],
                      admission_volume=args.admission_volume, container_name='exp-' + stage_id,
                      resource_path=str(resource))
         facts['labels'].update({'io.factory26.exp.attempt': stage_id, 'io.factory26.exp.incarnation': facts['exp_incarnation']})
@@ -647,6 +664,8 @@ def execute_run(args, endpoint, owner_token):
             instrumented = instrument_entry(args.agent, workspace.parent / 'delivery' / 'observed-agent', file_telemetry=file_telemetry)
             generation_command = base + ["--agent", str(instrumented), "--workspace", str(generation),
                                          "--image", image_id] + model_args
+            if args.template:
+                generation_command += ["--template", str(args.template)]
             generation_code = invoke(generation_command, "generation")
             if transport:
                 transport = Workspace(transport.path)
@@ -807,6 +826,7 @@ def main():
     parser.add_argument("--application", type=Path)
     parser.add_argument("--application-receipt", type=Path)
     parser.add_argument("--source-run-id")
+    parser.add_argument("--template", type=Path, help="Frozen prior-stage application for independent generation")
     parser.add_argument("--requirements", type=Path, required=True)
     parser.add_argument("--tests", type=Path)
     parser.add_argument("--selection", type=Path)
@@ -830,6 +850,8 @@ def main():
     args = parser.parse_args()
     if bool(args.agent) == bool(args.application):
         parser.error("provide exactly one of --agent or --application")
+    if args.template and not args.agent:
+        parser.error("--template requires --agent generation")
     if args.application and (args.application_receipt is None or args.noop_script is None or args.tests is None):
         parser.error("application evaluation needs receipt, noop script and tests")
     if args.requirements_only != (args.tests is None):

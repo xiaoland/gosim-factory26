@@ -1,9 +1,7 @@
 //! Local composition of the existing projector, scheduler, Agent Groups and adapters.
 use crate::{
     agent_session::{CliContext, CreatedSession, SessionError, SessionFactory},
-    config::{
-        BubConfig, CodexConfig, Config, PiConfig, Profile, ProviderConfig, RuntimeBinding,
-    },
+    config::{BubConfig, CodexConfig, Config, PiConfig, Profile, ProviderConfig, RuntimeBinding},
     group::{GroupKind, GroupSpec, agent_group_worker},
     objects::{LocalObjects, git},
     store::{StoreActor, TurnClaim},
@@ -26,6 +24,8 @@ use tracing::Instrument as _;
 struct Request {
     profiles: Vec<Profile>,
     root_profile_id: String,
+    #[serde(default)]
+    max_active_agents: Option<usize>,
     #[serde(default)]
     root_check_messages: Vec<String>,
     bindings: BTreeMap<String, RuntimeBinding>,
@@ -166,6 +166,7 @@ impl SessionFactory for RecordingFactory {
     }
 }
 fn config(request: &Request) -> Result<Config> {
+    ensure!(request.max_active_agents != Some(0), "max_active_agents must be positive");
     ensure!(!request.profiles.is_empty(), "profiles must not be empty");
     let mut ids = std::collections::BTreeSet::new();
     let mut assignee_logins = std::collections::BTreeSet::new();
@@ -208,6 +209,7 @@ fn config(request: &Request) -> Result<Config> {
             root: request.state.clone(),
             worktrees: request.state.join("worktrees"),
             offline_stopped_sessions: Vec::new(),
+            max_active_agents: request.max_active_agents,
         },
         scheduler: crate::config::SchedulerConfig { quiet_seconds: 1, event_threshold: 8 },
         tools: crate::config::ToolConfig { git: "git".into() },
@@ -269,7 +271,8 @@ fn delivery_complete(status: &Value) -> bool {
 }
 fn execution_settled(status: &Value) -> bool {
     ["active_turns", "pending_resets", "pending_continuations", "materializing_groups"]
-        .iter().all(|key| status[key] == 0)
+        .iter()
+        .all(|key| status[key] == 0)
 }
 // Keep result persistence and telemetry teardown in the same error boundary.
 #[allow(clippy::too_many_lines)]
@@ -277,10 +280,16 @@ async fn execute(request: Request, factory: Arc<dyn SessionFactory>) -> Result<(
     execute_mode(request, factory, false).await
 }
 
-async fn execute_mode(mut request: Request, factory: Arc<dyn SessionFactory>, offline_resume: bool) -> Result<()> {
+async fn execute_mode(
+    mut request: Request,
+    factory: Arc<dyn SessionFactory>,
+    offline_resume: bool,
+) -> Result<()> {
     ensure!(!request.prompt.trim().is_empty(), "prompt is empty");
-    ensure!(request.root_check_messages.iter().all(|message| !message.trim().is_empty()),
-        "root_check_messages must not contain blank messages");
+    ensure!(
+        request.root_check_messages.iter().all(|message| !message.trim().is_empty()),
+        "root_check_messages must not contain blank messages"
+    );
     ensure!(request.state.is_absolute(), "state must be absolute");
     let first_profile = request.profiles.first().context("profiles must not be empty")?;
     let workspace = fs::canonicalize(
@@ -315,7 +324,7 @@ async fn execute_mode(mut request: Request, factory: Arc<dyn SessionFactory>, of
     let objects = Arc::new(LocalObjects::new(request.state.clone()));
     let origin = request.state.canonicalize()?.join("origin.git");
     let request_path = request.state.join("request.json");
-    let current_request = json!({"run_id":request.run_id,"repository":workspace,"seed_commit":seed_commit,"delivery_ref":request.delivery_ref,"prompt":request.prompt,"profiles":input_profiles,"root_profile_id":request.root_profile_id,"root_check_messages":request.root_check_messages,"bindings":request.bindings});
+    let current_request = json!({"run_id":request.run_id,"repository":workspace,"seed_commit":seed_commit,"delivery_ref":request.delivery_ref,"prompt":request.prompt,"profiles":input_profiles,"root_profile_id":request.root_profile_id,"root_check_messages":request.root_check_messages,"max_active_agents":request.max_active_agents,"bindings":request.bindings});
     let mut refresh_request = false;
     ensure!(!offline_resume || request_path.is_file(), "offline resume requires retained state");
     if !request_path.exists() {
@@ -330,12 +339,15 @@ async fn execute_mode(mut request: Request, factory: Arc<dyn SessionFactory>, of
                 && prior["delivery_ref"] == request.delivery_ref,
             "resume request identity does not match retained run"
         );
-        refresh_request = prior["root_check_messages"] != current_request["root_check_messages"];
+        refresh_request = prior["root_check_messages"] != current_request["root_check_messages"]
+            || prior["max_active_agents"] != current_request["max_active_agents"];
         let same_material = prior["profiles"] == current_request["profiles"]
             && prior["bindings"] == current_request["bindings"];
         if !same_material && offline_resume {
-            let old_profiles = prior["profiles"].as_array().context("retained profiles are invalid")?;
-            let new_profiles = current_request["profiles"].as_array().context("resume profiles are invalid")?;
+            let old_profiles =
+                prior["profiles"].as_array().context("retained profiles are invalid")?;
+            let new_profiles =
+                current_request["profiles"].as_array().context("resume profiles are invalid")?;
             let same_recipe = old_profiles.len() == new_profiles.len()
                 && old_profiles.iter().zip(new_profiles).all(|(old, new)| {
                     let (mut old, mut new) = (old.clone(), new.clone());
@@ -343,42 +355,80 @@ async fn execute_mode(mut request: Request, factory: Arc<dyn SessionFactory>, of
                     new.as_object_mut().map(|value| value.remove("user_instructions"));
                     old == new
                 });
-            let old_bindings = prior["bindings"].as_object().context("retained bindings are invalid")?;
-            let new_bindings = current_request["bindings"].as_object().context("resume bindings are invalid")?;
+            let old_bindings =
+                prior["bindings"].as_object().context("retained bindings are invalid")?;
+            let new_bindings =
+                current_request["bindings"].as_object().context("resume bindings are invalid")?;
             let same_adapters = old_bindings.len() == new_bindings.len()
-                && old_bindings.iter().all(|(id, old)| new_bindings.get(id)
-                    .is_some_and(|new| old["adapter_type"] == new["adapter_type"]));
-            ensure!(same_recipe && same_adapters, "offline resume changes Profile identity or model recipe");
+                && old_bindings.iter().all(|(id, old)| {
+                    new_bindings
+                        .get(id)
+                        .is_some_and(|new| old["adapter_type"] == new["adapter_type"])
+                });
+            ensure!(
+                same_recipe && same_adapters,
+                "offline resume changes Profile identity or model recipe"
+            );
             refresh_request = true;
         } else {
             ensure!(same_material, "resume profile materials differ from the retained run");
         }
-        ensure!(prior["root_profile_id"] == request.root_profile_id,
-            "resume root Profile differs from the retained run");
+        ensure!(
+            prior["root_profile_id"] == request.root_profile_id,
+            "resume root Profile differs from the retained run"
+        );
     }
     if !origin.join("HEAD").exists() {
-        git(&request.state, &["init", "--bare", origin.to_str().context("origin path is not UTF-8")?])?;
+        git(
+            &request.state,
+            &["init", "--bare", origin.to_str().context("origin path is not UTF-8")?],
+        )?;
     }
-    let initialized: Option<String> = objects.connect()?.query_row(
-        "SELECT lifecycle FROM local_run", [], |r| r.get(0),
-    ).optional()?;
+    let initialized: Option<String> = objects
+        .connect()?
+        .query_row("SELECT lifecycle FROM local_run", [], |r| r.get(0))
+        .optional()?;
     if initialized.is_none() {
         let published = git(&origin, &["rev-parse", "--verify", &request.delivery_ref]).ok();
         if let Some(published) = published {
-            ensure!(published == seed_commit, "uninitialized origin delivery ref differs from input HEAD");
+            ensure!(
+                published == seed_commit,
+                "uninitialized origin delivery ref differs from input HEAD"
+            );
         } else {
-            git(&origin, &["fetch", "--no-tags", workspace.to_str().context("input path is not UTF-8")?, &format!("HEAD:{}", request.delivery_ref)])?;
+            git(
+                &origin,
+                &[
+                    "fetch",
+                    "--no-tags",
+                    workspace.to_str().context("input path is not UTF-8")?,
+                    &format!("HEAD:{}", request.delivery_ref),
+                ],
+            )?;
         }
         git(&origin, &["symbolic-ref", "HEAD", &request.delivery_ref])?;
-        let root_profile = request.profiles.iter()
+        let root_profile = request
+            .profiles
+            .iter()
             .find(|profile| profile.id == request.root_profile_id)
             .context("root profile is not configured")?;
-        let root_binding = request.bindings.get(&root_profile.id)
+        let root_binding = request
+            .bindings
+            .get(&root_profile.id)
             .context("root profile has no runtime binding")?;
         let _ = GroupSpec::new_with_binding(
-            GroupKind::Issue, root_profile.clone(), root_binding, &store,
+            GroupKind::Issue,
+            root_profile.clone(),
+            root_binding,
+            &store,
         )?;
-        objects.initialize(&origin, &request.run_id, &request.delivery_ref, &request.prompt, &request.root_profile_id)?;
+        objects.initialize(
+            &origin,
+            &request.run_id,
+            &request.delivery_ref,
+            &request.prompt,
+            &request.root_profile_id,
+        )?;
     } else {
         ensure!(objects.repository()? == origin, "stored origin differs from retained run");
         git(&origin, &["rev-parse", "--verify", &request.delivery_ref])?;
@@ -396,10 +446,17 @@ async fn execute_mode(mut request: Request, factory: Arc<dyn SessionFactory>, of
         let stopped = store.prepare_offline_resume()?;
         let receipts = request.state.join("offline-resumes");
         fs::create_dir_all(&receipts)?;
-        write_json(&receipts.join(format!("{}.json", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_millis())),
-            &json!({"host_assertion":"previous execution environment stopped", "provider_sessions":stopped}))?;
+        write_json(
+            &receipts.join(format!(
+                "{}.json",
+                std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_millis()
+            )),
+            &json!({"host_assertion":"previous execution environment stopped", "provider_sessions":stopped}),
+        )?;
         stopped
-    } else { Vec::new() };
+    } else {
+        Vec::new()
+    };
     for profile in &mut request.profiles {
         profile.workspace = Some(origin.clone());
     }
@@ -413,9 +470,10 @@ async fn execute_mode(mut request: Request, factory: Arc<dyn SessionFactory>, of
     });
     let root = tracing::info_span!("braid.run", braid.run.id = %request.run_id, result = tracing::field::Empty);
     let started = std::time::Instant::now();
-    let outcome = drive(&request, Arc::clone(&store), Arc::clone(&objects), factory, offline_stopped)
-        .instrument(root.clone())
-        .await;
+    let outcome =
+        drive(&request, Arc::clone(&store), Arc::clone(&objects), factory, offline_stopped)
+            .instrument(root.clone())
+            .await;
     let (mut status_name, mut reason) = match outcome {
         Ok(outcome) => outcome,
         Err(error) => ("failed".into(), format!("{error:#}")),
@@ -502,13 +560,24 @@ async fn drive(
     let (shutdown, signal) = tokio::sync::watch::channel(false);
     let (reports, mut health) = tokio::sync::mpsc::channel(32);
     let (fatal_stops, mut fatal_stop_events) = tokio::sync::mpsc::channel(8);
+    let execution_pool =
+        config.runtime.max_active_agents.map(|limit| Arc::new(tokio::sync::Semaphore::new(limit)));
     let mut workers = vec![];
-    let mut worker_count=0usize;
+    let mut worker_count = 0usize;
     for kind in [GroupKind::Issue, GroupKind::Pr, GroupKind::Review] {
-        for profile in config.profiles.iter().filter(|profile| {
-            if kind==GroupKind::Review {profile.has_tag("reviewer-only") && !profile.has_tag("root-only")} else {!profile.has_tag("reviewer-only")}
-        }).cloned() {
-            worker_count+=1;
+        for profile in config
+            .profiles
+            .iter()
+            .filter(|profile| {
+                if kind == GroupKind::Review {
+                    profile.has_tag("reviewer-only") && !profile.has_tag("root-only")
+                } else {
+                    !profile.has_tag("reviewer-only")
+                }
+            })
+            .cloned()
+        {
+            worker_count += 1;
             let binding = config
                 .bindings
                 .get(&profile.id)
@@ -521,6 +590,7 @@ async fn drive(
                     config.clone(),
                     spec,
                     Arc::clone(&factory),
+                    execution_pool.clone(),
                     reports.clone(),
                     fatal_stops.clone(),
                     signal.clone(),
@@ -547,7 +617,15 @@ async fn drive(
             write_json(&request.state.join("sessions.json"), &sessions(&objects)?)?;
             let mut current = status(&objects)?;
             current["provider_health"] = json!(provider_health);
+            current["execution_pool"] = json!({"max_active_agents":request.max_active_agents,"reserved_slots":execution_pool.as_ref().map(|pool| request.max_active_agents.expect("bounded pool").saturating_sub(pool.available_permits()))});
             write_json(&request.state.join("status.json"), &current)?;
+            // Offline resume temporarily leaves the retained provider unknown
+            // while its worker restores the native RPC process. A quiet DB
+            // alone cannot prove the root session is unavailable until every
+            // worker has completed its first materialization/recovery cycle.
+            if provider_health.len() != worker_count {
+                continue;
+            }
             // Closed scope stops ordinary dispatch in the store. Wait for already
             // accepted execution and reset continuations to finish naturally.
             if delivery_complete(&current) && execution_settled(&current) {
@@ -594,11 +672,18 @@ async fn drive(
             cleanup_errors.push(error);
         }
     }
-    if !cleanup_errors.is_empty() && result.as_ref().is_ok_and(|(state, _)| state == "quiescent") {
-        return Ok((
-            "blocked".into(),
-            format!("native teardown could not be proven during shutdown: {cleanup_errors:?}"),
-        ));
+    if !cleanup_errors.is_empty() {
+        return match result {
+            Ok((state, reason)) => Ok((
+                if state == "quiescent" { "blocked".into() } else { state },
+                format!(
+                    "{reason}; native teardown could not be proven during shutdown: {cleanup_errors:?}"
+                ),
+            )),
+            Err(error) => Err(anyhow::anyhow!(
+                "{error:#}; native teardown could not be proven during shutdown: {cleanup_errors:?}"
+            )),
+        };
     }
     result
 }

@@ -27,4 +27,4 @@ Agent 在原生 shell 用真实 CLI 创建 comment/reaction，然后自行 hide�
 - [原生会话清单与内容哈希](../integration/20260921-185322-pi-plain-2887cf/native/manifest.json)
 - [实际原生准备脚本](../integration/20260921-185322-pi-plain-2887cf/prepare.py)
 - [冻结交付代码](../integration/20260921-185322-pi-plain-2887cf/application/calc.py)
-- [本地检查与构建日志](../verification/20260921-braid-collaboration)
+- [本地检查与构建日志](../verification/20260921-braid-collaboration/)

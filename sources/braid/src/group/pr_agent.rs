@@ -101,13 +101,14 @@ pub(crate) fn provision_pr_agent_worktree(
 impl GroupDriver<'_> {
     pub(super) async fn materialize_next_pr_assignment(&self) {
         let store = self.store;
-        let candidates = match store.assignment_candidates("pr".into(), self.spec.profile.id.clone()) {
-            Ok(candidates) => candidates,
-            Err(error) => {
-                tracing::error!(%error, "cannot inspect PR activation events");
-                return;
-            }
-        };
+        let candidates =
+            match store.assignment_candidates("pr".into(), self.spec.profile.id.clone()) {
+                Ok(candidates) => candidates,
+                Err(error) => {
+                    tracing::error!(%error, "cannot inspect PR activation events");
+                    return;
+                }
+            };
         for candidate in candidates {
             if candidate.action == "unassign" {
                 if let Err(error) = self.settle_unassignment(candidate).await {
@@ -121,9 +122,19 @@ impl GroupDriver<'_> {
                 }
                 continue;
             }
+            if candidate.work_item_kind != "pr"
+                || !matches!(candidate.action.as_str(), "assign" | "mention" | "activate")
+            {
+                if let Err(error) = store.ignore_assignment_event(candidate.event_id) {
+                    tracing::error!(%error, "cannot consume invalid activation");
+                }
+                continue;
+            }
             if let Err(error) = Box::pin(self.materialize_pr_assignment(candidate)).await {
                 tracing::error!(%error, "cannot materialize PR Implementation Agent assignment");
             }
+            // Dispatch before starting another native process from this batch.
+            return;
         }
     }
 
@@ -143,6 +154,7 @@ impl GroupDriver<'_> {
             return Ok(());
         }
         let prepared = prepare_pr_context(store, github, config, profile, &candidate).await?;
+        let slot = self.sessions.reserve().await?;
         let Some(materialization) = store.begin_agent_assignment(
             candidate.event_id.clone(),
             profile_record.clone(),
@@ -179,7 +191,21 @@ impl GroupDriver<'_> {
                 return Err(error);
             }
         };
-        let instructions = pr_system_prompt(config, profile, candidate.number, &prepared.head_ref, Some(&materialization.member_login));
-        self.start_materialized_assignment(&candidate,materialization,effective_profile,instructions,prepared.rendered).await
+        let instructions = pr_system_prompt(
+            config,
+            profile,
+            candidate.number,
+            &prepared.head_ref,
+            Some(&materialization.member_login),
+        );
+        self.start_materialized_assignment(
+            &candidate,
+            materialization,
+            effective_profile,
+            instructions,
+            prepared.rendered,
+            slot,
+        )
+        .await
     }
 }

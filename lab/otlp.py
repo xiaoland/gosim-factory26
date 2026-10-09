@@ -145,6 +145,23 @@ def read_batch(path, batch_id):
     return row
 
 
+def persist_batch(path, signal, payload, *, session=None, wire_bytes=None, encoding="identity", observed_at=None):
+    """Persist one already-decoded OTLP protobuf payload and return its id."""
+    if signal not in SIGNALS.values():
+        raise ValueError(f"unknown OTLP signal: {signal}")
+    initialize(path)
+    digest = hashlib.sha256(payload).hexdigest()
+    with connect(path) as db:
+        prior = db.execute("SELECT batch_id FROM batch_meta WHERE sha256=?", (digest,)).fetchone()
+        if prior:
+            return prior[0]
+        cursor = db.execute("INSERT INTO batches(signal,received_at,payload) VALUES(?,?,?)",
+                            (signal, observed_at or time.time(), payload))
+        db.execute("INSERT INTO batch_meta VALUES(?,?,?,?,?)",
+                   (cursor.lastrowid, session, digest, wire_bytes or len(payload), encoding))
+        return cursor.lastrowid
+
+
 def list_receive_errors(path, *, after_id=0, limit=None):
     if limit is not None and (type(limit) is not int or limit < 1):
         raise ValueError("error limit must be a positive integer")

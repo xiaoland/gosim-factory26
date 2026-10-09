@@ -13,7 +13,7 @@
 
 本轮已做终态因果审查与全过程发现；当前不重新调查相同终态。最后修复审查可按争议定向补读原文，不能拿报告当必须同意的答案。
 
-- 运行分析方法：当时的运行分析说明（已删除）。
+- 运行分析方法：当时的 run-analysis SOP（现已删除）。
 - 审查成本来源：[Sheet方法复盘](sheet/method-retrospective.md)。
 - 待改的工具能力：[analytics cell](../cells/audit-analytics.md)。
 - 修复是否成立：[最终修复审查](../repair-review/final/packet.md)。

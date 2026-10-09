@@ -17,7 +17,7 @@
 | 拆 status 但仍间接读取 Harness | local_experiment.py:292 → inspect_runs；后者读取 .factory26/.arc/raw 和官方事件。run_feedback.py:343、run_viewer.py:15、factory.py:99 共用其增强结构。 | 核心 status 读原始状态；增强结构由分析消费者提供，ARC 结果与 Harness 过程目录拆分。 |
 | 只修通用 status 的 import | inspect_runs.py:161 只识别 .arc/raw；submission/hackathon_main.py 实际记录在 .arc/hackathon。 | 增强分析加入原生 Hackathon 入口发现；缺少记录继续明确缺口，不影响核心终态。 |
 | 分析输出按旧根推导 | run_viewer.py:726–737 固定 ROOT/runs/viewer；factory.analyze 在输入目录下建 analysis，inspect_runs 的发现/会话关联依赖后者。 | 仅 Viewer 增显式输出；Factory 私有缓存及其读取契约保留，不建立外置索引。 |
-| 改模块名遗漏展示和监控入口 | Makefile:21、当时的监控说明（已删除）:23、run_viewer.py:589、braid_telemetry_viewer.py:198 与运行文档包含旧 CLI。 | 更新当前操作命令与模板示例；不替换历史已执行命令或 frozen inputs。 |
+| 改模块名遗漏展示和监控入口 | Makefile:21、旧监控说明（已删除）、run_viewer.py:589、braid_telemetry_viewer.py:198 与运行文档包含旧 CLI。 | 更新当前操作命令与模板示例；不替换历史已执行命令或 frozen inputs。 |
 | 迁走 submission 中的模型代码 | hackathon_gateway.py:78 仍把 submission 放入 PYTHONPATH，callback 当前只依赖 scripts/responses_compat。 | 独立复核确认不是迁移断点：submission 目录仍保留，网关源码/PYTHONPATH 均不动。 |
 | 把远端当作本机工作树镜像 | WSL 若干脚本缺失、若干版本不同，见下节。 | 范围化部署到独立源码快照，显式依赖路径；不整仓覆盖或删除。 |
 | 认为旧 running 字段代表活动生成 | 旧 raw 记录保留 queued/running；本次进程快照匹配到两个网关，没有从字段推断控制器存活。 | 不改写旧终态或自动恢复/清理；源码部署前确认实际路径持有者。 |

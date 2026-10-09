@@ -10,7 +10,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT/'tooling/scripts'))
 from package_agent import write_zip
-from agent_support import copy_skill
+from agent_support import copy_skill, require_subagent_catalog
 from hackathon_gateway import read_assignments
 
 SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
@@ -20,6 +20,7 @@ SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable', '
 def build(runtime, output, credentials=None, arc_credentials=None):
     if (runtime/'bin/braid').exists():
         raise ValueError('pi-minimal requires a native Pi runtime without Braid')
+    catalog = require_subagent_catalog(runtime, ROOT/'materials/npm/patches/pi-subagents-0.56.0-catalog-hook.patch')
     with tempfile.TemporaryDirectory(prefix='pi-minimal-', dir=ROOT/'runs') as temporary:
         stage = Path(temporary)
         for name in ('main.py', 'models.json', 'instructions.md', 'mcporter.json', 'requirements.txt'):
@@ -62,6 +63,7 @@ def build(runtime, output, credentials=None, arc_credentials=None):
                        and 'node_modules/.bin' not in str(path.relative_to(stage))]
         (stage/'runtime-executables.json').write_text(json.dumps(executables)+'\n')
         source = json.loads((runtime/'runtime-source.json').read_text())
+        source = dict(source, subagent_catalog=catalog)
         write_zip(stage, output, 'pi', source, {'variant': 'pi-minimal'})
 
 

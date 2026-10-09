@@ -1,5 +1,6 @@
 # pi-minimal
 
+本 variant 保留历史源码与冻结记录，不再扩展维护。后续原生 Pi 改进归 [pi-minimal-vv](../pi-minimal-vv/README.md)。
 直接调用原生 Pi 完成比赛需求。主模型 GLM-5.3-flash（含视觉），唯一子角色为 Kimi-k2.7-code advisor。使用 pi-subagents 与 pi-background-bash；不引入 SVC CLI、Braid 或阶段调度。
 
 主会话与 advisor 显式启用独立的 svc-verification 技能，build.py 从 harness/skills/svc-verification（指向 sources/svc/skills/svc-verification）物化完整入口与 references，不装入其它 SVC 技能。该方法将需求转为可观察判据、选择检查条件、保留可重复执行证据并解释结果；材料提及的设计步骤由原生 Pi 主会话与 advisor 承担。agent-browser 用于探索与快速反馈，最终验收由主会话按应用需求编写可重复自动化测试或脚本。其已有 with-service.py 可记录执行结果并清理所拥有的服务，不预包应用检查源码。主会话关闭默认技能发现，通过 --skill 逐个加载所选技能；advisor 以独立 skills/skillPath 选择材料。
@@ -9,3 +10,7 @@ main.py 接受官方 requirements 目录与 --output-dir，默认从 Runner 环�
 ```sh
 python3 variants/pi-minimal/build.py --runtime runs/pi-minimal/20260929/runtime --output runs/pi-minimal/20260929/agent.zip
 ```
+
+主会话通过 `FACTORY26_SUBAGENT_CATALOG=1` 启用公共 pi-subagents catalog hook：在现有 system prompt 中追加当前可执行角色的名称与 description，供调用前发现；禁用角色、内置角色禁用配置和子角色能力边界沿用原生目录规则。目录不内联角色或技能正文；调用 advisor 后仍按角色文件加载独立指令和所选技能。此接线需要含 catalog-hook 补丁的当前公共 Pi runtime；旧冻结包不会因此更新，也未据此证明实际委派触发有所改善。
+
+装配器在创建暂存目录前核对 runtime 插件是否包含公共 catalog-hook 的完整新增 import 与事件处理块；缺失或不匹配时直接拒绝，不能以 launcher 开关替代补丁。装配 source 身份记录插件与补丁 SHA，旧冻结 runtime 应由公共 producer 重新生产后采用。

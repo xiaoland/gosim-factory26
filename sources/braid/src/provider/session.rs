@@ -149,12 +149,13 @@ impl ProviderAgentSession {
             .resume_session(thread_id, &session.profile, &session.instructions)
             .await
             .map_err(|error| match error {
-                // A resume timeout or broken transport does not prove that the
-                // persisted native session disappeared. Retain its identity.
-                ProviderError::Start(_) | ProviderError::Timeout { .. } | ProviderError::Disconnected =>
-                    SessionError::Deferred(error.to_string()),
-                other => map_provider_error(other),
-            })?;
+            // A resume timeout or broken transport does not prove that the
+            // persisted native session disappeared. Retain its identity.
+            ProviderError::Start(_)
+            | ProviderError::Timeout { .. }
+            | ProviderError::Disconnected => SessionError::Deferred(error.to_string()),
+            other => map_provider_error(other),
+        })?;
         Ok(session)
     }
 
@@ -252,7 +253,9 @@ impl AgentSession for ProviderAgentSession {
         if inner.status == SessionStatus::Running {
             return Ok(false);
         }
-        let thread_id = inner.thread_id.clone()
+        let thread_id = inner
+            .thread_id
+            .clone()
             .ok_or_else(|| SessionError::Failed("no provider session".into()))?;
         drop(inner);
         self.provider.can_accept_input(&thread_id).await.map_err(map_provider_error)
@@ -260,11 +263,36 @@ impl AgentSession for ProviderAgentSession {
 
     async fn managed_state(&self) -> Result<crate::agent_session::ManagedState, SessionError> {
         let inner = self.inner.lock().await;
-        if self.is_unavailable() { return Err(SessionError::Unavailable); }
-        if inner.status == SessionStatus::Running { return Ok(crate::agent_session::ManagedState::Busy); }
-        let id = inner.thread_id.clone().ok_or_else(|| SessionError::Failed("no provider session".into()))?;
+        if self.is_unavailable() {
+            return Err(SessionError::Unavailable);
+        }
+        if inner.status == SessionStatus::Running {
+            return Ok(crate::agent_session::ManagedState::Busy);
+        }
+        let id = inner
+            .thread_id
+            .clone()
+            .ok_or_else(|| SessionError::Failed("no provider session".into()))?;
         drop(inner);
         self.provider.managed_state(&id).await.map_err(map_provider_error)
+    }
+
+    async fn yield_stoppable_services(
+        &self,
+    ) -> Result<crate::agent_session::ManagedState, SessionError> {
+        let inner = self.inner.lock().await;
+        if self.is_unavailable() {
+            return Err(SessionError::Unavailable);
+        }
+        if inner.status == SessionStatus::Running {
+            return Ok(crate::agent_session::ManagedState::Busy);
+        }
+        let id = inner
+            .thread_id
+            .clone()
+            .ok_or_else(|| SessionError::Failed("no provider session".into()))?;
+        drop(inner);
+        self.provider.yield_stoppable_services(&id).await.map_err(map_provider_error)
     }
 
     async fn close(&self) -> Result<(), SessionError> {
@@ -294,9 +322,13 @@ impl AgentSession for ProviderAgentSession {
                     "the observed turn has ended".into()
                 }));
             }
-            (inner.thread_id.clone()
-                .ok_or_else(|| SessionError::Failed("no provider session".into()))?,
-             inner.current_turn_id.clone())
+            (
+                inner
+                    .thread_id
+                    .clone()
+                    .ok_or_else(|| SessionError::Failed("no provider session".into()))?,
+                inner.current_turn_id.clone(),
+            )
         };
         if let Some(turn_id) = turn_id {
             self.provider.steer(&thread_id, &turn_id, &msg).await.map_err(map_provider_error)?;
@@ -332,7 +364,12 @@ impl AgentSession for ProviderAgentSession {
     }
 
     async fn message_was_processed(&self, message: &str) -> Result<bool, SessionError> {
-        let thread_id = self.inner.lock().await.thread_id.clone()
+        let thread_id = self
+            .inner
+            .lock()
+            .await
+            .thread_id
+            .clone()
             .ok_or_else(|| SessionError::Failed("no provider session".into()))?;
         self.provider.message_was_processed(&thread_id, message).await.map_err(map_provider_error)
     }

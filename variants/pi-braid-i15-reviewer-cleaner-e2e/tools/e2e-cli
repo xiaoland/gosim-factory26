@@ -2,7 +2,14 @@
 set -eu
 : "${E2E_RUNTIME:?E2E_RUNTIME must name the frozen addon}"
 : "${FACTORY26_TOOL_NODE:?FACTORY26_TOOL_NODE must name the tool Node}"
-PLAYWRIGHT_BROWSERS_PATH="$E2E_RUNTIME/browsers"
+# Reuse the executor's prepared browser; the addon can be read-only and browser-free.
+# An explicit Playwright path may be a read-only preinstalled cache; "0" means
+# package-local browsers, not a directory named 0. Only create our fallback.
+if [ -z "${PLAYWRIGHT_BROWSERS_PATH:-}" ]; then
+  PLAYWRIGHT_BROWSERS_PATH="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-${HOME:?}/.cache}/factory26-playwright}"
+  if [ "$PLAYWRIGHT_BROWSERS_PATH" != "0" ]; then mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"; fi
+fi
+export PLAYWRIGHT_BROWSERS_PATH
 LD_LIBRARY_PATH="$E2E_RUNTIME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 TOOL_BIN=$(CDPATH= cd -- "$(dirname -- "$FACTORY26_TOOL_NODE")" && pwd)
 FONTCONFIG_PATH="$TOOL_BIN/../etc/fonts"

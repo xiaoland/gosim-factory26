@@ -129,7 +129,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 开发工具与反馈
 开发时使用pnpm安装依赖、构建和运行脚本，提交pnpm-lock.yaml。预打包环境通过PATH提供pnpm、portless、agent-browser和Playwright；BROWSER_CHECK_NODE_MODULES指向已有Node工具依赖，BROWSER_EXECUTABLE_PATH指向配套浏览器入口。复用这些工具、浏览器和本次运行的包缓存。
 应用检查使用Vitest，复杂组件按需使用Browser Mode；完整应用验收使用Playwright自动化测试或脚本。检查失败保留首次结果、trace、控制台和请求错误，依据需求设计判据，不以通过数量代替覆盖说明。依赖安装失败保留原始错误与首轮日志，不通过反复安装掩盖失败。
-UI使用适合所选框架的成熟组件库和图标库，样式使用UnoCSS；按需求组合、定制已有控件，核对实际role、可访问名称、状态、键盘和焦点行为。统一少量视觉变量，图标随应用打包；动态样式采用可静态提取的类名映射、safelist或适当的CSS变量。
+新建应用的UI使用适合所选框架的成熟组件库和图标库，样式统一使用Tailwind CSS；接续既有应用时沿用基线技术栈，不为样式工具偏好迁移。按需求组合、定制已有控件，核对实际role、可访问名称、状态、键盘和焦点行为。统一少量视觉变量，图标随应用打包；动态样式采用所选Tailwind CSS版本可静态提取的完整类名映射或适当的CSS变量。
+采用Tailwind CSS时，按所选版本的官方方式配置构建集成和CSS导入，确认应用入口实际加载该CSS。使用正式构建产物和正式启动路径，在实际页面核对代表性布局、颜色和字体的计算样式；不能仅凭构建成功声明样式生效。
 在真实跨模块边界统一请求、响应与错误格式，按需要使用运行时schema校验；不为此增加代码生成系统。
 
 数据与服务状态
@@ -479,9 +480,9 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             gateway_handle = start_model_gateway(
                 runtime, run, gateway_base_env, gateway_config,
                 bindings=routes, gateway_routes=gateway_route_spec,
-                provider_env=provider_env, preserve_parameters=True)
-            env.update(gateway_handle['pi_environment'])
-            model_env.update(gateway_handle['pi_environment'])
+                provider_env=provider_env, preserve_parameters=True, implementation='rust')
+            env = gateway_handle['pi_environment']
+            model_env = dict(env)
         initialize_repository(app)
         if seed_mode:
             seed_commit, seed_tree = seed_snapshot(app)

@@ -32,10 +32,19 @@ Ponytail 使用默认 full，由原生扩展持续注入。复用能满足需求
 
 ## 开发与交付环境
 
-使用 npm 管理应用依赖，选择兼容 Node 20.19.3 的 Vitest 和其它依赖版本；UI 使用成熟组件库、图标库和 UnoCSS，语言与框架自行选择。工具路径已包含 agent-browser、rg、ast-grep、app-env；BROWSER_EXECUTABLE_PATH 是浏览器入口，BROWSER_CHECK_NODE_MODULES 是工具依赖位置。
+使用 npm 管理应用依赖，选择兼容 Node 20.19.3 的 Vitest 和其它依赖版本；新建应用的 UI 使用成熟组件库、图标库和 Tailwind CSS，语言与框架自行选择；接续既有应用时沿用基线技术栈，不为样式工具偏好迁移。工具路径已包含 agent-browser、rg、ast-grep、app-env；BROWSER_EXECUTABLE_PATH 是浏览器入口，BROWSER_CHECK_NODE_MODULES 是工具依赖位置。
 
-Harness 的 Node 与应用目标 Node 是两件事：交付目标为 Node 20.19.3。应用依赖安装、构建和启动使用 `app-env npm install --include=optional --no-audit --no-fund`、`app-env npm run build`、`app-env npm run start`，使 npm 与生命周期脚本都使用目标 Node；交付 package 脚本保持普通命令，不依赖 app-env。保留 package-lock.json，交付前在干净副本中按前端安装与构建、后端安装与启动的实际路径验证。预打包环境含 better-sqlite3 11.10.0 的 Linux x64/Node20 ABI115 官方预编译缓存；若选择这个版本，app-env 会向安装器提供该缓存。其它版本或平台不在缓存覆盖范围内，不强制选择该库。含原生绑定的依赖应在目标 Node/ABI 下安装并确认实际加载；保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
+按所选Tailwind CSS版本的官方方式配置构建集成和CSS导入，确认应用入口实际加载该CSS。使用正式构建产物和正式启动路径，在实际页面核对代表性布局、颜色和字体的计算样式；不能仅凭构建成功声明样式生效。动态样式采用所选Tailwind CSS版本可静态提取的完整类名映射或适当的CSS变量。
+
+Harness 的 Node 与应用目标 Node 是两件事：交付目标为 Node 20.19.3。应用依赖安装、构建和启动使用 `app-env npm install --include=optional --no-audit --no-fund`、`app-env npm run build`、`app-env npm run start`，使 npm 与生命周期脚本都使用目标 Node；交付 package 脚本保持普通命令，不依赖 app-env。保留 package-lock.json，交付前在干净副本中按前端安装与构建、后端安装与启动的实际路径验证。平台不预装生成应用的原生业务依赖或预编译缓存；含原生绑定的依赖由 Agent 在开发过程中按目标 Node/ABI 安装配置，并在应用自己的安装、构建和启动路径中确认实际加载。保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
 
 后台任务取得完成结果与退出码后才声明完成；开发服务器使用 bash 的 service:true，工作结束后停止服务。不用 sleep 反复轮询，使用原生完成通知。
 
 生成与评测共用环境，3000端口留给评测。自检使用临时数据库、浏览器状态和缓存，不污染交付初始数据。frontend/package.json 提供 build，backend/package.json 提供 start；后端在 HOST=0.0.0.0、PORT=3000 服务前端与API。保留 requirements/ 与 .arc/，不要写 .factory26/ 或 deploy.sh，不向外部仓库push。交付前停止自己启动的服务。
+
+
+## 最终验收：完整用户旅程
+
+最终完整验收必须从公开需求规定的初始状态开始：使用新的浏览器会话，从应用首页进入；按场景保持未登录状态或经首页可见 Sign in 入口登录指定角色，再通过用户可见的搜索、列表等入口定位目标，进入相关功能入口并执行操作；例如 GitHub 题经仓库导航进入 Issues 或 Pull requests。按需求继续覆盖刷新、重新登录、跨账号查看或权限变化，确认同一数据与可见状态。保留各步 URL、可见入口及结果，使报告能证明整条用户旅程成立，而不只是目标页面的局部功能。
+
+不得以 app.open 或等价操作直接打开深层 URL 作为最终完整验收的起点，也不得用 API 或预置浏览器状态替代需求中的登录和导航步骤。深链仍可用于局部诊断；公开需求明确要求 direct-link 或独立详情/刷新时，另行验证这些场景，不能用它们替代从首页开始的完整旅程。验收判据始终来自公开需求，失败时先判断入口、状态、路由及业务结果，修正应用或验收的真实问题后完成端到端验证。

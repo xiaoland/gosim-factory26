@@ -125,3 +125,36 @@ LiteLLM能集中维护别名、接入及兼容，不能自动确定账户权限�
 
 
 负责人完成最终集成修复后，`python3 -m py_compile scripts/hackathon_gateway.py scripts/hackathon_gateway_compat.py`及空白检查通过。绑定marker和请求日志上下文补齐config SHA及incarnation；所选凭据的校验直接读取catalog实际环境变量引用，不依赖provider名称推导变量名。实际离线wrapper的撤销绑定已读回并归档为 `wrapper/binding-readback.json`，身份为 `attempt-readback-02 / inc-02`；临时客户端env已删除。该回执来自最后补齐marker/日志字段之前的实际运行，不将其写成补齐后已完成请求验收。操作说明提供方舟Flash准备命令，并明确prepare-only产物不能原目录再次启动。
+
+
+## 千帆个人套餐与普通API分通道（2026-10-03）
+
+用户补充已购买Coding Plan并指定 `https://qianfan.baidubce.com/v2/tokenplan/personal`，要求区分普通API与套餐。主Agent将此前填入QIANFAN的key按用户购买归属迁入独立QIANFAN_TOKEN_PLAN前缀；用户随后明确“普通千帆和coding plan 千帆我都配置好了”，已只读确认两套key及端点均已填，保留用户现有值。普通API使用QIANFAN前缀与/v2，个人套餐使用QIANFAN_TOKEN_PLAN前缀与/v2/tokenplan/personal；不共享默认凭据。
+
+provider_facts负责官方通道及请求ID核实，结果已采用：[个人版快速开始](https://cloud.baidu.com/doc/qianfan/s/kmracfgi2)及[个人版说明](https://cloud.baidu.com/doc/qianfan/s/Dmrabu8b6)确认套餐专属URL、专属key及GLM-5.3请求IDglm-5.3；[普通模型列表](https://cloud.baidu.com/doc/qianfan/s/rmh4stp0j)确认普通API同一请求ID。harness/model-gateway.json新增qianfan-token-plan-glm-5.3与qianfan-glm-5.3两个候选deployment，稳定alias均为glm-5.3，现有默认选择不变。每个实例仍只选一个上游。
+
+提供商页面已区分普通活动报价与套餐权益；套餐档位、成交价及账户额度未知，不用普通API价格代替。配置JSON解析、env语法、相对链接、600权限、Git忽略及任务文件空白检查通过。没有读取或输出key值到工具结果，没有模型请求、网关部署、远端同步或实验恢复。本轮为声明式配置及文档变更，没有编写或运行Factory/Braid测试，也未重新声称已通过运行时验收。
+
+
+## 新增MiniMax官方M3（2026-10-03）
+
+用户直接授权“新增 minimax 官方，可用 minimax-m3”。主Agent负责私有env、原生catalog及提供商文档，provider_facts只读核实官方中国区端点、请求ID及价格。采用[OpenAI SDK说明](https://platform.minimax.cn/docs/api-reference/text-openai-api)：Base URL为https://api.minimax.cn/v1，上游wire ID为MiniMax-M3，客户端稳定alias为minimax-m3。旧文档域名重定向至minimax.cn，本轮未推定旧API主机仍有效。
+
+私有env新增MINIMAX_API_KEY空值和MINIMAX_BASE_URL，保留现有所有凭据。catalog新增minimax-official-m3普通按量deployment，其default仅适用于新minimax-m3 alias。选择时显式使用--alias minimax-m3 --route minimax-m3=minimax-official-m3；省略--alias仍按现有启动器行为装配整个目录，所有获选凭据须已填。没有改其它alias的默认通道。独立供应商页记录标准输入≤512K时2.10/8.40/0.42元/M，>512K时4.20/16.80/0.84元/M（输入/输出/缓存读取），priority另按1.5倍计费；M3缓存写入价未知。Token Plan未作为本次购买通道配置。
+
+gateway_design_evidence持有共享读取边界修复：read_assignments允许未选中提供商的空字符串占位，仍验证变量名及字符串类型；selected_refs仍要求获选key及endpoint非空。这是新增空key时避免阻塞其它显式alias所需的范围内修复，未改其余现有路由、JSON环境或排序逻辑。
+
+负责人编译scripts/hackathon_gateway.py成功；主Agent采用结果并完成catalog JSON解析读回、env语法、600权限及Git忽略、相对链接和任务文件空白检查。本轮没有Factory/Braid测试、模型调用、网关启动、部署或实验恢复。MiniMax key尚未填写，官方能力与价格核实不构成账户权限或完整兼容验收。
+
+
+## ARC 首道与千帆个人 Token Plan 下架（2026-10-08，完成）
+
+本次授权原话：“ARC API 额度恢复了，可以加到自费 API 运行的配方中，作为第一道”；随后“可以将千帆 Token Plan 从配方下架了”。用户补充事实：“ARC的旧模型ID就是0731版本，这是早就确认的事情”。实现 owner 为 `arc_recipe_owner`；本次更改公共自费路由、ARC catalog 与私有环境引用、代理 ARC 余额耗尽的窄 fallback、配方与 ARC 文档，保留其他工作区修改，未提交。
+
+五个公共模型均已前置 ARC，所有公共链都已移除 `qianfan-token-plan-*`，其余顺序保留。供应商 catalog 的千帆能力条目与历史冻结路由保留，不据“配方下架”删除历史证据。DeepSeek 稳定 alias `deepseek-v4-flash-0731` 显式映射 ARC wire ID `deepseek-v4-flash`。GLM-5.3 与 K3 最长四道，沿用现有四道实现，没有扩容或新增配方机制。私有 `.secrets/models.env` 新增 ARC 两个引用，复用已有 ARC 账户凭据，没有输出、更换或外传密钥。
+
+只读 `GET https://api.arc-bench.com/v1/models` 返回 HTTP 200 并列出五个所需 wire ID，完整清单与收据归 `runs/arc-self-funded-20261008/`。默认 Python CA 首次缺失 issuer、未取得 HTTP 响应，使用已有 certifi 信任库后成功；没有关闭证书校验。实际 `freeze_model_channel` 对 I14-dx-test 与 pi-minimal-vv-dx-test 完成材料装配，selected catalog 与 provider-env 已独立冻结，千帆凭据不再进入新装配。公共五模型通过 Python proxy 冻结器生产配置。Rust release 编译通过（29.63 秒），使用本次二进制与本次冻结四道配置启动独立代理，取得 ready 及本地健康 HTTP 200，SIGTERM 正常退出；没有模型请求、设施测试或模拟上游。装配、编译与启动证据同归上述目录，全部 Mac 产物与 cache/TMPDIR 位于 WorkSSD。
+
+历史原生错误原件 `runs/finals-experiment-loop/validation/bookstack-wsl-native-error.json` 显示 HTTP 402 / code=insufficient_balance、type=billing_error、access key balance is exhausted。它是原生 errorMessage JSON，不是独立 raw HTTP 响应体。代理仅对 ARC+HTTP402+完整可解析JSON（顶层或 error 包装）+上述精确 code/type 允许切下一道；其余认证错误不放开，原错误诊断继续保留。编译已通过，实际余额耗尽 fallback 没有通过收费调用重现，当前余额没有查询，目录与健康响应不证明生成、工具或流式通过。
+
+只更新下一次装配输入；未启动、停止、改写或恢复任何已有 run。Stage3 与 finals-experiment-loop 的既有冻结身份、用户停止要求仍归原任务记录，本次额度恢复不恢复它们。新二进制仅位于本次编译产物，未同步远端或部署到在途实例；新运行要沿自身装配合同采用当前源与新二进制。后续无本轮必做事项；如需真实生成及耗尽切换验证，另按具体运行范围授权。

@@ -1,6 +1,6 @@
 ---
 name: svc-sub-agents
-description: Decide when and how to delegate work so its result advances the task without requiring the parent to repeat it. Shape useful assignments, match capability and feedback, and judge returns using observations or arguments whose scope and limits are understood.
+description: Decide when and how to delegate or recover work so its result advances the task without requiring the parent to repeat it. Shape useful assignments, match capability and feedback, and judge returns using observations or arguments whose scope and limits are understood.
 metadata:
   version: "16.0.0"
 ---
@@ -88,3 +88,5 @@ Before adding another writer, inspect current ownership, work in progress, and o
 Separate working directories do not make shared services, mutable data, or external resources independent.
 Coordinate the mutable targets and integration boundary using the actual execution environment.
 After interruption, inspect the original work and saved artifacts before reassigning the same effects; missing status does not establish that the child stopped.
+Classify the observed state as never started, partial work, a usable result, or an unresolved side effect. Reuse a resumable session or saved artifact when available; otherwise reassign only the remaining work and carry forward the partial artifact and its ownership. Do not create a second writer merely because the first status is unclear. When a provider or shared service is contended, use observed availability and remaining obligations to decide what to resume or assign, retaining the concrete failure; repeated copies whose only new result would be another admission failure add no progress.
+While a delegated state is unchanged, prefer the existing wait or completion event over repeatedly asking for another model turn that rereads the same history. If reassignment is necessary, pass the necessary premise, usable artifact, and remaining obligations; keep detailed failure evidence at its source for targeted reading rather than replaying the entire failed history. This is a context-shaping choice, not a token threshold or a requirement that every delegation be fresh.

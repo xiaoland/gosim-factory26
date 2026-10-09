@@ -1,0 +1,81 @@
+{
+  "kind": "factory26.exp.intent",
+  "schema_version": 2,
+  "experiment_id": "pi-minimal-vv-github-stage-2-20261003",
+  "authorization": "用户明确更新pi-minimal-vv并加入tester e2e，上传官网跑Sheet及GitHub stage1~3参赛；确认四项合计人民币100元，超额停止本次在途运行并禁止后续启动。",
+  "execution": {
+    "max_parallel": 1,
+    "budget": {
+      "max_attempts": 1
+    },
+    "storage": {
+      "host_reserve_bytes": 21474836480
+    }
+  },
+  "cases": {
+    "github-stage-2": {
+      "inputs": {
+        "agent": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal-vv/20261003/agent-v2.zip"
+        },
+        "submission_reference": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal-vv/20261003/github-stage-2-submission-reference.json"
+        }
+      },
+      "backend": {
+        "competition_id": "hackathon",
+        "task": "hackathon--github-stage-2"
+      }
+    }
+  },
+  "variants": {
+    "pivv": {
+      "generate": {
+        "purpose": "generate",
+        "backend": {
+          "kind": "hosted",
+          "variant": "pi-minimal-vv",
+          "credential_mode": "official_evaluation",
+          "allow_competition_credit": true
+        },
+        "outputs": [],
+        "limits": {
+          "wall_seconds": 43200,
+          "storage_bytes": 42949672960,
+          "telemetry_bytes": 1073741824
+        },
+        "environment": {}
+      }
+    }
+  },
+  "models": {
+    "flash": {
+      "config": {
+        "model": "glm-5.3-flash",
+        "visual_model": "glm-5.3-flash",
+        "provider": "ARC",
+        "base_url": "https://api.arc-bench.com/v1"
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "pivv-github-stage-2",
+      "case": "github-stage-2",
+      "variant": "pivv",
+      "model": "flash"
+    }
+  ],
+  "selection_policy": {
+    "kind": "explicit"
+  },
+  "evaluation_policy": {
+    "kind": "none"
+  },
+  "labels": {
+    "variant": "pi-minimal-vv",
+    "budget": "four-task aggregate CNY100",
+    "guard": "task-specific independent program; only own attempts",
+    "model_connection": "competition injected key; no private BigModel/ARC personal credentials"
+  }
+}

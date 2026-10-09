@@ -1,0 +1,20 @@
+{
+  "packages": [],
+  "subagents": {
+    "disableBuiltins": true,
+    "modelScope": {
+      "enforce": true,
+      "strict": true,
+      "allow": ["factory26/*", "factory26-visual/*"]
+    }
+  },
+  "defaultTools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ]
+}

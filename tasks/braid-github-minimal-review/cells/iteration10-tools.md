@@ -42,4 +42,4 @@ python3 -m lab show <new-experiment-directory>
 
 `--requirements-only` 只生成与部署，不给本地官方分数；每题完成后用 `python3 -m lab.arc_bench.package_arc_replay --run <that-run-directory> --output <new-single-task-replay.zip>` 冻结应用，再按既定 `self_funded` 官网路径单题评分，生成和评分耗时分开记录。
 
-旧 `attempt-09/continuation-03/monitor-generation.py` 已按每个 run 的 `started_at` 在前 600 秒每 180 秒、随后每 480 秒采集，并把原始摘要写 `generation-monitor.jsonl`；当时的监控说明（已删除） 定义内容审查与完成条件。这个脚本固定 `ROOT=自身目录/generation/runs` 与两题名，不是可直接指向任意新实验的通用 CLI。新实验应在其独立目录复用该已验证节奏与 `lab show/status/events` 读取，绑定本次 run 身份；不能拿旧 monitor 的 PID、旧结果或只看 token 增长冒充新运行监控。长等待交程序，异常或终态再给审查 Agent 真实证据。新监控接线仍须在主实验工作项冻结前确认。
+旧 `attempt-09/continuation-03/monitor-generation.py` 已按每个 run 的 `started_at` 在前 600 秒每 180 秒、随后每 480 秒采集，并把原始摘要写 `generation-monitor.jsonl`；当时的监控说明（现已删除）定义内容审查与完成条件。这个脚本固定 `ROOT=自身目录/generation/runs` 与两题名，不是可直接指向任意新实验的通用 CLI。新实验应在其独立目录复用该已验证节奏与 `lab show/status/events` 读取，绑定本次 run 身份；不能拿旧 monitor 的 PID、旧结果或只看 token 增长冒充新运行监控。长等待交程序，异常或终态再给审查 Agent 真实证据。新监控接线仍须在主实验工作项冻结前确认。

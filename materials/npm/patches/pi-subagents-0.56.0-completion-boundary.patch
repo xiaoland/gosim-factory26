@@ -163,11 +163,30 @@
 +}
 --- a/src/extension/index.ts
 +++ b/src/extension/index.ts
-@@ -718,7 +718,26 @@
+@@ -12,6 +12,7 @@
+  *   { "asyncByDefault": true, "defaultSubagentContext": "fork", "forceTopLevelAsync": true, "maxSubagentDepth": 1, "intercomBridge": { "mode": "always", "instructionFile": "./intercom-bridge.md" }, "worktreeSetupHook": "./scripts/setup-worktree.mjs" }
+  */
+ 
++import { snapshotBackgroundWork } from "../api/background-work.ts";
+ import { randomUUID } from "node:crypto";
+ import * as fs from "node:fs";
+ import * as os from "node:os";
+@@ -722,8 +723,36 @@
+ 
  	registerWaitTool(pi, state, waitToolConfig.enabled, waitSubscriptionManager);
  
- 	pi.on("agent_end", async (_event, ctx) => {
+-	pi.on("agent_end", async (_event, ctx) => {
 -		if (!ctx.hasUI) await drainOutstandingWork({ state, events: pi.events });
++	pi.on("agent_end", async (event, ctx) => {
++		if (event.willRetry) return;
++		const lastAssistant = [...event.messages].reverse().find((message) => message.role === "assistant");
++		if (lastAssistant?.stopReason === "error") {
++			// Result files and active work keep their ownership; failed inference is not a completion acknowledgement.
++			pi.sendMessage({ customType: "subagent-terminal-background", content: "Model inference failed; background work and saved results remain available for recovery.", display: false,
++				details: { sessionId: state.currentSessionId, active: snapshotBackgroundWork(state.currentSessionId ?? "", Date.now()).items,
++					retained: state.currentSessionId ? listRetainedChildren(DIRS.async, state.currentSessionId) : [] } }, { triggerTurn: false });
++			return;
++		}
 +		if (ctx.mode !== "tui") {
 +			completionNotifier.beginDrain();
 +			try {

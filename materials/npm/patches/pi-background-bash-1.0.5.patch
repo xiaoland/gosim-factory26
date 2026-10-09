@@ -118,12 +118,13 @@
    if (!result.job) {
      console.error(context("pbb.error", { session_key: id.sessionKey, instance_id: id.instanceId, scope, job_id: jobId, error: result.error === "ambiguous" ? "ambiguous_job" : "unknown_job" }, `${result.error === "ambiguous" ? "ambiguous" : "unknown"} job ${jobId}`));
      process.exit(result.error === "ambiguous" ? 3 : 2);
-@@ -336,3 +370,3 @@
+@@ -336,4 +370,4 @@
  function printKill(id, jobId, opts) {
 -  const scope = opts.scope || (opts.instance ? "session" : "current-instance");
 -  const result = findJob(id, jobId, { scope, instance: opts.instance });
 +  const scope = jobId?.includes(":") ? "global" : opts.scope || (opts.instance ? "session" : "current-instance");
 +  const result = findJob(id, jobId, { scope, instance: opts.instance }, true);
+   if (!result.job) {
 @@ -341,7 +375,7 @@
      process.exit(result.error === "ambiguous" ? 3 : 2);
    }
@@ -436,3 +437,82 @@
  			});
  			scheduleDetachedBackgroundToolResultRepair(ctx, toolCallId);
  
+--- a/extensions/background-bash.ts
++++ b/extensions/background-bash.ts
+@@ -773,7 +773,7 @@
+ 
+ const pendingBackgroundResultFollowUps: PendingBackgroundResultFollowUp[] = [];
+ 
+-function deliverBackgroundResultFollowUp(pi: ExtensionAPI, item: PendingBackgroundResultFollowUp): void {
++function deliverBackgroundResultFollowUp(pi: ExtensionAPI, item: PendingBackgroundResultFollowUp, triggerTurn = true): void {
+ 	if (shuttingDown) return;
+ 	repairDetachedBackgroundToolResults(item.job.repairContext, item.job.toolCallId, { rewriteFile: item.job.repairContext?.isIdle?.() === true });
+ 	pi.sendMessage(
+@@ -783,14 +783,14 @@
+ 			display: true,
+ 			details: item.details,
+ 		},
+-		{ deliverAs: "followUp", triggerTurn: !item.job.service },
++		{ deliverAs: "followUp", triggerTurn: triggerTurn && !item.job.service },
+ 	);
+ }
+ 
+-function flushPendingBackgroundResultFollowUps(pi: ExtensionAPI): void {
++function flushPendingBackgroundResultFollowUps(pi: ExtensionAPI, triggerTurn = true): void {
+ 	if (shuttingDown || pendingBackgroundResultFollowUps.length === 0) return;
+ 	const items = pendingBackgroundResultFollowUps.splice(0);
+-	for (const item of items) deliverBackgroundResultFollowUp(pi, item);
++	for (const item of items) deliverBackgroundResultFollowUp(pi, item, triggerTurn);
+ }
+ 
+ function sendBackgroundResultFollowUp(pi: ExtensionAPI, job: ActiveJob, content: string, details: BackgroundBashDetails): void {
+@@ -1011,7 +1011,16 @@
+ 		for (const outcome of outcomes) if (outcome.status === "rejected") throw outcome.reason;
+ 	});
+ 
+-	pi.on("agent_end", async (_event, ctx) => {
++	pi.on("agent_end", async (event, ctx) => {
++		if (event.willRetry) return;
++		const lastAssistant = [...event.messages].reverse().find((message) => message.role === "assistant");
++		if (lastAssistant?.stopReason === "error" || lastAssistant?.stopReason === "aborted") {
++			// Persist completed results without scheduling another inference; active jobs keep their original ownership.
++			flushPendingBackgroundResultFollowUps(pi, false);
++			pi.sendMessage({ customType: "background-bash-terminal-work", content: "Model inference failed; active bash jobs remain available for recovery.", display: false,
++				details: { jobs: [...activeJobs.values()].map((job) => ({ id: job.id, sessionId: job.ownerSessionId, service: job.service === true })) } }, { triggerTurn: false });
++			return;
++		}
+ 		// Child Pi sessions may load PBB without pi-subagents. Await their own
+ 		// finite jobs before non-interactive shutdown can abort them; RPC has a UI proxy.
+ 		if (ctx.mode !== "tui") await Promise.all(pendingCompletionJobs().map((job) => {
+--- a/extensions/background-bash.ts
++++ b/extensions/background-bash.ts
+@@ -790,7 +790,18 @@
+ function flushPendingBackgroundResultFollowUps(pi: ExtensionAPI, triggerTurn = true): void {
+ 	if (shuttingDown || pendingBackgroundResultFollowUps.length === 0) return;
+ 	const items = pendingBackgroundResultFollowUps.splice(0);
+-	for (const item of items) deliverBackgroundResultFollowUp(pi, item, triggerTurn);
++	if (items.length === 1) {
++		deliverBackgroundResultFollowUp(pi, items[0], triggerTurn);
++		return;
++	}
++	// Completions queued during one inference are one observation batch, not
++	// separate user requests. Keep every result, but wake Pi only once.
++	for (const item of items) {
++		repairDetachedBackgroundToolResults(item.job.repairContext, item.job.toolCallId, { rewriteFile: item.job.repairContext?.isIdle?.() === true });
++	}
++	pi.sendMessage({ customType: CUSTOM_TYPE, content: items.map((item) => item.content).join("\n\n"), display: true,
++		details: { jobs: items.map((item) => item.details) } },
++		{ deliverAs: "followUp", triggerTurn: triggerTurn && items.some((item) => !item.job.service) });
+ }
+ 
+ function sendBackgroundResultFollowUp(pi: ExtensionAPI, job: ActiveJob, content: string, details: BackgroundBashDetails): void {
+@@ -954,7 +965,8 @@
+ 	for (const entry of entries as Array<Record<string, unknown>>) {
+ 		const details = entry.details as Record<string, unknown> | undefined;
+ 		const content = typeof entry.content === "string" ? entry.content : undefined;
+-		const candidates = [details?.jobId, content?.match(/<pi_context\b[^>]*\bid="(bg\d{3,})"/)?.[1]];
++		const batch = Array.isArray(details?.jobs) ? details.jobs as Record<string, unknown>[] : [];
++		const candidates = [details?.jobId, ...batch.map((job) => job.jobId), content?.match(/<pi_context\b[^>]*\bid="(bg\d{3,})"/)?.[1]];
+ 		for (const candidate of candidates) {
+ 			const n = parseJobNumber(candidate);
+ 			if (n !== undefined) max = Math.max(max, n);

@@ -8,13 +8,14 @@
  	abortController: AbortController;
  	startedAt: number;
  	cwd?: string;
-@@ -585,12 +586,20 @@
+@@ -586,15 +587,29 @@
  			resolve(completed);
  		};
  
 -		const child = spawn("bash", ["-lc", params.command], {
 +		const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
 +		let child: ChildProcess;
++		let managedStartup: Promise<unknown> | undefined;
 +		try {
 +		child = (managedRuntime?.spawnManaged ?? spawn)("bash", ["-lc", params.command], {
  			cwd,
@@ -23,6 +24,7 @@
  			stdio: ["ignore", "pipe", "pipe"],
 -		});
 +		}, { kind: "tool", service: job.service, manifest: job.pbb ? join(pbbJobsDir(job.pbb), `${job.id}.json`) : undefined });
++		managedStartup = managedRuntime?.waitManagedStartup(child);
 +		} catch (error) {
 +			job.startError = error instanceof Error ? error.message : String(error);
 +			finish({ status: "error", error, body: job.startError, details: undefined, outcome: "error", exitCode: null });
@@ -31,6 +33,13 @@
  		job.child = child;
  		job.pid = child.pid;
  		job.pgid = child.pid;
++		managedStartup?.catch((error) => {
++			job.startError = error instanceof Error ? error.message : String(error);
++			finish({ status: "error", error, body: job.startError, details: undefined, outcome: "error", exitCode: 75 });
++		});
+ 		writePbbJob(job, { pid: child.pid, pgid: child.pid, runner: "pbb" });
+ 
+ 		const append = (chunk: Buffer) => {
 @@ -630,7 +639,8 @@
  			finish({ status: "error", error, body: error.message, details: undefined, outcome: "error", exitCode: null });
  		});

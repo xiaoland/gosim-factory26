@@ -322,7 +322,7 @@ def main():
     (args.output / "result.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     (args.output / "analysis.json").write_text(json.dumps({
         "schema_version": 1, "title": "Hackathon public-requirements proxy",
-        "created_at": time.time(), "tool": "benchmarks/hackathon/report.py",
+        "created_at": time.time(), "tool": "experiments/hackathon-local/suite/report.py",
         "tool_sha256": report["report_source_sha256"], "batches": batches,
         "run_ids": [json.loads((path / "run.json").read_text())["run_id"] for path in paths],
         "result": "result.json", "report": "report.md"

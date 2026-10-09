@@ -1,0 +1,125 @@
+--- a/src/runs/shared/session-lease.ts
++++ b/src/runs/shared/session-lease.ts
+@@ -65,7 +65,7 @@
+ 	}
+ }
+ 
+-function getProcessStartIdentity(pid: number): string | undefined {
++export function getProcessStartIdentity(pid: number): string | undefined {
+ 	if (process.platform === "linux") {
+ 		try {
+ 			const stat = fs.readFileSync(`/proc/${pid}/stat`, "utf-8");
+--- a/src/shared/types.ts
++++ b/src/shared/types.ts
+@@ -1450,6 +1450,8 @@
+ 	runId: string;
+ 	/** Parent Pi process/window that owns local completion delivery. */
+ 	completionOwnerId?: string;
++	/** OS process birth identity, never PID liveness alone. */
++	processStartIdentity?: string;
+ 	/** Host tool-call id retained when it differs from the internal run id. */
+ 	toolCallId?: string;
+ 	sessionId?: string;
+--- a/src/runs/foreground/subagent-executor.ts
++++ b/src/runs/foreground/subagent-executor.ts
+@@ -1,3 +1,4 @@
++import { getProcessStartIdentity } from "../shared/session-lease.ts";
+ import { randomUUID } from "node:crypto";
+ import * as fs from "node:fs";
+ import * as path from "node:path";
+@@ -4428,6 +4429,7 @@
+ 					...(workflowSessionRoot ? { sessionRoot: workflowSessionRoot } : {}),
+ 					...(requestParams.scheduleOrigin ? { scheduleOrigin: requestParams.scheduleOrigin } : {}),
+ 					pid: process.pid,
++					processStartIdentity: getProcessStartIdentity(process.pid),
+ 					steps: [],
+ 					workflow: { trace: [], emits: [], console: [] },
+ 					runFanoutBudget: getRunFanoutBudgetSnapshot(workflowFanoutBudget),
+--- a/src/runs/background/subagent-runner.ts
++++ b/src/runs/background/subagent-runner.ts
+@@ -143,7 +143,7 @@
+ import { formatParallelHandoffError, formatParallelHandoffReference, parallelHandoffPath, writeParallelHandoffGroup, writePendingParallelHandoff } from "../shared/parallel-handoff.ts";
+ import { resolveWatchdogConfig } from "../../watchdog/settings.ts";
+ import { createBoundedByteTail, createBoundedLineReader, formatProtocolOutputLimit, MAX_CHILD_STDERR_BYTES, PI_AGGREGATE_EVENT_PROJECTOR, projectChildLifecycle, type ChildLifecycleAction, type ProtocolOutputLimit } from "../shared/child-protocol.ts";
+-import { acquireSessionLease, type SessionLeaseRequest } from "../shared/session-lease.ts";
++import { getProcessStartIdentity, acquireSessionLease, type SessionLeaseRequest } from "../shared/session-lease.ts";
+ import { buildExternalCliPrompt, runExternalCli } from "../shared/external-cli-runner.ts";
+ import { runExternalJob } from "../shared/external-job-runner.ts";
+ import { createOrcaProgressTab, type OrcaProgressTab } from "../shared/orca-progress-tabs.ts";
+@@ -2530,6 +2530,7 @@
+ 		...(config.toolBudget ? { toolBudget: initialToolBudgetState(config.toolBudget) } : {}),
+ 		...(config.usageBudget ? { usageBudget: usageBudgetState(config.usageBudget, undefined) } : {}),
+ 		pid: process.pid,
++		processStartIdentity: getProcessStartIdentity(process.pid),
+ 		cwd,
+ 		currentStep: 0,
+ 		chainStepCount: steps.length,
+@@ -3780,6 +3781,7 @@
+ 			mode: statusPayload.mode,
+ 			cwd,
+ 			pid: process.pid,
++		processStartIdentity: getProcessStartIdentity(process.pid),
+ 		}),
+ 	);
+ 
+--- a/src/runs/background/stale-run-reconciler.ts
++++ b/src/runs/background/stale-run-reconciler.ts
+@@ -1,3 +1,5 @@
++import { getProcessStartIdentity } from "../shared/session-lease.ts";
++import { currentCompletionOwnerId } from "../../shared/completion-owner.ts";
+ import * as fs from "node:fs";
+ import * as path from "node:path";
+ import { writeAtomicJson } from "../../shared/atomic-json.ts";
+@@ -275,6 +277,13 @@
+ 
+ function writeFailedRepair(asyncDir: string, status: AsyncStatus, resultPath: string, now: number, reason?: string): ReconcileAsyncRunResult {
+ 	const repair = buildFailedRepair(status, asyncDir, now, reason);
++	if (reason?.startsWith("INTERRUPTED_")) {
++		repair.result.interrupted = true;
++		delete repair.result.exitCode;
++		for (const step of repair.status.steps ?? []) {
++			if (step.error?.includes("INTERRUPTED_")) delete step.exitCode;
++		}
++	}
+ 	if (repair.result.sessionId) writeAsyncResultFile(resultPath, repair.result);
+ 	writeAtomicJson(path.join(asyncDir, "status.json"), repair.status);
+ 	updateActiveRunIndex(asyncDir, repair.status.state, repair.status.toolCallId);
+@@ -391,6 +400,19 @@
+ 		}
+ 	}
+ 
++	// A workflow continuation lives in its owning Pi process, not in status.json.
++	// A detached runner may survive parent restoration; verify its OS birth
++	// identity independently rather than using the parent's completion token.
++	const actualBirth = getProcessStartIdentity(effectiveStatus.pid);
++	const workflowHere = effectiveStatus.mode === "workflow" && effectiveStatus.pid === process.pid;
++	const lostWorkflow = workflowHere && effectiveStatus.completionOwnerId !== currentCompletionOwnerId();
++	const unknownBirth = !effectiveStatus.processStartIdentity || !actualBirth;
++	const changedBirth = !unknownBirth && effectiveStatus.processStartIdentity !== actualBirth;
++	if (lostWorkflow || changedBirth || (unknownBirth && !workflowHere)) {
++		const reason = lostWorkflow ? "INTERRUPTED_OWNER_REPLACED" : changedBirth ? "INTERRUPTED_PROCESS_REPLACED" : "INTERRUPTED_OWNERSHIP_UNVERIFIED";
++		return writeFailedRepair(asyncDir, effectiveStatus, resultPath, now,
++			`${reason}: retained task metadata cannot restore execution ownership. Existing results and artifacts remain available; no process was killed and no process exit code was observed.`);
++	}
+ 	const liveness = checkPidLiveness(effectiveStatus.pid, options.kill);
+ 	if (liveness !== "dead") {
+ 		const staleAfterMs = options.staleAlivePidMs ?? 24 * 60 * 60 * 1000;
+--- a/src/runs/background/subagent-wait.ts
++++ b/src/runs/background/subagent-wait.ts
+@@ -550,6 +550,16 @@
+ 
+ 	let providerActive = providerSnapshot.items;
+ 	if (active.length === 0 && providerActive.length === 0) {
++		if (params.id) {
++			const retained = listAsyncRuns(deps.asyncDirRoot ?? DIRS.async, {
++				sessionId: deps.state.currentSessionId ?? undefined, resultsDir: deps.resultsDir ?? DIRS.results,
++				includeNested: false, runId: params.id,
++			}).filter(run => matchesId(run, params.id!));
++			if (retained.length === 1 && !ACTIVE_STATES.includes(retained[0]!.state)) {
++				const run = retained[0]!;
++				return result(`Subagent ${run.id} is already ${run.state}; no live task will be waited for. ${formatAsyncRunList(retained)} Inspect its retained result and artifacts before deciding whether to start a new task.`, run.state === "failed");
++			}
++		}
+ 		return result(params.id
+ 			? `UNKNOWN_SUBAGENT: no active subagent matched "${params.id}". Bash pbb handles belong to background_job; use result or wait there.`
+ 			: "No active async runs or registered provider work in this session. Nothing to wait for.", Boolean(params.id));

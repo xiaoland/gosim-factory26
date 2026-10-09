@@ -75,10 +75,10 @@ def observe(path):
                 write_json(path / "records/result-save.json", {"saved": False,
                            "error": f"{type(exc).__name__}: {exc}", "as_of": time.time()})
         manifest = run.run_layout.manifest(path)
-        interval = manifest.get("observation_interval", 10)
-        if manifest.get("target_kind") == "hosted":
+        interval = manifest.get("observation_interval") or manifest.get("target_config", {}).get("observation_interval")
+        if interval is None:
             age = time.time() - manifest.get("created_at", time.time())
-            interval = 180 if age < 600 else 480
+            interval = (180 if age < 600 else 480) if manifest.get("target_kind") == "hosted" else 10
         time.sleep(interval)
 
 
@@ -184,19 +184,48 @@ def relay(path):
         time.sleep(10)
 
 
-def stages(initial_run, tasks):
+def stages(initial_run, tasks=None):
     """Continue only normal completion, preserving same-variant data per stage."""
     current = run.resolve(initial_run)
+    origin = current
+    plan = run.run_layout.manifest(origin).get('stage_plan', {})
+    if tasks is None:
+        tasks = plan['tasks'][1:]
+    progress = {'task': plan.get('task'), 'runs': [str(current)],
+                'current_run': str(current), 'phase': 'waiting'}
+    record = origin / 'records/stages-progress.json'
+    def save():
+        write_json(record, {**progress, 'as_of': time.time()})
     results = []
-    for task in tasks:
+    save()
+    try:
+        for task in tasks:
+            terminal = run.wait(current)
+            results.append(terminal)
+            if terminal['lifecycle'] != 'completed':
+                progress.update(phase='halted', source_lifecycle=terminal['lifecycle'])
+                save()
+                return results
+            progress.update(phase='restarting', next_task=task)
+            save()
+            next_run = run.restart(current, task=task, keep_data=True)
+            current = Path(next_run['path'])
+            progress['runs'].append(str(current))
+            progress.update(current_run=str(current), phase='waiting')
+            progress.pop('next_task', None)
+            save()
         terminal = run.wait(current)
         results.append(terminal)
-        if terminal["lifecycle"] != "completed":
-            return results
-        next_run = run.restart(current, task=task, keep_data=True)
-        current = Path(next_run["path"])
-    results.append(run.wait(current))
-    return results
+        progress.update(phase='finished' if terminal['lifecycle'] == 'completed' else 'halted',
+                        source_lifecycle=terminal['lifecycle'])
+        save()
+        return results
+    except Exception as exc:
+        progress.update(phase='error', error=f'{type(exc).__name__}: {exc}')
+        if getattr(exc, 'lab_run_path', None):
+            progress['failed_start_run'] = exc.lab_run_path
+        save()
+        raise
 
 
 def facts(path):
@@ -204,16 +233,6 @@ def facts(path):
     return run.status(path)
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("observe", "default", "relay"))
-    parser.add_argument("run")
-    args = parser.parse_args(argv)
-    {'observe': observe, 'default': default, 'relay': relay}[args.mode](args.run)
-
-
-if __name__ == "__main__":
-    main()
 def watch(path=None, *, interval=10, follow=False):
     """Yield saved run facts until terminal; never create a second collector.
 
@@ -258,3 +277,14 @@ def watch(path=None, *, interval=10, follow=False):
         yield observation
         time.sleep(interval)
 
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("mode", choices=("observe", "default", "relay", "stages"))
+    parser.add_argument("run")
+    args = parser.parse_args(argv)
+    {'observe': observe, 'default': default, 'relay': relay, 'stages': stages}[args.mode](args.run)
+
+
+if __name__ == "__main__":
+    main()

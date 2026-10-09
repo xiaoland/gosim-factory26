@@ -1,0 +1,50 @@
+--- a/extensions/background-bash.ts
++++ b/extensions/background-bash.ts
+@@ -90,6 +90,7 @@
+ 	toolCallId: string;
+ 	ownerSessionId?: string;
+ 	service?: boolean;
++	capacityHandoff?: boolean;
+ 	completion?: Promise<CompletedBashRun>;
+ 	startError?: string;
+ 	abortController: AbortController;
+@@ -828,7 +829,7 @@
+ 	recordPbbJobCompleted(job, completed, cwd, durationMs);
+ 	activeJobs.delete(job.id);
+ 	pendingJobs.finish(job.id);
+-	if (shuttingDown) return;
++	if (shuttingDown || job.capacityHandoff) return;
+ 	const body = truncateBackgroundBody(job, completed.body);
+ 	const content = buildXmlResult(job, completed.outcome, completed.exitCode, durationMs, body);
+ 	const details: BackgroundBashDetails = {
+@@ -982,10 +983,26 @@
+ export default function backgroundBashExtension(pi: ExtensionAPI) {
+ 	installProcessHooks();
+ 	const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
+-	const unregisterManaged = managedRuntime?.registerManagedProvider("pi-background-bash", () => ({
+-		status: activeJobs.size || pendingBackgroundResultFollowUps.length ? "busy" : "quiescent",
+-		reason: activeJobs.size ? "finite_job_or_service_active" : "result_not_consumed",
+-	}));
++	const unregisterManaged = managedRuntime?.registerManagedProvider("pi-background-bash", () => {
++		const finite = [...activeJobs.values()].some((job) => !job.service);
++		const pending = pendingBackgroundResultFollowUps.length > 0;
++		return {
++			status: activeJobs.size || pending ? "busy" : "quiescent",
++			services_only: activeJobs.size > 0 && !finite && !pending,
++			reason: finite ? "finite_job_active" : pending ? "result_not_consumed" : "services_only",
++		};
++	}, async () => {
++		const jobs = [...activeJobs.values()];
++		if (pendingBackgroundResultFollowUps.length || jobs.some((job) => !job.service || !job.child?.managedProcessRecord || !job.completion)) {
++			throw new Error("Service handoff requires only registered service jobs with no pending result.");
++		}
++		for (const job of jobs) job.capacityHandoff = true;
++		for (const job of jobs) {
++			const stop = await managedRuntime.finishManagedProcess(job.child, { observation: "capacity_service_handoff", observed_at: Date.now() });
++			if (stop?.status !== "stopped") throw new Error(`Service ${job.id} stop proof failed: ${stop?.reason ?? "unknown"}`);
++			await job.completion;
++		}
++	});
+ 	const unregisterBackgroundWork = registerBackgroundWorkProvider({
+ 		name: "pi-background-bash",
+ 		listActiveWork: () => pendingCompletionJobs().map((job) => ({ id: job.id, sessionId: job.ownerSessionId! })),

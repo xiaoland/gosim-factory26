@@ -5,7 +5,6 @@ import hashlib
 import os
 from pathlib import Path
 import select
-import signal
 import shutil
 import subprocess
 import sys
@@ -15,304 +14,54 @@ import time
 from urllib.request import ProxyHandler, build_opener
 
 
-def _current_cgroup():
-    """Resolve this process' cgroup v2 directory without host-path guessing."""
+def _diagnostic(evidence, phase, error):
+    value = {'phase': phase, 'status': 'failed',
+             'error': f'{type(error).__name__}: {error}'}
     try:
-        membership = next(line[3:] for line in Path('/proc/self/cgroup').read_text().splitlines()
-                          if line.startswith('0::'))
-        for line in Path('/proc/self/mountinfo').read_text().splitlines():
-            before, separator, after = line.partition(' - ')
-            if not separator or not after.startswith('cgroup2 '):
-                continue
-            fields = before.split()
-            root, mount = Path(fields[3]), Path(fields[4])
-            if membership == '/':
-                return mount
-            if Path(membership).is_relative_to(root):
-                candidate = mount / Path(membership).relative_to(root)
-                return candidate if '..' not in candidate.parts else None
-    except (OSError, StopIteration, IndexError, ValueError):
-        return None
-    return None
+        with (Path(evidence) / 'services-errors.jsonl').open('a') as stream:
+            stream.write(json.dumps(value)+'\n')
+    except OSError as write_error:
+        print(f'Harness service diagnostic: {value}; write failed: {write_error}', file=sys.stderr)
+
+
+def _stop_service(process):
+    if process.poll() is None:
+        process.terminate()
+    try:
+        process.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=3)
 
 
 class ResourceSupervisor:
-    """Observe and close only services owned by this context.
-
-    The supervisor is a thread, not a recovery process: it can still run when
-    the pids limit is exhausted. It never gates startup or kills unowned
-    Agent, browser, or workspace processes.
-    """
+    """Own the Rust observer connection; gateway and receiver ownership stays with this caller."""
     def __init__(self, evidence):
         self.evidence = Path(evidence)
-        self.cgroup = _current_cgroup()
-        self.stop = threading.Event()
-        self.failed = None
         self.children = []
-        self.entry = None
-        self.thread = None
-        self.baseline_events = {}
-        self.sampler = None
-        self.sample_condition = threading.Condition()
-        self.sample_pending = None
-        self.sample_closing = False
-        self.sample_thread = None
-        self.sample_coalesced = 0
+        self.monitor = None
+        self.package = None
 
     def attach_sampler(self, package):
-        """Sample the execution namespace; an external OTLP receiver cannot see it."""
-        try:
-            package = Path(package)
-            support = next(candidate for candidate in (package / 'support', package)
-                           if (candidate / 'agent_support.py').is_file())
-            sys.path.insert(0, str(support))
-            from agent_support import ResourceEvidence
-            self.sampler = ResourceEvidence(self.evidence, root_pid=os.getpid())
-        except Exception as error:
-            self._save({'phase': 'startup', 'error': {
-                'type': type(error).__name__, 'message': str(error)}}, 'resource-sampler-error.json')
-
-    def _collect_sample(self, kind='sample', request=None):
-        if self.sampler is None:
-            return
-        try:
-            self.sampler.sample(kind, request=request)
-        except Exception as error:
-            try:
-                self._save({'phase': kind, 'error': {
-                    'type': type(error).__name__, 'message': str(error)}}, 'resource-sampler-error.json')
-            except OSError as save_error:
-                print(f'resource sample failed: {type(error).__name__}: {error}; evidence write failed: {save_error}',
-                      file=sys.stderr, flush=True)
-
-    def _sample(self, kind='sample'):
-        if self.sampler is None:
-            return
-        with self.sample_condition:
-            if self.sample_closing:
-                return
-            request = {'kind': kind, 'kinds': [kind], 'requested_monotonic_ns': time.monotonic_ns()}
-            if self.sample_pending is not None:
-                self.sample_coalesced += 1
-                request['kinds'] = list(dict.fromkeys([*self.sample_pending['kinds'], kind]))
-                request['requested_monotonic_ns'] = self.sample_pending['requested_monotonic_ns']
-                priorities = {'sample': 0, 'baseline': 1, 'resource_limit': 2, 'final': 3}
-                if priorities.get(kind, 0) <= priorities.get(self.sample_pending['kind'], 0):
-                    self.sample_pending['kinds'] = request['kinds']
-                    return
-            self.sample_pending = request
-            self.sample_condition.notify()
-
-    def _sampling_worker(self):
-        while True:
-            with self.sample_condition:
-                self.sample_condition.wait_for(lambda: self.sample_pending is not None or self.sample_closing)
-                if self.sample_pending is None:
-                    return
-                request, self.sample_pending = self.sample_pending, None
-                coalesced = self.sample_coalesced
-            started = time.monotonic_ns()
-            request['coalesced_requests'] = coalesced
-            self._collect_sample(request['kind'], request)
-            try:
-                self._save({'kind': request['kind'], 'requested_monotonic_ns': request['requested_monotonic_ns'],
-                            'started_monotonic_ns': started, 'finished_monotonic_ns': time.monotonic_ns(),
-                            'queue_delay_ns': started-request['requested_monotonic_ns'],
-                            'coalesced_requests': coalesced}, 'resource-sampling-worker.json')
-            except OSError as error:
-                print(f'resource sampler status failed: {error}', file=sys.stderr, flush=True)
-
-    def _read(self):
-        row = {'observed_at_ns': time.time_ns(), 'cgroup_path': str(self.cgroup) if self.cgroup else None,
-               'values': {}, 'errors': {}}
-        if self.cgroup is None:
-            row['errors']['cgroup'] = 'cgroup v2 is not visible'
-            return row
-        for name in ('memory.current', 'memory.max', 'memory.events', 'pids.current', 'pids.max', 'pids.events'):
-            try:
-                row['values'][name] = (self.cgroup / name).read_text().strip()
-            except OSError as error:
-                row['errors'][name] = {'type': type(error).__name__, 'errno': error.errno, 'message': str(error)}
-        return row
-
-    def _save(self, row, name='resource-observation.json'):
-        self.evidence.mkdir(parents=True, exist_ok=True)
-        target = self.evidence / name
-        temporary = target.with_name('.' + target.name + '.tmp')
-        # The entry may be terminated immediately after this record.  Flush it
-        # before signalling so resource_exhausted.json is useful even when the
-        # entry's finally block is never reached.
-        with temporary.open('w') as stream:
-            stream.write(json.dumps(row, ensure_ascii=False, indent=2) + '\n')
-            stream.flush()
-            os.fsync(stream.fileno())
-        temporary.replace(target)
-
-    def _event_values(self, row):
-        values = row['values']
-        events = {}
-        for source in ('memory.events', 'pids.events'):
-            prefix = source.split('.', 1)[0]
-            events.update({f'{prefix}.{key}': int(value)
-                           for key, value in (line.split() for line in values.get(source, '').splitlines()
-                                              if len(line.split()) == 2)
-                           if value.isdigit()})
-        return events
-
-    def _limit_state(self, row, event_baseline=None):
-        values = row['values']
-        def number(name):
-            value = values.get(name)
-            return None if value in (None, '', 'max') else int(value)
-        memory, memory_max = number('memory.current'), number('memory.max')
-        pids, pids_max = number('pids.current'), number('pids.max')
-        current_limit = ((memory is not None and memory_max is not None and memory >= memory_max) or
-                (pids is not None and pids_max is not None and pids >= pids_max) or
-                (event_baseline is not None and any(value > event_baseline.get(key, value)
-                    for key, value in self._event_values(row).items()
-                    if key in {'memory.oom', 'memory.oom_kill', 'pids.max'})))
-        return current_limit, self._event_values(row)
-
-    def _at_limit(self, row):
-        return self._limit_state(row, self.baseline_events)[0]
-
-    def _reap_finished(self, reason):
-        actions = []
-        for child in tuple(self.children):
-            code = child.poll()
-            if code is None:
-                continue
-            action = {'pid': child.pid, 'reason': reason, 'result': 'already_exited',
-                      'exit_code': code, 'reaped': False}
-            try:
-                child.wait(timeout=0)
-                action['reaped'] = True
-            except BaseException as error:
-                action['error'] = {'type': type(error).__name__, 'message': str(error)}
-            actions.append(action)
-        return actions
-
-    def _fail_fast(self):
-        """Stop an explicitly owned entry group after durable evidence.
-
-        The public entry gives us its actual child Popen. Killing the
-        supervisor itself would bypass the caller's service cleanup.
-        """
-        entry = self.entry
-        if entry is None:
-            return {'status': 'entry_owner_missing'}
-        pid = entry.pid
-        if entry.poll() is not None:
-            return {'status': 'entry_already_exited', 'pid': pid, 'exit_code': entry.returncode}
-        try:
-            pgid = os.getpgid(pid)
-            if pgid == pid:
-                os.killpg(pgid, signal.SIGTERM)
-                target = lambda: entry.poll() is None
-            else:
-                entry.terminate()
-                target = lambda: entry.poll() is None
-            deadline = time.monotonic() + 3
-            while time.monotonic() < deadline and target():
-                time.sleep(.05)
-            if target():
-                if pgid == pid:
-                    os.killpg(pgid, signal.SIGKILL)
-                else:
-                    entry.kill()
-                return {'status': 'entry_killed', 'pid': pid, 'pgid': pgid, 'term': 'sent', 'kill': 'sent'}
-            return {'status': 'entry_stopped', 'pid': pid, 'pgid': pgid, 'term': 'sent'}
-        except (OSError, ValueError) as error:
-            return {'status': 'entry_signal_failed', 'pid': pid,
-                    'error': {'type': type(error).__name__, 'errno': getattr(error, 'errno', None),
-                              'message': str(error)}}
-
-    def register_entry(self, process):
-        """Give the supervisor the exact Popen owned by the public entry."""
-        self.entry = process
-        if self.failed:
-            self.failed['entry_shutdown'] = self._fail_fast()
-            self._save(self.failed, 'resource-exhausted.json')
-            raise RuntimeError(json.dumps(self.failed, ensure_ascii=False))
+        self.package = Path(package)
 
     def start(self):
-        if self.sampler is not None:
-            self.sample_thread = threading.Thread(target=self._sampling_worker, name='resource-sampler', daemon=True)
-            self.sample_thread.start()
-        self.thread = threading.Thread(target=self._run, name='resource-supervisor', daemon=True)
-        self.thread.start()
+        support = next(candidate for candidate in (self.package/'support', self.package)
+                       if (candidate/'resource_monitor.py').is_file())
+        sys.path.insert(0, str(support))
+        from resource_monitor import ResourceMonitor
+        self.monitor = ResourceMonitor(self.evidence, root_pid=os.getpid(), package=self.package)
 
-    def _run(self):
-        self._sample('baseline')
-        initial = self._read()
-        initial_events = {}
-        initial_events.update(self._event_values(initial))
-        self.baseline_events = initial_events
-        previous_check = time.monotonic_ns()
-        while not self.stop.wait(2):
-            check = time.monotonic_ns()
-            row = self._read()
-            row.update(check_monotonic_ns=check, actual_interval_ns=check-previous_check,
-                       scheduling_delay_ns=max(0, check-previous_check-2_000_000_000))
-            previous_check = check
-            self._sample('resource_limit' if self._at_limit(row) else 'sample')
-            self._save(row)
-            if not self._at_limit(row):
-                continue
-            # Required gateway/collector children are not reclaim candidates.
-            # Only reap children that had already exited before this event.
-            action = {'trigger': row, 'actions': self._reap_finished('resource_limit'),
-                      'active_owned_services': [child.pid for child in self.children if child.poll() is None],
-                      'remediation_deadline_ns': time.time_ns() + 4_000_000_000}
-            trigger_events = self._event_values(row)
-            if self.cgroup is not None and (self.cgroup / 'memory.reclaim').exists():
-                try:
-                    (self.cgroup / 'memory.reclaim').write_text(str(256 * 1024 * 1024))
-                    action['memory_reclaim'] = 'requested'
-                except OSError as error:
-                    action['memory_reclaim'] = {'status': 'failed', 'error': str(error)}
-            time.sleep(1)
-            after = self._read()
-            action['after'] = after
-            after_events = self._event_values(after)
-            event_during_remediation = {key: value for key, value in after_events.items()
-                                        if value > trigger_events.get(key, value)
-                                        and key in {'memory.oom', 'memory.oom_kill', 'pids.max'}}
-            # A trigger caused by an OOM/pids failure is already an execution
-            # failure; lowering current usage cannot rewrite that fact.  For a
-            # pure current/max ceiling, recovery is possible if no new event
-            # occurred during the bounded remediation window.
-            trigger_failure = any(trigger_events.get(key, 0) > self.baseline_events.get(key, 0)
-                                  for key in {'memory.oom', 'memory.oom_kill', 'pids.max'})
-            still_limited = (self._limit_state(after, None)[0] or trigger_failure or
-                             bool(event_during_remediation))
-            action['events_during_remediation'] = event_during_remediation
-            self._save({'status': 'resource_exhausted' if still_limited else 'recovered', **action},
-                       'resource-remediation.json')
-            if still_limited:
-                self.failed = {'status': 'resource_exhausted', 'reason': 'memory_or_pids_limit_persisted',
-                               'remediation': action}
-                self._save(self.failed, 'resource-exhausted.json')
-                action['entry_shutdown'] = self._fail_fast()
-                self.failed['remediation']['entry_shutdown'] = action['entry_shutdown']
-                self._save(self.failed, 'resource-exhausted.json')
-                return
+    def register_entry(self, process):
+        if self.monitor is not None:
+            try:
+                self.monitor.register_entry(process)
+            except Exception as error:
+                _diagnostic(self.evidence, 'resource-entry-registration', error)
 
     def close(self):
-        self.stop.set()
-        if self.thread is not None:
-            self.thread.join(timeout=3)
-        self._sample('final')
-        with self.sample_condition:
-            self.sample_closing = True
-            self.sample_condition.notify()
-        if self.sample_thread is not None:
-            self.sample_thread.join(timeout=3)
-            if self.sample_thread.is_alive():
-                self._save({'phase': 'close', 'status': 'incomplete',
-                            'reason': 'sampler_did_not_finish_within_shutdown_window'}, 'resource-sampler-error.json')
-        if self.failed:
-            raise RuntimeError(json.dumps(self.failed, ensure_ascii=False))
+        if self.monitor is not None:
+            self.monitor.close()
 
 
 def install_inputs(package, output):
@@ -469,10 +218,14 @@ def _start_model_proxy(package, evidence, contract):
             time.sleep(.1)
         raise RuntimeError(f'model proxy failed readiness: exit={child.poll()}; log={log}')
     except BaseException:
-        if child.poll() is None:
-            child.terminate()
-        child.wait(timeout=10)
-        capture.join(timeout=2)
+        try:
+            _stop_service(child)
+        except Exception as error:
+            _diagnostic(evidence, 'gateway-start-cleanup', error)
+        try:
+            capture.join(timeout=2)
+        except Exception as error:
+            _diagnostic(evidence, 'gateway-start-log-close', error)
         raise
 
 
@@ -491,7 +244,10 @@ def services(package, output):
     previous = {}
     error_log = None
     try:
-        supervisor.start()
+        try:
+            supervisor.start()
+        except Exception as error:
+            _diagnostic(evidence, 'resource-monitor-start', error)
         for name, value in contract.get('model_environment', {}).items():
             if name not in os.environ:
                 previous[name] = None
@@ -511,13 +267,13 @@ def services(package, output):
                 previous.setdefault(name, os.environ.get(name))
                 os.environ[name] = value
         if contract.get('target_kind') == 'hosted':
-            error_log = (evidence / 'collector.stderr.log').open('a')
-            process = subprocess.Popen(
-                [sys.executable, str(package / 'lab_otlp.py'), '--serve-run', str(evidence),
-                 '--no-resource-sampling'],
-                stdout=subprocess.PIPE, stderr=error_log, text=True)
-            supervisor.children.append(process)
             try:
+                error_log = (evidence / 'collector.stderr.log').open('a')
+                process = subprocess.Popen(
+                    [sys.executable, str(package / 'lab_otlp.py'), '--serve-run', str(evidence),
+                     '--no-resource-sampling'],
+                    stdout=subprocess.PIPE, stderr=error_log, text=True)
+                supervisor.children.append(process)
                 if not select.select([process.stdout], [], [], 15)[0]:
                     raise RuntimeError('Hosted OTLP receiver did not provide its startup handshake')
                 line = process.stdout.readline()
@@ -535,42 +291,38 @@ def services(package, output):
                     os.environ[name] = value
             except Exception as error:
                 # Evidence failure is visible, but does not gate generation.
-                (evidence/'collector-start.json').write_text(json.dumps({
-                    'status': 'failed', 'error': f'{type(error).__name__}: {error}'})+'\n')
+                _diagnostic(evidence, 'collector-start', error)
         # The public wrapper registers its actual Popen after creating the
         # variant child.  This is a local-only handle; callers must not
         # serialize it as part of the run contract.
         contract['_resource_supervisor'] = supervisor
         yield contract
     finally:
-        if process is not None:
-            process.terminate()
-            try:
-                process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait()
+        # Stop each owned evidence/gateway service independently. A cleanup
+        # failure must neither mask a variant failure nor gate evaluation.
+        for phase, child in [('collector-close', process),
+                             ('gateway-close', gateway['process'] if gateway else None)]:
+            if child is not None:
+                try:
+                    _stop_service(child)
+                except Exception as error:
+                    _diagnostic(evidence, phase, error)
         if gateway is not None:
-            child = gateway['process']
-            if child.poll() is None:
-                child.terminate()
             try:
-                child.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                child.kill()
-                child.wait()
-            gateway['log_thread'].join(timeout=2)
+                gateway['log_thread'].join(timeout=2)
+            except Exception as error:
+                _diagnostic(evidence, 'gateway-log-close', error)
         if error_log is not None:
-            error_log.close()
-        supervisor_error = None
+            try:
+                error_log.close()
+            except Exception as error:
+                _diagnostic(evidence, 'collector-log-close', error)
         try:
             supervisor.close()
-        except BaseException as error:
-            supervisor_error = error
+        except Exception as error:
+            _diagnostic(evidence, 'resource-monitor-close', error)
         for name, value in previous.items():
             if value is None:
                 os.environ.pop(name, None)
             else:
                 os.environ[name] = value
-        if supervisor_error is not None:
-            raise supervisor_error

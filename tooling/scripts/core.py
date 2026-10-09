@@ -227,6 +227,16 @@ def finalize_archive(output, *, reclaim_workspace):
     reasons = []
     if not reclaim_workspace or recovery:
         reasons.append('运行仍有恢复承诺或未满足既有成功条件')
+    cleanup_receipt = output/'workspace-cleanup.json'
+    if not cleanup_receipt.exists() and (output/'work').exists():
+        reasons.append('缺少工作区停止清理回执；保留现场')
+    if cleanup_receipt.exists():
+        try:
+            cleanup_confirmed = json.loads(cleanup_receipt.read_text()).get('status') == 'stopped'
+        except (OSError, ValueError, AttributeError):
+            cleanup_confirmed = False
+        if not cleanup_confirmed:
+            reasons.append('工作区清理尚未证明停止；保留现场')
     if missing:
         reasons.append('归档缺少关键对象: ' + ', '.join(missing))
     reasons.extend(preservation_gaps)

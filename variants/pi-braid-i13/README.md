@@ -20,7 +20,7 @@
 
 I13内部角色默认使用独立历史（`defaultContext:fresh`），以本次委派和按需读取取得背景；`inheritProjectContext:false`与`inheritSkills:false`关闭自动继承。角色保留自己的技能发现入口，模型按需读取独立文件。所有Agent Skill的SKILL.md及references正文均不得拼入system、profile、role或task prompt，发现信息只含名称、description和路径；这条约定同时适用于主会话与子代理。历史冻结包保留原身份，不能据当前文档推断其输入已改变。
 
-[pi-braid-i13](.)的角色description帮助调用方选择有委派价值的工作，正文说明用途；不声明角色工具白名单。`settings.json`选择默认基础工具，原生扩展提供委派、联络、等待及后台执行能力。`run.py`只替换角色的技能和扩展路径，不追加父profile、运行条件或方法正文；以`PI_SUBAGENT_MAX_DEPTH=3`限制子层深度。完整工具能力不代替委派的目标与修改范围。原生接口介绍工具使用，技能提供按需方法，不在角色中重复维护。
+[pi-braid-i13](../../variants/pi-braid-i13/)的角色description帮助调用方选择有委派价值的工作，正文说明用途；不声明角色工具白名单。`settings.json`选择默认基础工具，原生扩展提供委派、联络、等待及后台执行能力。`run.py`只替换角色的技能和扩展路径，不追加父profile、运行条件或方法正文；以`PI_SUBAGENT_MAX_DEPTH=3`限制子层深度。完整工具能力不代替委派的目标与修改范围。原生接口介绍工具使用，技能提供按需方法，不在角色中重复维护。
 
 ## 工具与技能接线
 

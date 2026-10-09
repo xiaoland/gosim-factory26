@@ -15,7 +15,7 @@
 
 平台详情当时显示 12306=138、BookStack=34、Ctrip=126、Keep=32、PrestaShop=87、Stack Overflow=67，共 484。固定本地 revision 的 README 列出 117、34、125、32、86、66，共 460；本轮进一步运行已安装 Playwright 的 `test --list --reporter=json`，实际发现 12306=135、BookStack=34、Ctrip=125、Keep=32、PrestaShop=86、Stack Overflow=66，共 478 项；没有执行测试、生成应用或调用模型。原始清单见 [benchmark-discovery.json](../../runs/agent-profile-presets/benchmark-discovery.json)，评测器工作树仍干净。README 的 12306 声明数与实际发现数不一致；本地发现与平台当前数也不同，不能仅用 README 作分母。正式比较必须固定 requirement 及测试版本、task ID 和实际用例身份，不能只记录总数。
 
-历史依据：[首次基线](../../reports/2026-09-20-pi-keep-baseline.md)、[四组结果](../../reports/2026-09-20-harness-matrix.md)、[恢复后单任务](../../reports/2026-09-21-pi-svc-keep.md)。旧 shared-config 的额外 Keep 运行不属于本批 preset 矩阵，已从本地证据中移除，不能自动计作新 preset 的成绩。
+历史依据：[首次基线](../../runs/reports/2026-09-20-pi-keep-baseline.md)、[四组结果](../../runs/reports/2026-09-20-harness-matrix.md)、[恢复后单任务](../../runs/reports/2026-09-21-pi-svc-keep.md)。旧 shared-config 的额外 Keep 运行不属于本批 preset 矩阵，已从本地证据中移除，不能自动计作新 preset 的成绩。
 
 ## Preset 应服务的能力
 
@@ -39,7 +39,7 @@
 
 ## 并行和反馈
 
-已实测 WSL 四个独立 Keep 评测任务，全部与参考逐项一致，吞吐约 3.91 倍；不能外推为四个复杂应用同时生成或 K3/GLM 长会话配额已验证。[并发报告](../../reports/2026-09-20-playground-concurrency.md)中的模型四路成功仅是 DeepSeek 短请求。
+已实测 WSL 四个独立 Keep 评测任务，全部与参考逐项一致，吞吐约 3.91 倍；不能外推为四个复杂应用同时生成或 K3/GLM 长会话配额已验证。[并发报告](../../runs/reports/2026-09-20-playground-concurrency.md)中的模型四路成功仅是 DeepSeek 短请求。
 
 建议外层先同时生成两个 variant/task，冻结评测最多四个独立任务；每个评测仍保持官方单 worker。如果实际 CPU/内存和模型服务表现支持，再把生成提高到四个，而不是修改官方 Playwright workers。Braid agents 与原生子代理还会产生内部模型请求，所以外层两个生成不等于只有两个 API 请求；预演要验证总请求并发可观测、限流/排队可诊断，不能通过缩短正常 Agent 的时间/token 上限解决。
 

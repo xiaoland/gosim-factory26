@@ -50,7 +50,7 @@ competition.prepare 的凭据模式进入冻结身份，snapshot 显式提交该
 本次监控遗漏的触发是新 Agent 创建返回 `agent thread limit reached`；其上限是否偶发尚无证据。
 直接原因是先 interrupt 原监控，再创建接替者；创建失败后既未恢复监控，也未检查当时实验终态便结束回复。
 这是交接顺序缺口，不是实验控制器故障或三分钟采样间隔问题。
-只在既有 当时的监控说明（已删除） 补充先确认接管再结束原职责的顺序，不增加 watcher、轮询、测试或新平台。
+只在当时的监控说明（现已删除）补充先确认接管再结束原职责的顺序，不增加 watcher、轮询、测试或新平台。
 
 用户要求逐 run 分析覆盖此前改进的实际体现。
 两个分析 Agent 已分别收到 SVC skill/导航/task packet/V&V/shift-left、Braid 指派/身份简化/评论与上下文协作、子 Agent fresh/SOP/工具/模型的观察任务。

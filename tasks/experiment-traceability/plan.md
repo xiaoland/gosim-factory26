@@ -102,7 +102,7 @@ HTTP 接收补 gzip 的有界解压、envelope 校验、protobuf 错误、提交
 
 旧 `lab.run status/telemetry`、`lab.wait` 与分析命令委托新查询；旧 --controller-pid 只作弱观察，不授予停止权限。现有静态查看页消费相同摘要并区分本次评测过程和输入应用的生成过程。
 
-实施收尾更新现有 PRD、技术说明、deployment/index、hackathon、braid-diagnostics、CONTRIBUTING、两处 benchmark/recipe README 及 run-monitor；新增 `lab/README.md` 仅作为通用外部命令/OTLP/分析接入契约。局部注释解释单写者、启动不明、快照发布边界及官方 ZIP 权限行为，不重复字段表或维护第二套设计说明。将 task 内稳定知识转入这些归属后再更新 packet。
+实施收尾更新现有 PRD、技术说明、deployment/index、hackathon、braid-diagnostics、CONTRIBUTING、两处 benchmark/recipe README；新增 `lab/README.md` 仅作为通用外部命令/OTLP/分析接入契约。局部注释解释单写者、启动不明、快照发布边界及官方 ZIP 权限行为，不重复字段表或维护第二套设计说明。将 task 内稳定知识转入这些归属后再更新 packet；旧监控说明已删除。
 
 ## 工作树、部署与验收安排
 

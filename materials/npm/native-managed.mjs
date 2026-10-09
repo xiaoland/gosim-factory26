@@ -3,10 +3,17 @@ import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { startV8Observation } from "./v8-observation.mjs";
+
+if (process.argv[1] && path.resolve(process.argv[1]) !== fileURLToPath(import.meta.url)) startV8Observation();
 
 const providers = globalThis[Symbol.for("factory26.native-managed-providers.v1")] ??= new Map();
+// The upstream user-wide daemon can serve several live native owners. A
+// stoppable service must instead belong to this exact execution namespace.
+if (process.env.FACTORY_NATIVE_EXECUTION_DIR && process.env.FACTORY_NATIVE_EXECUTION_ID) {
+  process.env.MCPORTER_DAEMON_DIR = path.join(process.env.FACTORY_NATIVE_EXECUTION_DIR, "mcporter");
+}
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const synchronousPause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 const diagnostic = (error) => error instanceof Error ? error.message : String(error);
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
 
@@ -24,7 +31,7 @@ function helper(args, env = process.env) {
   return JSON.parse(result.stdout);
 }
 
-/** The launcher owns admission and immutable process registration before exec. */
+/** The launcher registers immutable process ownership before exec. */
 export function spawnManaged(command, args, options, metadata = {}) {
   const env = options.env ?? process.env;
   if (!env.FACTORY_RESOURCE_HELPER) return spawn(command, args, options);
@@ -34,37 +41,41 @@ export function spawnManaged(command, args, options, metadata = {}) {
   if (metadata.service) launchArgs.push("--service");
   launchArgs.push("--", command, ...args);
   const child = spawn(env.FACTORY_RESOURCE_PYTHON, launchArgs, { ...options, detached: true, env });
-  const receipt = path.join(env.FACTORY_RESOURCE_DIR, "starts", `${startId}.json`);
-  const deadline = Date.now() + 10_000;
-  while (true) {
-    try {
-      const start = readJson(receipt);
-      if (start.status === "resource_deferred") {
-        child.once("error", () => {});
-        const error = new Error(`resource_deferred: ${start.reason}; pressure=${JSON.stringify(start.pressure ?? null)}`);
-        error.code = "resource_deferred";
-        error.resource = start;
-        throw error;
-      }
-      if (start.status !== "started") throw new Error(`Unexpected resource start receipt: ${start.status}.`);
-      child.managedStartId = startId;
-      child.managedProcessRecord = start.process_record;
-      return child;
-    } catch (error) {
-      if (error.code !== "ENOENT") throw error;
-    }
-    if (Date.now() >= deadline) {
-      child.once("error", () => {});
-      child.kill("SIGKILL");
-      throw new Error(`Managed launcher did not publish a start receipt: ${receipt}.`);
-    }
-    synchronousPause(10);
-  }
+  child.managedStartId = startId;
+  child.managedResourceDirectory = env.FACTORY_RESOURCE_DIR;
+  child.managedStartReceipt = path.join(env.FACTORY_RESOURCE_DIR, "starts", `${startId}.json`);
+  return child;
 }
 
-export function registerManagedProvider(name, snapshot) {
-  providers.set(name, snapshot);
-  return () => { if (providers.get(name) === snapshot) providers.delete(name); };
+/** Wait without blocking the Pi event loop; callers attach stdout/error/close first. */
+export async function waitManagedStartup(child, timeoutMs = 30_000) {
+  if (!child?.managedStartReceipt) return { status: "started", unmanaged: true };
+  child.managedStartup ??= (async () => {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      try {
+        const start = readJson(child.managedStartReceipt);
+        if (start.status !== "started") throw new Error(`Managed process did not start: ${JSON.stringify(start)}`);
+        child.managedProcessRecord = start.process_record;
+        return start;
+      } catch (error) { if (error.code !== "ENOENT") throw error; }
+      if ((child.exitCode !== null && child.exitCode !== undefined) ||
+          (child.signalCode !== null && child.signalCode !== undefined)) {
+        throw new Error(`Managed launcher exited before publishing a start receipt: ${child.managedStartReceipt}.`);
+      }
+      await pause(10);
+    }
+    child.once("error", () => {});
+    child.kill("SIGKILL");
+    throw new Error(`Managed launcher did not publish a start receipt: ${child.managedStartReceipt}.`);
+  })();
+  return child.managedStartup;
+}
+
+export function registerManagedProvider(name, snapshot, stopServices) {
+  const provider = { snapshot, stopServices };
+  providers.set(name, provider);
+  return () => { if (providers.get(name) === provider) providers.delete(name); };
 }
 
 function execution(env = process.env) {
@@ -183,12 +194,52 @@ export function managedState(session = {}) {
     const ownership = records(directory, id);
     if (session.isStreaming || session.isCompacting || session.pendingMessageCount > 0) return { status: "busy", reason: "native_turn_or_messages", execution_id: id };
     if (ownedProcesses(ownership, id, process.pid, true).length) return { status: "busy", reason: "owned_process_active", execution_id: id };
-    for (const [name, snapshot] of providers) {
-      const state = snapshot();
+    for (const [name, provider] of providers) {
+      const state = provider.snapshot();
       if (state.status !== "quiescent") return { status: state.status, reason: `${name}: ${state.reason ?? state.status}`.slice(0, 512), execution_id: id };
     }
     return { status: "quiescent", execution_id: id };
   } catch (error) { return { status: "unknown", reason: diagnostic(error).slice(0, 512), execution_id: process.env.FACTORY_NATIVE_EXECUTION_ID ?? "unavailable" }; }
+}
+
+/** Yield only declared services after finite/native obligations are empty. */
+export async function yieldStoppableServices(session = {}) {
+  try {
+    const { directory, id } = execution();
+    if (session.isStreaming || session.isCompacting || session.pendingMessageCount > 0) return managedState(session);
+    if (fs.existsSync(path.join(directory, "stopping.json"))) return managedState(session);
+    const serviceProviders = [];
+    for (const [name, provider] of providers) {
+      const state = provider.snapshot();
+      if (state.status === "quiescent") continue;
+      if (!state.services_only || typeof provider.stopServices !== "function") {
+        return { status: state.status, reason: `${name}: ${state.reason ?? state.status}`, execution_id: id };
+      }
+      serviceProviders.push(provider);
+    }
+    const ownership = records(directory, id);
+    const serviceRoots = ownership.filter((record) => record.service === true);
+    const serviceRecords = [...new Map(serviceRoots.flatMap((root) => ownedDescendants(ownership, root.start_id)).map((record) => [record.start_id, record])).values()];
+    const covered = new Set(ownedProcesses(serviceRecords, id, process.pid).map((item) => item.pid));
+    const active = ownedProcesses(ownership, id, process.pid, true);
+    if (active.some((item) => !covered.has(item.pid))) return { status: "busy", reason: "finite_or_unclassified_owned_process", execution_id: id };
+    for (const provider of serviceProviders) await provider.stopServices();
+    await stopRecords(serviceRoots, id, process.pid, false, directory);
+    const verifiedAt = Date.now();
+    for (const record of serviceRecords) {
+      const terminalPath = path.join(directory, "terminals", `${record.start_id}.json`);
+      let previous;
+      try { previous = readJson(terminalPath); } catch (error) { if (error.code !== "ENOENT") throw error; }
+      writeJson(terminalPath, {
+        start_id: record.start_id, execution_id: id,
+        close: previous?.close ?? { observation: "capacity_service_handoff", observed_at: verifiedAt },
+        terminal: { status: "stopped", verified_at: verifiedAt },
+      });
+    }
+    const state = managedState(session);
+    writeJson(path.join(directory, "service-handoff.json"), { ...state, service_start_ids: serviceRoots.map((record) => record.start_id), verified_at: verifiedAt });
+    return state;
+  } catch (error) { return { status: "unknown", reason: diagnostic(error).slice(0, 1024), execution_id: process.env.FACTORY_NATIVE_EXECUTION_ID ?? "unavailable" }; }
 }
 
 export async function cleanupOwnedExecution(options = {}) {
@@ -239,46 +290,26 @@ export function createManagedProcessTreeController(child) {
   return { terminate, finishAfterWriterClose: terminate };
 }
 
-export async function relievePressure() {
-  try {
-    const { directory, id } = execution();
-    const ownership = records(directory, id);
-    const active = ownedProcesses(ownership, id, process.pid, true);
-    const job = [...ownership].reverse().find((record) => record.pid !== process.pid && !ownedDescendants(ownership, record.start_id).some((item) => item.service) && active.some((item) => item.pid === record.pid && item.starttime === record.starttime));
-    if (!job) return { status: "deferred", reason: "no_exact_owned_finite_job" };
-    writeJson(path.join(directory, "pressure", `${job.start_id}.json`), { reason: "resource_pressure", requested_at: Date.now(), manifest_path: job.manifest_path, partial_side_effects: "possible" });
-    await stopRecords(ownedDescendants(ownership, job.start_id), id, process.pid);
-    return { status: "relieved", reason: "owned_finite_job_stopped_output_and_partial_effects_retained", job_id: job.start_id };
-  } catch (error) { return { status: "unknown", reason: diagnostic(error).slice(0, 1024) }; }
-}
-
 export function publishChildStartup(manifestDirectory, status, reason) {
   if (!process.env.FACTORY_NATIVE_EXECUTION_DIR || !manifestDirectory) return;
   writeJson(path.join(manifestDirectory, "native-child-startup.json"), { status, reason, execution_id: process.env.FACTORY_NATIVE_EXECUTION_ID, observed_at: Date.now() });
 }
 
-export function waitChildStartup(manifestDirectory, timeoutMs) {
+export async function waitChildStartup(manifestDirectory, timeoutMs) {
   const file = path.join(manifestDirectory, "native-child-startup.json");
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try { return readJson(file); }
     catch (error) { if (error.code !== "ENOENT") throw error; }
-    synchronousPause(10);
+    await pause(10);
   }
   throw new Error(`Async child did not confirm physical startup within ${timeoutMs}ms: ${file}.`);
 }
 
-export default function managedResourceExtension(pi) {
-  pi.on("before_agent_start", (event) => {
-    let fact;
-    try { fact = helper(["status"]); }
-    catch (error) { fact = { pressure: "unavailable", reason: diagnostic(error) }; }
-    const text = `[当前运行资源]\n${JSON.stringify(fact).slice(0, 2400)}\n新工具作业与子 Agent 的资源准入可能立即返回 resource_deferred；遇到压力时保留已有输出与部分副作用，缩小并发或分步完成。工具原生 worker 参数从 1 开始，根据真实余量再提高；不要通过重试扩大并发。`;
-    return { systemPrompt: `${event.systemPrompt}\n\n${text}` };
-  });
-}
+// Process management is installed by this module; it does not alter model prompts.
+export default function managedProcessExtension() {}
 
-globalThis[Symbol.for("factory26.native-runtime.v1")] = { spawnManaged, finishManagedProcess, createManagedProcessTreeController, registerManagedProvider, publishChildStartup, waitChildStartup };
+globalThis[Symbol.for("factory26.native-runtime.v1")] = { spawnManaged, waitManagedStartup, finishManagedProcess, createManagedProcessTreeController, registerManagedProvider, publishChildStartup, waitChildStartup };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);

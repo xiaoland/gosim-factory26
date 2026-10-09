@@ -31,6 +31,8 @@
 
 `python3 tooling/linux/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON --acquisition ACQUISITION_JSON` 保存来源材料，获取窗口需要覆盖全部 writer 的连续关闭证明。停止原件只证明观察时点，不能排除复制期间的中途写入。没有获取窗口证明或原 Git/native 历史缺失时保留 partial；历史 schema 1 只读，不补造 complete。
 
+Hosted 的旧运行若没有 schema 4 managed capture，可显式使用 `factory26.exp.legacy-terminal-export`：必须绑定同一 attempt/execution 的终态 GET、终态后的完整 terminal workspace ZIP 及其 SHA、冻结 definition/source identity，并逐项核对 ZIP 的 logical root、`harness-layout.json`、需求和成员 artifact 引用。该 acquisition 只表示 Hosted terminal 导出后的来源映射，不提供 writer-closure、capture token 或 managed container 身份；checkpoint 保持 `partial`，不可把终态前保存的普通活体 ZIP 以后的停止证明追认为完整恢复点。下载请求起止时间若未记录必须如实标为缺失，不得编造。
+
 Docker 导出后的保存位置与原运行逻辑根不同。对新分离布局，checkpoint 用 `--state-binding <attempt/export.json>` 消费真实导出回执；`--source` 仍明确选择本机的运行状态目录。生产者核对导出 namespace、已安装目录及成员内容，保留原执行 OS/architecture 和逻辑路径，不从 Mac 的平台或当前 `/assets` 目录猜来源。首次运行和 prepared 接续都使用这条关系；停止与获取窗口证明仍独立提供。嵌套 SDK 的 `/workspace` 若没有自己的实际导出映射，不能套用外层 `/execution/workspace`，应保留具体缺口。
 
 同域修复前，明确选中的新 definition reference/member 在原 store 认证并保留，再安装到目标域资产位置。材料生产不持有 mutable capture；进入修复之后只处理已冻结资产和允许的状态变更。通用 `prepare` production 只派生 immutable snapshot-copy，不借 compilation/build 隐式改活动状态。恢复操作原件保存在派生目录旁的 `.recovery-operation.json`，错误另存 `.recovery-error.json`；同 request 改参数明确拒绝。

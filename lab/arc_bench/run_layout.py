@@ -83,6 +83,9 @@ def create_run(
         "task": task,
         "route": route,
         "competition": bool(competition),
+        # New runs always use the common container installer.  Historical
+        # manifests without this field retain their recorded target behavior.
+        "runtime_delivery": "installer",
         "source": dict(source) if source else None,
     })
     return run

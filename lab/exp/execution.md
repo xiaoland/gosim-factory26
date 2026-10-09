@@ -30,6 +30,8 @@ Provider 已保存的会话生命周期、连续观察、资源等待及 native 
 
 Fresh、prepared 和 SDK child 使用共同 assembly，显式绑定本域定义根、可写 state、实际 namespace 和入口。公共 bootstrap 在实际运行域提供持续资源采样与 telemetry，并从同一执行上下文派生入口变量；父域的服务路径和凭据值不成为公开子域事实。旧冻结执行器仍沿自己的合同。
 
+Bootstrap 启动前的凭据、绑定与必要资源采样校验失败仍阻止启动。入口已经启动后，采样失败停止该采样并记录具体错误，不终止入口；子进程退出码独立于结果回执写入、资源与 Collector 收尾。辅助错误保存在 `.arc/execution/bootstrap-auxiliary-errors.json`，文件不可写时输出具体错误到 stderr。回执或遥测证据缺失须单独报告，不能将真实非零退出改成成功，也不能据此将已知成功退出改成失败。
+
 新 Docker 执行使用运行宿主上的 detached runner，负载容器只读挂载域资产，拥有独立的可写执行路径。短时 store owner 执行受限发布/输运，工作负载不能访问 owner 代码、请求和 RW 发布卷。Runner host/process 出生身份与 daemon/container 出生身份分开；controller 退出不撤销 runner，运行宿主失联也不证明 Docker 负载已停止。该隔离依赖 Linux local-volume 及支持 volume-subpath 的 Docker API 1.45 或更高版本，不自动回落到共享 RW。
 
 受管 create/start/stop/pause/resume 先保存版本化意图，再执行和读回物理效果。超时留下 pending；重入原请求查询效果，不重发 create/start。终态实例禁止再次 start，新执行重新准入。只读 query 使用已核验 Mountpoint 的 bind，不按卷名称打开并意外创建缺失卷；正常使用期间不删除或重建域资产根。Query、输运和构建不是另一个生成调度系统，但各自必须有界并发、超时、清理和实际资源约束。

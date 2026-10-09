@@ -23,7 +23,7 @@ Console整体暂停/恢复能力已独立实现并部署，归[设施任务](../
 
 Console 原暂停 registry 只读留存为新目录 `console-runs.paused.json`，其 DB/Git 路径保持原现场。正式新 registry 必须在标准入口分配实际 Braid run 后生成，主线负责切换 bridge/UI。
 
-下一步：收到主线冻结信号后更新矩阵 identity，以标准 main.py/run.py 启动两题，核对容器与限制、空 seed、新 DB 和首条真实模型工具行为，再交回启动证据及 watcher PID。watcher 只记录状态并终态退出，不会主动回传主会话；主线另接获授权 run-monitor。
+下一步：收到主线冻结信号后更新矩阵 identity，以标准 main.py/run.py 启动两题，核对容器与限制、空 seed、新 DB 和首条真实模型工具行为，再交回启动证据及 watcher PID。watcher 只记录状态并终态退出，不会主动回传主会话；当时计划另接获授权监控消费者。
 
 主线随后给出新冻结信号：Linux Braid SHA256 为 `38c68450fa93399e7dabd3c4c912410a503e59152cb13f3d3c724ce7d9fc708d`，编译身份在新目录 `build/build-identity.json`。新 shared-submission 仅硬链接不可变 runtime 树，small 与 manifest 独立复制；freeze 前 unlink braid 再 copy，新 manifest SHA256 为 `2efe2ed0d09cb92b3afb03994a5fdddba5957a5e916f33a37a3754df82e7da66`。旧 binary 与 manifest 的原 SHA256 均保持不变。
 
@@ -46,7 +46,7 @@ Console 原暂停 registry 只读留存为新目录 `console-runs.paused.json`�
 
 新 Console registry 为 `console-runs.json`，使用 `i12-restart-github` 与 `i12-restart-sheet` 的新对象身份。服务PID6073，监听8765，原日志和journal保留；新log/journal在restart目录。实际HTTP GET `/api/runs` 与两题 `/api/items` 均200，两题当时各有一个根 Issue，没有发送评论或改写状态/Git路径。
 
-`launch-receipt.json` 包含真实容器/image/PID/资源和观察命令。两个既有3+8 watcher写入 WSL `runs/iteration12/restart-20260930/watches/<case>/watch.jsonl`，stderr.log当前为空；watcher仅记录状态并终态退出，不主动向主会话回传。主线按这些实际run路径接run-monitor作为结果消费者，单题完成后交官网self_funded应用重放。本部署已交回实际启动结果，不长期等待完整benchmark。
+`launch-receipt.json` 包含真实容器/image/PID/资源和观察命令。两个既有3+8 watcher写入 WSL `runs/iteration12/restart-20260930/watches/<case>/watch.jsonl`，stderr.log当前为空；watcher仅记录状态并终态退出，不主动向主会话回传。主线按这些实际run路径接当时的监控消费者作为结果消费者，单题完成后交官网self_funded应用重放。本部署已交回实际启动结果，不长期等待完整benchmark。
 
 ## 15:34 CST：Console看似静止的核对
 

@@ -23,7 +23,7 @@
 
 The exact projection is the [Context contract](../20-product-tdd/context.md).
 
-本地入口以SQLite中的Issue、PR、正文和讨论为协作权威，每个被指派工作项拥有独立成员和clone，不再维护设计/实施Markdown镜像。当前Context与生命周期契约见[本地工作项](../20-product-tdd/local.md)。
+本地 Issue 可通过子 Issue 分担结果责任，PR 承载关联 Issue 的实施候选；Issue 与 PR 可以多对多关联。本地入口以SQLite中的Issue、PR、正文和讨论为协作权威，每个被指派工作项拥有独立成员和clone，不再维护设计/实施Markdown镜像。当前Context与生命周期契约见[本地工作项](../20-product-tdd/local.md)。
 
 本地PR还可拥有明确的ReviewRequest。请求绑定具体PR、验收Issue、固定base/head和需求依据；请求是否完成、原候选结论和结论是否仍适用于当前候选是不同事实。默认由验收Issue现有负责人处理，也可委派reviewer-only成员。委派建立独立执行身份与冻结checkout，源PR实施者保持原责任。一次请求保存不可覆写的Approved、ChangesRequested或Inconclusive，或有原因的Cancelled；候选修复后使用新请求，PR关闭不代替验收。
 

@@ -60,9 +60,9 @@
 
 Factory analyze 的私有缓存继续写入其输入 run/analysis，inspect_runs 的发现和会话关联都依赖该位置；本轮不修改这项成套契约，不增加外置分析索引。实验根的 analysis 保存独立 Viewer、Braid 网站和诊断报告，不要求所有 Harness 内部派生产物都迁出 workspace。
 
-当前文档、Makefile 的 braid-report、当时的监控说明（已删除）、活动 task 的待执行操作统一更新为模块入口。历史报告、已执行命令和冻结清单不批量替换路径；涉及旧方案的 task 只增加退役/后继入口，不改写当时事实。未启动的旧机器清单属于当时实验记录，不直接重新派发；后续获授权运行使用新实验目录重新生成清单。
+当前文档、Makefile 的 braid-report、活动 task 的待执行操作统一更新为模块入口；旧监控说明已删除。历史报告、已执行命令和冻结清单不批量替换路径；涉及旧方案的 task 只增加退役/后继入口，不改写当时事实。未启动的旧机器清单属于当时实验记录，不直接重新派发；后续获授权运行使用新实验目录重新生成清单。
 
-必须检查的文档映射包括 AGENTS.md 仓库地图、CONTRIBUTING 的修改位置/角色/诊断段、docs/product-tdd 的组件边界、docs/deployment/{index,hackathon,braid-diagnostics}.md、docs/index.md、variants/README.md、Makefile 和 当时的监控说明（已删除）。旧 multi-agent-lite 文件搬入 archive 后，tasks/developer-experience/{inquiry,boundaries}.md 等仍有效的 Markdown 链接只修目标，不改历史措辞。README 与新 experiments 导航指向当前入口，raw/native-hackathon 的新目录明确归档状态和专用打包方法。
+必须检查的文档映射包括 AGENTS.md 仓库地图、CONTRIBUTING 的修改位置/角色/诊断段、docs/product-tdd 的组件边界、docs/deployment/{index,hackathon,braid-diagnostics}.md、docs/index.md、variants/README.md 和 Makefile。旧 multi-agent-lite 文件搬入 archive 后，tasks/developer-experience/{inquiry,boundaries}.md 等仍有效的 Markdown 链接只修目标，不改历史措辞；旧监控说明已删除，不再作为映射目标。README 与新 experiments 导航指向当前入口，raw/native-hackathon 的新目录明确归档状态和专用打包方法。
 
 ## 源码位置与分发位置分离
 

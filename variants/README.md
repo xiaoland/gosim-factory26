@@ -11,6 +11,8 @@
 | [pi-braid-i14](pi-braid-i14/) | I14-0 共同基线 | PR 默认 draft，显式固定候选 review，由 Issue 现有负责人验收；模型、矩阵和实际启动身份见 [I14 packet](../tasks/iteration14/packet.md)。 |
 | [pi-braid-i14-cleaner](pi-braid-i14-cleaner/) | I14-0 维护职责对照 | 在共同基线上增加按需 cleaner，继承当前原生历史，推理结束后原子提交维护批次。 |
 | [pi-braid-i14-reviewer](pi-braid-i14-reviewer/) | I14-0 独立验收对照 | 在共同基线上增加 reviewer-only Braid 成员，使用独立请求、会话和固定候选 checkout。 |
+| [pi-braid-i14-reviewer-direct](pi-braid-i14-reviewer-direct/) | 本次官网直连实验 | 保留 reviewer 配方，Sheet 独立运行去掉模型网关；范围见 [直连实验](../tasks/iteration14/direct-official-20261003/packet.md)。 |
+| [pi-braid-i14-cleaner-direct](pi-braid-i14-cleaner-direct/) | 本次官网直连实验 | 保留 cleaner 配方，GitHub 三个 stage 分题运行去掉模型网关。 |
 | [pi-braid-i14-e2e](pi-braid-i14-e2e/) | I14-0 浏览器工具对照 | 优先 tester.army/e2e，保留 agent-browser；独立 Linux addon 与基础真实反馈见 [接线记录](../tasks/iteration14/tester-e2e.md)。 |
 
 [pi-braid-i15-reviewer-cleaner-e2e](pi-braid-i15-reviewer-cleaner-e2e/README.md)从当前I14组合派生，保留模型与工具配方，增加每PR单一当前Braid reviewer、候选冻结、原始需求权威和每执行验收隔离。其独立builder必须替换新Linux Braid，不能继承底包旧binary；实现与验收范围见[I15任务包](../tasks/iteration15/packet.md)。

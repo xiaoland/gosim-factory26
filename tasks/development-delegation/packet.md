@@ -25,7 +25,7 @@
 
 ## 修订与归属
 
-用户追加要求“这样的 AGENTS.md 太长了，我们需要 progressive closure”。按此要求，[用户级 AGENTS.md](/Users/lanzhijiang/.codex/AGENTS.md) 与 [repo AGENTS.md](../../AGENTS.md) 仅保留核心责任与按需入口。通用方法移到 [Delegation](/Users/lanzhijiang/.codex/guides/delegation.md)，按分配工作、会话协调、责任移交和独立判断组织；项目具体方法移到 当时的委派说明（已删除）。复杂委派、跨会话协调或负责人替换时阅读相关部分，普通任务无需预读全套。历史证据仍留在本 packet。未新增协调框架、固定交接模板或消息数量门槛。
+用户追加要求“这样的 AGENTS.md 太长了，我们需要 progressive closure”。按此要求，[用户级 AGENTS.md](/Users/lanzhijiang/.codex/AGENTS.md) 与 [repo AGENTS.md](../../AGENTS.md) 仅保留核心责任与按需入口。通用方法和项目委派指南曾分别放在用户级与项目级指南中，现已删除；本 packet 保留当时的归属记录，不再把它们作为现行入口。历史证据仍留在本 packet。未新增协调框架、固定交接模板或消息数量门槛。
 
 重写 [Explorer](/Users/lanzhijiang/.codex/agents/explorer.toml) 与 [Browser Operator](/Users/lanzhijiang/.codex/agents/browser_operator.toml)，新增 [Computer Operator](/Users/lanzhijiang/.codex/agents/computer_operator.toml)。Explorer 覆盖复杂调查、原因诊断和反例，必要时向 caller 补充会改变调查的问题；两个 Operator 负责完整操作与实际结果验证，在原授权内处理局部失败。正文不重复通用工具手册，不绑定特定浏览器工具，不要求固定输入输出表格。
 
@@ -37,4 +37,4 @@
 
 本次没有启动子 Agent、重载服务、提交 Git 或操作实验。配置文件有效不等于当前会话已热加载新角色。行为收益仍需后续实际委派观察，重点看普通失败能否由原负责人完成、跨会话消息是否包含会改变执行的信息，以及调用方是否能低成本采用结果；不把减少消息数量本身当作完成任务的替代指标。
 
-Progressive closure 修订完成：用户级委派章节从 4506 字符缩至 770，repo 从 950 缩至约 218。原通用方法完整保留，两份 AGENTS 的其它章节不变。用户随后明确 CONTRIBUTING 是开源项目共享协作规范，不承担 Agent 行为指南；据此撤出本任务新增章节，将项目方法移到 当时的委派说明（已删除），并更新 AGENTS 的按需入口。
+Progressive closure 修订完成：用户级委派章节从 4506 字符缩至 770，repo 从 950 缩至约 218。原通用方法完整保留，两份 AGENTS 的其它章节不变。用户随后明确 CONTRIBUTING 是开源项目共享协作规范，不承担 Agent 行为指南；据此撤出本任务新增章节，项目级委派指南后来已删除。本段只记录当时的修订事实，不指向已删除入口。

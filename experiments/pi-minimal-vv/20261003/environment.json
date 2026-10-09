@@ -1,0 +1,8 @@
+{
+  "kind": "factory26.exp.environment",
+  "schema_version": 1,
+  "id": "pi-minimal-vv-workssd-20261003",
+  "cache_root": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal-vv/20261003/lab-cache",
+  "python": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+  "harness": {}
+}

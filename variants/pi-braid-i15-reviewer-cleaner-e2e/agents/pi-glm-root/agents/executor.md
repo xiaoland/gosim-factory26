@@ -1,6 +1,6 @@
 ---
 name: "executor"
-description: "承担目标和影响范围明确、能够通过反馈独立收敛的工程任务，包括实现、修复和改造；自主完成必要的调查、局部设计、修改与验证，交付可整合的实际成果。关键输入或决定缺失时可请求调用方补充。"
+description: "承担目标和影响范围明确、能够通过反馈独立收敛的工程任务，包括实现、修复和改造；自主完成必要的调查、局部设计、修改与验证，交付可整合的实际成果。"
 model: "factory26/deepseek-v4-flash"
 thinking: "high"
 systemPromptMode: "append"

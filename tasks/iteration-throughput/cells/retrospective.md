@@ -4,7 +4,7 @@
 
 | 观察 | 证据 | 判断 |
 | --- | --- | --- |
-| 上轮 08:54–17:13 历时 8h19，10:48–12:08 有四项健康评分；12:08–17:11 的约 5h03 同时包含正常生成、provider/teardown、恢复与重采样。 | `reports/2026-09-22-multi-agent-lite.md`、上轮 profiling | 模型生成有不可省略的时间；额外耗时主要出现在跨组件边界和交付恢复。无法把整个 5h03 算作浪费。 |
+| 上轮 08:54–17:13 历时 8h19，10:48–12:08 有四项健康评分；12:08–17:11 的约 5h03 同时包含正常生成、provider/teardown、恢复与重采样。 | `runs/reports/2026-09-22-multi-agent-lite.md`、上轮 profiling | 模型生成有不可省略的时间；额外耗时主要出现在跨组件边界和交付恢复。无法把整个 5h03 算作浪费。 |
 | 上轮首次大提交 `6dd0f73` 覆盖 72 文件、增加 6178 行；评分中又改变 Braid revision，两项成绩依靠已有应用确定性导出。 | Git 历史、上轮报告 | 平台建设、生命周期设计和矩阵评分同时进入一条成功路径；生成有效应用与交付终态绑得过紧。 |
 | 本轮 20:01–23:43 历时 3h42，官方 0 上传、0 评分；后续删除跨层 Pi child 控制和自建沙箱，短真实 Braid 旅程才完成。 | 暂停盘点、`f223c7b`、`runs/qualification/pi-boundary/live/braid-boundary/recheck.json` | 最大症结是责任边界与问题定义偏移，其次是关键真实接缝验证进评分热路径。Pi 内部 child 生命周期不是 Braid 的交付前提。 |
 | mixed 官网 Keep 71.9（23/32）、BookStack 38.2（13/34）。BookStack 官网约 02:57 CST 终结，本地约 07:56 CST 才收集。 | `runs/competition/iteration-throughput-boundary-20260923/hosted/pi-team-mixed/tasks/*/status.json`、`state.json` | 约 4h59 的收分延迟由已观察到的`STARTING`误判导致控制器退出，直到接续才消除；这不是模型耗时。仅列举已知运行态的控制器设计也容易再次失效，现改为有效非终态继续观察。 |

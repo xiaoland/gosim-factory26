@@ -41,6 +41,13 @@ def _target(run: Path) -> dict[str, Any]:
     return value
 
 
+def _uses_prebuilt_runtime(run: Path, target: Mapping[str, Any]) -> bool:
+    delivery = manifest(run).get("runtime_delivery")
+    if delivery is not None:
+        return delivery == "prebuilt"
+    return bool(target.get("prebuilt_runtime"))
+
+
 def _remote(run: Path, target: Mapping[str, Any]) -> tuple[str, Path]:
     host = target.get("executor")
     root = target.get("remote_root")
@@ -126,14 +133,15 @@ def _prepare_workspace(run: Path, target: Mapping[str, Any]) -> Path:
     task_config = state.get("task_config") if isinstance(state.get("task_config"), dict) else {}
     raw_task = str(task_config.get("platform_task") or state.get("task") or "")
     task = raw_task.rsplit("--", 1)[-1]
-    competition = "public-practice" if task == "bookstack" else "hackathon"
+    competition = raw_task.rsplit("--", 1)[0] if "--" in raw_task else ("public-practice" if task == "bookstack" else "hackathon")
     evaluation = state.get("run_kind") == "evaluation"
     args = SimpleNamespace(
         data_root=str(paths(run)["inputs"]), competition=competition, task=task,
         requirements_dir=str(_requirements(run)),
         tests_dir=str(paths(run)["inputs"] / "tests") if evaluation and (paths(run)["inputs"] / "tests").is_dir() else None,
         workspace=str(output), agent=str(_agent(run, target)),
-        template=str(paths(run)["inputs"] / "application") if evaluation and (paths(run)["inputs"] / "application").is_dir() else None,
+        template=(str(paths(run)["inputs"] / "application") if evaluation and (paths(run)["inputs"] / "application").is_dir()
+                  else str(paths(run)["inputs"]/'initial-application') if task_config.get('initial_application') else None),
         image=str(target["image_id"]), run_as_root=True, memory=str(target.get("memory", "2g")),
         cpus=str(target.get("cpus", "1")), env_file=None,
         meter_base_url=None,
@@ -359,7 +367,9 @@ def _stage_app(run: Path, sdk_workspace: Path) -> Path:
         return app
     template = sdk_workspace / "template"
     app.mkdir(parents=True, exist_ok=True)
-    if not any(app.iterdir()):
+    state = manifest(run)
+    task_config = state.get('task_config') or {}
+    if not any(app.iterdir()) or (task_config.get('initial_application') and not state.get('source_run')):
         shutil.copytree(template, app, dirs_exist_ok=True)
     else:
         for name in ("requirements", ".arc"):
@@ -712,7 +722,7 @@ def _create_argv(run: Path, target: Mapping[str, Any], remote_run: Path, workspa
                  private_env: Path | None = None, native_scope: str | None = None,
                  image_id: str | None = None, runtime_path: str | None = None) -> list[str]:
     name = _container_name(run)
-    argv = ["create", "--init", "--name", name,
+    argv = ["create", "--init", "--ulimit", "core=0:0", "--name", name,
             "--label", "io.factory26.managed=true", "--label", f"io.factory26.run={run.name}",
             "--mount", f"type=bind,source={_remote_sdk_workspace(remote_run, target)},target=/workspace",
             "--mount", f"type=bind,source={remote_run / 'data/workspace'},target=/workspace/template",
@@ -740,6 +750,86 @@ def _resolve_remote_image(host: str, target: Mapping[str, Any]) -> tuple[str, di
     raise RuntimeError(f"target image unavailable with exact requested image ID {requested}: {checked.stderr.strip()}")
 
 
+def saved_restart_source(source: Path, destination_target: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Retain terminal Local data on its execution host, without claiming a Mac save."""
+    state = manifest(source)
+    original = _target(source)
+    if original.get("kind") != "local" or destination_target.get("kind") != "local":
+        return None
+    host, remote_run = _remote(source, original)
+    if host == "local" or _remote(source, destination_target) != (host, remote_run):
+        return None
+    handle = json.loads((paths(source)["records"] / "docker.json").read_text())
+    cid, daemon = handle.get("container_id"), handle.get("daemon_id")
+    actual = _remote_exec(host, ["docker", "info", "--format", "{{.ID}}"], check=True).stdout.strip()
+    if not cid or not daemon or actual != daemon:
+        raise ValueError("same-host restart requires the source Docker daemon identity")
+    checked = _remote_exec(host, ["docker", "inspect", str(cid)], check=True)
+    inspection = json.loads(checked.stdout)[0]
+    if inspection.get("Id") != cid or inspection.get("State", {}).get("Running"):
+        raise ValueError("same-host restart requires the exact source container stopped")
+    # Use the source's already installed, frozen executor save API. This is a
+    # terminal save on the execution host, not a portable/controller recovery.
+    code = ("import sys; from lab.arc_bench import execution; "
+            "execution.save(sys.argv[1])")
+    pythonpath = ":".join(str(remote_run / name) for name in
+                         ("automation", "source", "inputs/sdk-workspace/submission"))
+    _remote_exec(host, ["env", "PYTHONPATH=" + pythonpath, "python3", "-c", code,
+                       str(remote_run)], check=True)
+    receipt_path = paths(source)["records"] / "restart-remote-save.json"
+    if not _remote_file(host, remote_run / "records/result-save.json", receipt_path):
+        raise RuntimeError("same-host restart remote save receipt missing")
+    saved = json.loads(receipt_path.read_text())
+    if (saved.get("saved") is not True or saved.get("errors") != [] or
+            saved.get("snapshot") is not False or saved.get("storage_root") != str(remote_run) or
+            not {"data/workspace", "data/harness", "records"}.issubset(saved.get("scope") or []) or
+            saved.get("lifecycle") not in {"completed", "failed", "stopped"}):
+        raise ValueError(f"same-host restart requires a complete terminal remote save: {saved}")
+    remote_manifest = paths(source)["records"] / "restart-remote-manifest.json"
+    if not _remote_file(host, remote_run / "manifest.json", remote_manifest):
+        raise RuntimeError("same-host restart source manifest missing")
+    remote_state = json.loads(remote_manifest.read_text())
+    for key in ("run_id", "task", "native_scope_id", "requirements_version"):
+        if remote_state.get(key) != state.get(key):
+            raise ValueError(f"same-host restart source {key} mismatch")
+    return {"source_run": source.name, "executor": host, "remote_run": str(remote_run),
+            "container_id": cid, "daemon_id": daemon, "native_scope_id": state.get("native_scope_id"),
+            "task": state.get("task"), "saved": saved}
+
+
+def _copy_saved_restart_data(run: Path, host: str, remote_run: Path,
+                             source: Mapping[str, Any]) -> None:
+    state = manifest(run)
+    saved = source["saved"]
+    origin = Path(str(source["remote_run"]))
+    if (host != source["executor"] or origin != remote_run.parent / str(source["source_run"]) or
+            state.get("source_run") != source["source_run"] or not state.get("native_resume") or
+            state.get("native_scope_id") != source["native_scope_id"] or state.get("task") != source["task"] or
+            saved.get("saved") is not True or saved.get("errors") != [] or
+            saved.get("snapshot") is not False or saved.get("storage_root") != str(origin)):
+        raise ValueError("same-host restart copy identity/save contract mismatch")
+    daemon = _remote_exec(host, ["docker", "info", "--format", "{{.ID}}"], check=True).stdout.strip()
+    inspected = json.loads(_remote_exec(host, ["docker", "inspect", source["container_id"]], check=True).stdout)[0]
+    if daemon != source["daemon_id"] or inspected.get("Id") != source["container_id"] or inspected.get("State", {}).get("Running"):
+        raise ValueError("same-host restart source container/daemon changed before copy")
+    staging = remote_run / "data.restart-staging"
+    # cp -a creates independent regular files; reflinks are copy-on-write, not
+    # hardlinks. Never bind or mutate the source's saved data tree.
+    command = " && ".join((
+        "test -d " + shlex.quote(str(origin / "data/workspace")),
+        "test -d " + shlex.quote(str(origin / "data/harness" / str(source["native_scope_id"]))),
+        "test ! -e " + shlex.quote(str(staging)),
+        "test ! -e " + shlex.quote(str(remote_run / "data")),
+        "mkdir -p " + shlex.quote(str(remote_run)),
+        "cp --reflink=auto -a " + shlex.quote(str(origin / "data")) + " " + shlex.quote(str(staging)),
+        "mv " + shlex.quote(str(staging)) + " " + shlex.quote(str(remote_run / "data"))))
+    _remote_exec(host, ["sh", "-c", command], check=True)
+    write_json(paths(run)["records"] / "restart-data-copy.json", {
+        "source": dict(source), "destination": str(remote_run / "data"),
+        "method": "independent cp --reflink=auto -a", "controller_data_recovered": False,
+        "as_of": time.time()})
+
+
 def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     run = Path(run).expanduser().resolve()
     target = _target(run)
@@ -752,7 +842,8 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
         return {"run": str(run), "app": str(paths(run)["workspace"]), "remote_run": str(remote_run),
                 "executor": host, "image_id": None, "status": "prepared", "mode": "simulate"}
     workspace = _prepare_workspace(run, target)
-    app = _stage_app(run, workspace)
+    retained = manifest(run).get("remote_restart_data")
+    app = paths(run)["workspace"] if retained else _stage_app(run, workspace)
     host, remote_run = _remote(run, target)
     _verify_remote_sdk(host, target)
     # Public packages install their small native/runtime inputs inside the
@@ -760,20 +851,29 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     # runtime for this path.  Legacy packages retain the explicit deployment
     # branch until their entry is migrated.
     public_program = workspace / "submission" / "runtime_install.py"
-    if public_program.is_file():
+    if public_program.is_file() and not _uses_prebuilt_runtime(run, target):
         runtime_facts = {"mode": "container-installer", "path": None,
                          "source": "program/runtime_install.py"}
     else:
         runtime_facts = _ensure_remote_runtime(run, host, target)
     _sync(host, workspace, str(_remote_sdk_workspace(remote_run, target)))
-    _sync(host, app, str(remote_run / "data/workspace"))
+    if retained:
+        _copy_saved_restart_data(run, host, remote_run, retained)
+        # Only SDK-owned execution inputs are refreshed. An empty controller
+        # workspace must never upload the official baseline over saved work.
+        for name in ("requirements", ".arc"):
+            member = workspace / "template" / name
+            if member.is_dir():
+                _sync(host, member, str(remote_run / "data/workspace" / name))
+    else:
+        _sync(host, app, str(remote_run / "data/workspace"))
     # Establish the output boundary after workspace migration but before the
     # container starts; an inherited .arc log is therefore never relabeled as
     # this run's fresh process output.
     _record_agent_log_baseline(run, host, remote_run)
     _remote_exec(host, ["mkdir", "-p", str(remote_run / "data/harness"), str(remote_run / "records")], check=True)
     harness = paths(run)["harness"]
-    if harness.is_dir():
+    if harness.is_dir() and not retained:
         _sync(host, harness, str(remote_run / "data/harness"))
     return {"run": str(run), "workspace": str(workspace), "app": str(app), "remote_run": str(remote_run),
             "executor": host, "image_id": target.get("image_id"), "runtime": runtime_facts,
@@ -889,11 +989,16 @@ def spawn(run: str | os.PathLike[str], module: str, args: list[str] | tuple[str,
         _copy_file(host, identity, remote_run / "records/docker.json")
     # The SDK workspace/runtime are already assembled and deployed. Only
     # inputs needed by this spawned process cross the host boundary.
-    for relative in ("requirements", "tests", "application", "application-receipt.json"):
+    for relative in ("requirements", "tests", "application", "application-receipt.json",
+                     "initial-application", "task-context.md", "gateway-routes.json",
+                     "model-gateway.json", "native-resume.json"):
         source = paths(run)["inputs"] / relative
         destination = remote_run / "inputs" / relative
         if source.exists() and _remote_exec(host, ["test", "-e", str(destination)]).returncode:
-            _sync(host, source, str(destination))
+            if source.is_dir():
+                _sync(host, source, str(destination))
+            else:
+                _copy_file(host, source, destination)
     repository = Path(__file__).resolve().parents[2]
     _sync(host, paths(run)["program"], str(remote_run / "program"))
     # Python policies can call start/restart just like the existing stages program.
@@ -1091,7 +1196,10 @@ def save(run: str | os.PathLike[str], *, live: bool = False,
         # A run's harness contains live Unix sockets owned by native helpers.
         # They are runtime endpoints, not recoverable data; copying them makes
         # macOS rsync fail with mkstempsock instead of saving the run.
-        command = ["rsync", "-a", "--no-devices", "--no-specials"]
+        # openrsync's delta receiver can abort when a previously mirrored
+        # native status file changes size during recovery. Transfer complete
+        # files so save never depends on that mutable local basis mapping.
+        command = ["rsync", "-a", "--whole-file", "--no-devices", "--no-specials"]
         if member == "records":
             # Remote save success is not controller-side data recovery success.
             command += ["--exclude=/save.json", "--exclude=/result-save.json"]

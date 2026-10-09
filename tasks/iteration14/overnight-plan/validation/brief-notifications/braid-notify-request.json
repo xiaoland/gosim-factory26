@@ -1,0 +1,42 @@
+{
+  "profiles": [
+    {
+      "id": "root",
+      "display_name": "Root",
+      "assignee_login": "agent-1",
+      "assignee_description": "message verification",
+      "tags": ["root-only"],
+      "adapter_type": "pi",
+      "adapter_version": "test",
+      "provider": "",
+      "model": null,
+      "reasoning": null,
+      "user_instructions": "",
+      "workspace": "/tmp/braid-notify-work",
+      "context_window_tokens": 128000,
+      "context_soft_ratio": 0.2,
+      "context_hard_bytes": 1000000
+    }
+  ],
+  "root_profile_id": "root",
+  "root_check_messages": [],
+  "bindings": {
+    "root": {
+      "adapter_type": "pi",
+      "executable": "/bin/false",
+      "capabilities": {},
+      "native_home": {}
+    }
+  },
+  "codex": null,
+  "pi": {
+    "executable": "/bin/false",
+    "startup_timeout_seconds": 1,
+    "home": null
+  },
+  "bub": null,
+  "prompt": "message verification",
+  "state": "/tmp/braid-notify-state",
+  "run_id": "notify-verification",
+  "delivery_ref": "refs/heads/braid-delivery"
+}

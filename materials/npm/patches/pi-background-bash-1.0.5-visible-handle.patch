@@ -1,0 +1,86 @@
+--- a/extensions/background-bash.ts
++++ b/extensions/background-bash.ts
+@@ -1057,10 +1057,10 @@
+ 	pi.registerTool({
+ 		name: "background_job",
+ 		label: "Background job",
+-		description: "Read or wait for a specific Bash job using its returned pbb:instance:job handle. Terminal results remain available while the Agent is busy; do not use subagent_wait or pgrep for Bash jobs. result is immediate; wait has a bounded timeout; stop requests owned process-group shutdown and confirms it. Persistent servers must be launched with bash service:true. This reports the shell exit code, so preserve a suite's original exit code before formatting logs.",
++		description: "Read or wait for a specific Bash job by copying the actual Handle printed in the Bash startup response (never construct an instance placeholder). Terminal results remain available while the Agent is busy; do not use subagent_wait or pgrep for Bash jobs. result is immediate; wait has a bounded timeout; stop requests owned process-group shutdown and confirms it. Persistent servers must be launched with bash service:true. This reports the shell exit code, so preserve a suite's original exit code before formatting logs.",
+ 		parameters: Type.Object({
+ 			operation: Type.Union([Type.Literal("result"), Type.Literal("wait"), Type.Literal("stop")]),
+-			handle: Type.String(),
++			handle: Type.String({ description: "Copy the actual Handle printed in the Bash result; a legacy bgNNN is resolved only in this current owner" }),
+ 			timeoutSeconds: Type.Optional(Type.Number({ minimum: 0, maximum: 300 })),
+ 		}),
+ 		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+@@ -1068,12 +1068,19 @@
+ 			try {
+ 				const identity = pbbIdentity(ctx);
+ 				if (!identity) throw new Error("OWNER_UNAVAILABLE: persistent PBB identity is required");
+-				const match = /^pbb:([A-Za-z0-9_.-]+):(bg[0-9]+)$/.exec(params.handle);
+-				if (!match) throw new Error("WRONG_HANDLE: expected pbb:instance:bgNNN returned by bash");
++				const candidates = () => {
++					const jobs = pbbJobsDir(identity);
++					return existsSync(jobs) ? readdirSync(jobs).filter(name => /^bg[0-9]+\.json$/.test(name)).map(name => `pbb:${identity.instanceId}:${name.slice(0, -5)}`) : [];
++				};
++				// Local IDs are meaningful only in this process owner, never a search
++				// across old instances where the same bg number may name other work.
++				const requested = /^bg[0-9]+$/.test(params.handle) ? `pbb:${identity.instanceId}:${params.handle}` : params.handle;
++				const match = /^pbb:([A-Za-z0-9_.-]+):(bg[0-9]+)$/.exec(requested);
++				if (!match) throw new Error(`WRONG_HANDLE: copy the actual Handle printed by bash; current-owner handles: ${candidates().join(", ") || "none"}`);
+ 				const [, instance, local] = match;
+ 				const path = join(pbbSessionDir(identity), "instances", instance, "jobs", `${local}.json`);
+ 				const read = () => {
+-					if (!existsSync(path)) throw new Error("UNKNOWN_JOB: no retained result for this session and handle");
++					if (!existsSync(path)) throw new Error(`UNKNOWN_JOB: no retained result for this session and handle; current-owner handles: ${candidates().join(", ") || "none"}`);
+ 					const record = JSON.parse(readFileSync(path, "utf8"));
+ 					if (record.sessionKey !== identity.sessionKey || record.instanceId !== instance || record.jobId !== local) throw new Error("OWNER_MISMATCH: invalid retained job identity");
+ 					return record;
+@@ -1097,7 +1104,7 @@
+ 					const terminal = !["running", "kill_requested"].includes(record.status);
+ 					if (params.operation === "stop" && Date.now() - started >= 500 && groupAlive()) killProcessGroup(record.pgid, "SIGKILL");
+ 					if (terminal && (params.operation !== "stop" || !groupAlive())) break;
+-					if (Date.now() >= deadline) return reply({ handle: params.handle, status: "wait_timeout", job: record, stopped: false }, true);
++					if (Date.now() >= deadline) return reply({ handle: requested, status: "wait_timeout", job: record, stopped: false }, true);
+ 					await new Promise<void>((resolve, reject) => {
+ 						const done = () => { signal?.removeEventListener("abort", abort); resolve(); };
+ 						const timer = setTimeout(done, 100);
+@@ -1112,7 +1119,7 @@
+ 					try { bytes = fstatSync(fd).size; const buffer = Buffer.alloc(Math.min(bytes, MAX_RESULT_BYTES)); readSync(fd, buffer, 0, buffer.length, Math.max(0, bytes - buffer.length)); body = buffer.toString("utf8"); }
+ 					finally { closeSync(fd); }
+ 				}
+-				return reply({ handle: params.handle, job: record, body: body.slice(-MAX_RESULT_BYTES), logPath, truncated: bytes > MAX_RESULT_BYTES, ...(params.operation === "stop" ? { stopped: true } : {}) }, record.outcome === "error" || record.status === "unknown");
++				return reply({ handle: requested, job: record, body: body.slice(-MAX_RESULT_BYTES), logPath, truncated: bytes > MAX_RESULT_BYTES, ...(params.operation === "stop" ? { stopped: true } : {}) }, record.outcome === "error" || record.status === "unknown");
+ 			} catch (error) { return reply({ handle: params.handle, error: error instanceof Error ? error.message : String(error) }, true); }
+ 		},
+ 	});
+@@ -1178,8 +1185,8 @@
+ 
+ 				return {
+ 					content: [{ type: "text", text: params.service
+-						? `Bash service ${job.id} started in background. It stays active until stopped or session shutdown; continue independent work.`
+-						: `Bash job ${job.id} started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.` }],
++						? `Bash service ${job.id} started in background. Handle: ${job.pbb ? `pbb:${job.pbb.instanceId}:${job.id}` : "unavailable (no persistent owner identity)"}. Use background_job with this actual handle. It stays active until stopped or session shutdown; continue independent work.`
++						: `Bash job ${job.id} started in background. Handle: ${job.pbb ? `pbb:${job.pbb.instanceId}:${job.id}` : "unavailable (no persistent owner identity)"}. Use background_job with this actual handle. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.` }],
+ 					details: runningJobDetails(job, ctx.cwd),
+ 				};
+ 			}
+@@ -1274,7 +1281,7 @@
+ 			scheduleDetachedBackgroundToolResultRepair(ctx, toolCallId);
+ 
+ 			return {
+-				content: [{ type: "text", text: `Bash job ${job.id} moved to background after ${formatThreshold(autoAfterSeconds)}. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.` }],
++				content: [{ type: "text", text: `Bash job ${job.id} moved to background after ${formatThreshold(autoAfterSeconds)}. Handle: ${job.pbb ? `pbb:${job.pbb.instanceId}:${job.id}` : "unavailable (no persistent owner identity)"}. Use background_job with this actual handle. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.` }],
+ 				details: runningJobDetails(job, ctx.cwd),
+ 			};
+ 		},
+--- a/skills/pbb/SKILL.md
++++ b/skills/pbb/SKILL.md
+@@ -58,6 +58,6 @@
+ 
+ ## Native job results and control
+ 
+-Bash returns a `pbb:instance:bgNNN` handle. Use `background_job` with `operation: result`, `wait`, or `stop` and this exact handle. result reads retained terminal status and bounded output immediately; wait blocks only on this job for a bounded duration; stop requests this live owner to stop its process group and confirms disappearance. Errors are native tool failures with the concrete reason; timeout is not completion, and unknown/stale owner is not a safe automatic kill target. Repeated result reads retain the same job identity and log path. Do not pass Bash handles to subagent_wait or wait on all jobs merely for one suite. Declare persistent servers with `service:true`.
++Copy the actual Handle printed by Bash. Never construct an owner or instance placeholder; a legacy bg id is resolved only by the current owner. Use `background_job` with `operation: result`, `wait`, or `stop` and this exact handle. result reads retained terminal status and bounded output immediately; wait blocks only on this job for a bounded duration; stop requests this live owner to stop its process group and confirms disappearance. Errors are native tool failures with the concrete reason; timeout is not completion, and unknown/stale owner is not a safe automatic kill target. Repeated result reads retain the same job identity and log path. Do not pass Bash handles to subagent_wait or wait on all jobs merely for one suite. Declare persistent servers with `service:true`.
+ 
+ Preserve the original check exit status before summarizing output. PBB records the shell exit code and does not infer application assertions from grep/tail. For isolated application checks, read the agent-browser application-checks reference and use its existing with-service wrapper with explicit fresh data binding. Automatic completion notifications retain their existing lifecycle; direct result retrieval does not trigger a new Agent turn.

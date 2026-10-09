@@ -1,0 +1,24 @@
+{
+  "factory26": {
+    "provider": "QIANFAN_TOKEN_PLAN",
+    "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+    "credential_env": "QIANFAN_TOKEN_PLAN_API_KEY",
+    "model": "glm-5.3-flash"
+  },
+  "factory26-visual": {
+    "provider": "QIANFAN_TOKEN_PLAN",
+    "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+    "credential_env": "QIANFAN_TOKEN_PLAN_API_KEY"
+  },
+  "factory26/deepseek-v4-flash": {
+    "provider": "QIANFAN_TOKEN_PLAN",
+    "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+    "credential_env": "QIANFAN_TOKEN_PLAN_API_KEY",
+    "model_id": "deepseek-v4-flash-0731"
+  },
+  "factory26/kimi-k3": {
+    "provider": "ARK_CODING_PLAN",
+    "base_url": "https://ark.cn-beijing.volces.com/api/coding/v3",
+    "credential_env": "ARK_CODING_PLAN_API_KEY"
+  }
+}

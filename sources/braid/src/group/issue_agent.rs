@@ -69,7 +69,6 @@ pub(crate) fn provision_issue_agent_worktree(
     Ok(effective_profile)
 }
 
-
 /// The Issue Agent worktree binds the issue's sole same-repository
 /// Development linked branch; with zero or several Development branches it
 /// starts on the repository default branch and the Agent may switch or create
@@ -97,14 +96,12 @@ pub(super) async fn resolve_issue_worktree_ref(
 impl GroupDriver<'_> {
     /// Settle a native Issue unassignment after its debounce window and
     /// confirm teardown of any provider session owned by this driver.
-    pub(super) async fn settle_unassignment(
-        &self,
-        candidate: AssignmentCandidate,
-    ) -> Result<()> {
+    pub(super) async fn settle_unassignment(&self, candidate: AssignmentCandidate) -> Result<()> {
         let store = self.store;
         let config = self.config;
         let sessions = &self.sessions;
-        if candidate.target_profile_id.as_deref().is_some_and(|owner| owner != self.spec.profile.id) {
+        if candidate.target_profile_id.as_deref().is_some_and(|owner| owner != self.spec.profile.id)
+        {
             return Ok(());
         }
         let event_id = candidate.event_id.clone();
@@ -126,7 +123,9 @@ impl GroupDriver<'_> {
         }
         let first_session = outcome.provider_sessions.first().cloned();
         for provider_session_id in outcome.provider_sessions {
-            if owned.contains(&provider_session_id) && sessions.is_managed(&provider_session_id).await {
+            if owned.contains(&provider_session_id)
+                && sessions.is_managed(&provider_session_id).await
+            {
                 sessions.remove(&provider_session_id).await?;
             }
         }
@@ -134,19 +133,24 @@ impl GroupDriver<'_> {
             store.retire_stopping_provider_session(provider_session_id)?;
         }
         store.finish_unassigned_work_item(event_id)?;
-        tracing::info!(kind = candidate.work_item_kind, number = candidate.number, "retired unassigned Agent Group");
+        tracing::info!(
+            kind = candidate.work_item_kind,
+            number = candidate.number,
+            "retired unassigned Agent Group"
+        );
         Ok(())
     }
 
     pub(super) async fn materialize_next_issue_assignment(&self) {
         let store = self.store;
-        let candidates = match store.assignment_candidates("issue".into(), self.spec.profile.id.clone()) {
-            Ok(candidates) => candidates,
-            Err(error) => {
-                tracing::error!(%error, "cannot inspect assignment events");
-                return;
-            }
-        };
+        let candidates =
+            match store.assignment_candidates("issue".into(), self.spec.profile.id.clone()) {
+                Ok(candidates) => candidates,
+                Err(error) => {
+                    tracing::error!(%error, "cannot inspect assignment events");
+                    return;
+                }
+            };
         for candidate in candidates {
             if candidate.action == "unassign" {
                 if let Err(error) = self.settle_unassignment(candidate).await {
@@ -160,9 +164,19 @@ impl GroupDriver<'_> {
                 }
                 continue;
             }
+            if candidate.work_item_kind != "issue"
+                || !matches!(candidate.action.as_str(), "assign" | "mention" | "activate")
+            {
+                if let Err(error) = store.ignore_assignment_event(candidate.event_id) {
+                    tracing::error!(%error, "cannot consume invalid activation");
+                }
+                continue;
+            }
             if let Err(error) = self.materialize_issue_assignment(candidate).await {
                 tracing::error!(%error, "cannot materialize Issue Agent assignment");
             }
+            // Dispatch before starting another native process from this batch.
+            return;
         }
     }
 
@@ -185,7 +199,9 @@ impl GroupDriver<'_> {
         let Some(canonical) = self.materialize_assignment_context(&candidate).await? else {
             return Ok(());
         };
-        if !mention_activation && candidate.target_profile_id.as_deref() != Some(self.spec.profile.id.as_str()) {
+        if !mention_activation
+            && candidate.target_profile_id.as_deref() != Some(self.spec.profile.id.as_str())
+        {
             return Ok(());
         }
         let rendered = context::render_budgeted(
@@ -196,6 +212,7 @@ impl GroupDriver<'_> {
         );
         context::record_context_revision(&canonical, &rendered, store)?;
         let preserve_wake = rendered.pressure != ContextPressure::Hard;
+        let slot = self.sessions.reserve().await?;
         let Some(materialization) = store.begin_agent_assignment(
             candidate.event_id.clone(),
             profile_record.clone(),
@@ -255,10 +272,16 @@ impl GroupDriver<'_> {
                 anyhow::bail!(message);
             }
         };
-        let instructions = issue_system_prompt(config, profile, candidate.number, Some(&materialization.member_login));
+        let instructions = issue_system_prompt(
+            config,
+            profile,
+            candidate.number,
+            Some(&materialization.member_login),
+        );
         let instruction_revision = hex::encode(Sha256::digest(instructions.as_bytes()));
         let context = rendered.text.clone();
-        let result = sessions.start(effective_profile.clone(), instructions.clone(), context).await;
+        let result =
+            sessions.start(effective_profile.clone(), instructions.clone(), context, slot).await;
         match result {
             Ok((thread_id, binding_id)) => {
                 if let Err(error) = store.complete_agent_assignment(
@@ -280,7 +303,11 @@ impl GroupDriver<'_> {
             }
             Err(error) => {
                 if error.is_deferred() {
-                    store.defer_agent_assignment(materialization.assignment_id, candidate.event_id, error.to_string())?;
+                    store.defer_agent_assignment(
+                        materialization.assignment_id,
+                        candidate.event_id,
+                        error.to_string(),
+                    )?;
                     return Err(error.into());
                 }
                 store.fail_agent_assignment(materialization.assignment_id, error.to_string())?;

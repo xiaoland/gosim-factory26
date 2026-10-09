@@ -6,11 +6,11 @@
 
 用户已确定上述方向，并接受根 Issue description 保存 Factory prompt、引用完整 requirements 包，子 Issue 按需要内联局部需求。Braid 与 SVC 继续独立：前者管理对象、关系、执行和上下文，后者提供协作方法，Factory harness 负责装配。CLI/config 收敛已完成。用户于 2026-09-21 同意第 1 项 Braid 能力的具体技术、验收及实施方案；完成独立预演及基线提交后实施。新增 agent-profile 是另一个项目，归第 3 项 Factory 装配，本轮不做。
 
-当前实现：CLI/config 收敛已经完成；本轮新增 thread/reply、resolve cutoff、hide 理由、reaction、可选父子 Issue、讨论参与者路由，以及独立活动会话和自编辑重建恢复。Braid 20 项本地检查、Factory 81 项检查（1 项平台跳过）通过；首次真实 Pi 自编辑探针通过，详见 [报告](../../reports/2026-09-21-braid-collaboration-pi-probe.md)。SVC user scope 保持两行查询导航，导航存在不能证明方法有效。
+当前实现：CLI/config 收敛已经完成；本轮新增 thread/reply、resolve cutoff、hide 理由、reaction、可选父子 Issue、讨论参与者路由，以及独立活动会话和自编辑重建恢复。Braid 20 项本地检查、Factory 81 项检查（1 项平台跳过）通过；首次真实 Pi 自编辑探针通过，详见 [报告](../../runs/reports/2026-09-21-braid-collaboration-pi-probe.md)。SVC user scope 保持两行查询导航，导航存在不能证明方法有效。
 
 本页保留控制状态和授权；[产品方案](design.md)承接协作与上下文行为，[技术方案](technical.md)和[验收方案](verification.md)是本轮已批准的具体方案；[共同工作方法](working-methods.md)承接设计、实施和 V&V；[实施计划](plan.md)维护步骤与复核门槛；[历史实施核验](implementation.md)保留已完成 CLI/config 的证据。各文档拥有不同问题，不以一份长文代替 packet。
 
-CLI/config 历史核验见 implementation.md，本轮新增协作能力见 execution.md。历史 `pi-svc` 的 [9/32 实验](../../reports/2026-09-21-pi-svc-keep.md)不代表当前新协作方案的效果；[旧接入 packet](../braid-svc/packet.md)不因方向收敛而虚报完成。
+CLI/config 历史核验见 implementation.md，本轮新增协作能力见 execution.md。历史 `pi-svc` 的 [9/32 实验](../../runs/reports/2026-09-21-pi-svc-keep.md)不代表当前新协作方案的效果；[旧接入 packet](../braid-svc/packet.md)不因方向收敛而虚报完成。
 
 当前讨论依据用户纠正收敛为：LLM 拥有任务语义与决策，harness 连接环境并提供能力。Braid 的协作机制围绕 comment 组织异步消息、围绕 work-item 组织 session context；multi-agent 专指 Braid 级别 Agent，sub-agent 专指 Codex/Pi 内部子会话。Turn 留作现有 provider 的执行协议事实，不作为产品上的协作单位。不强制拆 Issue，也不要求结束主会话执行后才允许协作；本轮已解除同类 worker 的串行限制，真实 provider 行为仍需验收。
 

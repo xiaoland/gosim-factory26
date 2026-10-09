@@ -1,6 +1,6 @@
 # I11 GitHub 身份、组织与团队旅程断点
 
-2026-09-30，只读定向审查。对象是最终 replay `e68661975b53` 的冻结应用；`F` = `runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/`，以下应用路径均相对 F。原始要求 `Q` = `requirements/requirements.yaml`。只写此报告；未运行应用、测试、生成或评测，未查私有评测器、Sheet，未修改应用/variant。读取根 AGENTS、run-analysis SOP，代码阅读采用 ponytail 端到端原则。本报告是候选断点而非官网逐例失败归因。
+2026-09-30，只读定向审查。对象是最终 replay `e68661975b53` 的冻结应用；`F` = `runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/`，以下应用路径均相对 F。原始要求 `Q` = `requirements/requirements.yaml`。只写此报告；未运行应用、测试、生成或评测，未查私有评测器、Sheet，未修改应用/variant。读取根 AGENTS、当时的运行分析说明（现已删除），代码阅读采用 ponytail 端到端原则。本报告是候选断点而非官网逐例失败归因。
 
 ## 原需求前提与入口
 

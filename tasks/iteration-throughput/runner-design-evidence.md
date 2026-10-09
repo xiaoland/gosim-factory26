@@ -9,7 +9,7 @@
 | [Competition 页面](https://arc-bench.com/competition)、[API 文档](https://arc-bench.com/api-doc) | 公开页面和当前前端行为 | Competition 的任务/快照/运行 UI 与 SDK 运行时约定；网页/API 路由仍应视为当前实现接口，不当作长期稳定公共 API |
 | `GET /api/competitions`、`GET /api/competitions/{id}`、`GET /api/requirements?catalog=competition`、需求与公开 tests | 2026-09-22 只读 HTTP 请求 | 当前比赛、任务数量、测试数量、任务 ID、需求/公开测试内容；未证明需登录的写请求 |
 | 网站当前 JS `assets/index-5u2DjXvG.js` | 只读下载并检索客户端 API 封装 | 当前浏览器实际构造的 Competition multipart 字段和 run/日志/产物路由；不证明后台版本兼容承诺 |
-| [`reports/2026-09-20-development-loop.md`](../../reports/2026-09-20-development-loop.md)、[`reports/2026-09-20-playground-concurrency.md`](../../reports/2026-09-20-playground-concurrency.md) | 仓库已保存的请求与已完成探针 | Playground 的真实上传/创建/启动/终态/日志/traceability 形状；不能冒充 Competition 运行证据 |
+| [`runs/reports/2026-09-20-development-loop.md`](../../runs/reports/2026-09-20-development-loop.md)、[`runs/reports/2026-09-20-playground-concurrency.md`](../../runs/reports/2026-09-20-playground-concurrency.md) | 仓库已保存的请求与已完成探针 | Playground 的真实上传/创建/启动/终态/日志/traceability 形状；不能冒充 Competition 运行证据 |
 | [主办方 local simulation 固定版本](https://github.com/code-philia/hackathon-local-simulation/tree/cfbbc287ee1bbffcf1e936545e4803145693a8d8) | 克隆并阅读 `README.md`、`local_submit.py`、`local_runner.py`、`test_local_submit.py` | 本地 runner 的打包、容器、部署、Playwright、结果和 Meter 逻辑；不证明生产平台隐藏 runner 的实现 |
 
 ## Observed：Competition（非 Playground）

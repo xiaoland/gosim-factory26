@@ -51,6 +51,15 @@
       "repository": "https://github.com/ibelick/ui-skills",
       "revision": "fd0889bdf72aee45c32028b4643b09735d5b5a34",
       "adaptation": "Condensed interaction guidance; pinned upstream MIT license"
+    },
+    "svc-specs": {
+      "source": "sources/svc/skills/svc-specs (copied from development SVC corpus/svc-specs)",
+      "revision": "45fe1b42ed3670c8d77df1c3603c016b8500481f",
+      "version": "16.0.0",
+      "content_sha256": "870a95f8088431731d03288ab742cc684f7b27131f6744348e78892794ab8f6e",
+      "content_digest_algorithm": "sha256(sorted relative path + NUL + file sha256 + LF)",
+      "adaptation": "Description refined for native Pi catalog discovery; SKILL body, references, assets and LICENSE retained from recorded upstream revision",
+      "upstream_content_sha256": "6f0f462ccd92b5c60516476abb4f66ce2b413a2934d5300b575b3ad4f71c33db"
     }
   }
 }

@@ -17,7 +17,7 @@
 
 GLM-5.3 采用文本输入、1,000,000 context、131,072 maxTokens，支持工具，推理仅开启；档位映射为 low/high/max，根保持与基线相同 high。依据 [Z.ai 官方文档](https://docs.z.ai/guides/llm/glm-5.3)，不沿用 Flash 的 image 声明。Pi 的 zai 兼容路径发送 thinking.enabled、clear_thinking=false、reasoning_effort=high，并沿用已有工具流兼容；当前 ARC 参数可用性留给首次真实 I13 请求反馈，没有增加 Chat 测试任务。
 
-K2.7 Code context 为 262,144、支持 image、工具以及强制保留推理，依据 [Moonshot 官方模型卡](https://huggingface.co/moonshotai/Kimi-K2.7-Code)。运行输出上限保留旧独立 `pi-braid-kimi-root/agents/pi-kimi-k27-code/models.json` 的 131,072；它是本轮运行上限，不声称等于模型理论最大输出。2026-09-23 ARC 原件已记录该 ID 两轮工具往返及 max_tokens=262144 接受，见同级 `factory26-official-local/runs/raw-baseline-20260923/replacement-api-qualification/qualification/kimi-k2.7-code/`；这不证明实际曾生成对应长度。旧 reasoning 实测还明确拒绝关闭推理，见 [历史报告](../../reports/2026-09-23-model-reasoning-probe.md)。采用既有 deepseek thinking 兼容、不发送 effort，并显式保留 assistant reasoning_content；不复制 K3 的 effort 和 deferredToolsMode。
+K2.7 Code context 为 262,144、支持 image、工具以及强制保留推理，依据 [Moonshot 官方模型卡](https://huggingface.co/moonshotai/Kimi-K2.7-Code)。运行输出上限保留旧独立 `pi-braid-kimi-root/agents/pi-kimi-k27-code/models.json` 的 131,072；它是本轮运行上限，不声称等于模型理论最大输出。2026-09-23 ARC 原件已记录该 ID 两轮工具往返及 max_tokens=262144 接受，见同级 `factory26-official-local/runs/raw-baseline-20260923/replacement-api-qualification/qualification/kimi-k2.7-code/`；这不证明实际曾生成对应长度。旧 reasoning 实测还明确拒绝关闭推理，见 [历史报告](../../runs/reports/2026-09-23-model-reasoning-probe.md)。采用既有 deepseek thinking 兼容、不发送 effort，并显式保留 assistant reasoning_content；不复制 K3 的 effort 和 deferredToolsMode。
 
 ## 装配与反馈
 

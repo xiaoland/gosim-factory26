@@ -24,7 +24,7 @@
 | Collector发出集合和flush窗口 | evidence.rs/telemetry.rs；R29。 | 本轮展开emit→自动flush→轮末flush→失败重试，见下。 |
 | monitor连续错误与来源时间边界、Pi错误原文 | monitor-generation.py、provider/pi；R25/A03。 | 旧snapshot未变，复用已列真实记录核对，非新运行监控通过。 |
 | 证据采集包含subscription/activity及新终态标签 | evidence.rs::TABLES与capture终态判断；R29只登记重试、未单列这两处。 | diff显示新增协作表并接受quiescent/blocked终态；属于协作/生命周期基线的证据投影，不把blocked等同应用成功。当前静态已核，精确所属迭代未从dirty推断。 |
-| 原文证据ID定位、分页及分析方法 | lab/__main__.py/L03；agents/run-analysis/M05。 | lab读取机制已深核；方法交methods。不能把定位便利当成自动跨链分析。 |
+| 原文证据ID定位、分页及分析方法 | lab/__main__.py/L03；当时的运行分析说明（现已删除）/M05。 | lab读取机制已深核；方法交methods。不能把定位便利当成自动跨链分析。 |
 | pnpm/portless、Node/Chromium工具入口、PBB补丁、技能物化及共同环境 | package_agent.py→variant build.py→submission/build.py/Dockerfile，runtime.py；A06/A07/R02/R28/M项。 | 当前传递链已读；Node20/正式npm兼容仍为新应用真实观察。methods负责角色和SVC内容，不以本表代替。 |
 | with-service首轮退出/候选回执、process group清理 | agent-browser目录；R26/R27/A10。 | 旧快照一致，复用此前全文审查与历史应用副本实操；不扩大为全机资源隔离。 |
 | 按Braid身份的昂贵模型限额 | package_agent复制model_budget.mjs，agent_support.py::budgeted_pi，同一launcher由variant使用。 | 属competition-budget已有约束，现目录没有独立项；当前只读确认SQLite cli_binding→agent_id身份、原生child排除、原子slot和失败退出的接线。不是本轮新修，不声称实际模型请求通过；新制品准入仍必须保留。 |

@@ -142,7 +142,10 @@ def inspect(recipe_path, deployment=None, *, environment=None, job_id=None):
                 stop_path = input_paths.get('stop_evidence')
                 stop = read(stop_path / 'manifest.json' if stop_path.is_dir() else stop_path) if stop_path else {}
                 controller.source_stop_binding(prepared, stop)
-                if prepared.get('status') != 'complete':
+                legacy_terminal = (prepared.get('acquisition', {}).get('status') == 'legacy-terminal-export'
+                                   and prepared.get('source_identity', {}).get('backend_identity', {}).get('kind') == 'hosted'
+                                   and not prepared.get('readback', {}).get('gaps', ['missing-readback']))
+                if prepared.get('status') != 'complete' and not legacy_terminal:
                     raise ValueError('Harness producer has not declared complete prepared content')
                 row['source_gate'] = 'saved binding matched; current source observation required at launch'
             except (OSError, ValueError, KeyError, controller.Blocked) as exc:
@@ -159,9 +162,11 @@ def inspect(recipe_path, deployment=None, *, environment=None, job_id=None):
         bindings = json.loads(job.get('environment', {}).get('FACTORY26_MODEL_BINDINGS', '{}'))
         required = {binding['credential_env'] for binding in bindings.values()}
         row['credential_coverage'] = {'required_variables': sorted(required), 'missing': sorted(required - credential_names)}
-        if required - credential_names:
+        generated = set(job.get('arc_contract', {}).get('prepared_delivery', {}).get('service_generated_credentials', []))
+        missing = required - credential_names - generated
+        if missing:
             row['blockers'].append({'component': 'deployment', 'reason': '选定私有引用缺少模型通道凭据变量',
-                                     'variables': sorted(required - credential_names)})
+                                     'variables': sorted(missing)})
         targets = [backend] if backend['kind'] == 'docker' else []
         if backend.get('external_docker'):
             targets.append(backend['external_docker'])

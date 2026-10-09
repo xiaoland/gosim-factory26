@@ -1,15 +1,36 @@
 """File, process and delivery operations; no Harness selection or orchestration."""
 import hashlib,json,os,platform,selectors,shutil,signal,subprocess,sys,time,uuid
 import shlex
-import secrets
 import re
 import fcntl
 import errno
-import resource
-from collections import deque
+import traceback
 from pathlib import Path
 
 RESERVED={".arc", ".git", "requirements", ".factory26"}
+
+
+def require_subagent_catalog(runtime, patch):
+    """Reject stale runtime inputs before opting in to the shared catalog hook."""
+    member = Path('node_modules/pi-subagents/src/extension/index.ts')
+    target, patch = Path(runtime)/member, Path(patch)
+    patch_text = patch.read_text()
+    # The maintained patch adds an import and one contiguous event hook. Require
+    # its exact additions, rather than trusting a filename or an env-token match.
+    additions, current = [], []
+    for line in patch_text.splitlines():
+        if line.startswith('+') and not line.startswith('+++'):
+            current.append(line[1:])
+        elif current:
+            additions.append('\n'.join(current))
+            current = []
+    if current:
+        additions.append('\n'.join(current))
+    text = target.read_text() if target.is_file() else ''
+    if len(additions) != 2 or any(text.count(block) != 1 for block in additions):
+        raise ValueError(f'Pi subagent catalog hook missing or mismatched: {target}; rebuild with {patch.name}; launcher opt-in cannot upgrade an old runtime')
+    return {'member': str(member), 'sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
+            'patch': patch.name, 'patch_sha256': hashlib.sha256(patch.read_bytes()).hexdigest()}
 
 def evidence_time():
     return {'realtime_ns': time.time_ns(), 'monotonic_ns': time.monotonic_ns()}
@@ -79,10 +100,11 @@ def process_memory_evidence(pid, starttime):
 
 def process_evidence(run, name, row, *, cap_bytes=8*1024*1024):
     """Append bounded evidence; failure must never change the operation being observed."""
-    folder = Path(run)/'process-evidence'
-    path = folder/name
-    marker = path.with_suffix(path.suffix+'.capped.json')
+    path = run
     try:
+        folder = Path(run)/'process-evidence'
+        path = folder/name
+        marker = path.with_suffix(path.suffix+'.capped.json')
         folder.mkdir(exist_ok=True)
         with path.open('ab', buffering=0) as stream:
             fcntl.flock(stream, fcntl.LOCK_EX)
@@ -104,321 +126,17 @@ def process_evidence(run, name, row, *, cap_bytes=8*1024*1024):
                 raise OSError(errno.EIO, 'incomplete process evidence append', str(path))
             os.fsync(stream.fileno())
         return True
-    except (OSError, TypeError, ValueError) as error:
+    except Exception as error:
         try:
             print(f'process evidence failed: {path}: {json.dumps(evidence_error(error))}', file=sys.stderr, flush=True)
         except OSError:
             pass
         return False
 
-class ResourceEvidence:
-    """Read the namespace's visible cgroup and processes from the existing collector."""
-    memory_files = ('memory.events', 'memory.events.local', 'memory.current', 'memory.peak',
-                    'memory.stat', 'memory.pressure',
-                    'memory.max', 'memory.oom.group', 'memory.swap.current', 'memory.swap.peak',
-                    'memory.swap.max', 'pids.current', 'pids.max', 'pids.events',
-                    # Raw monotonic counters; consumers derive rates using
-                    # sample_started rather than treating one sample as usage.
-                    'cpu.stat', 'cpu.pressure', 'io.stat', 'io.pressure')
-
-    def __init__(self, run, *, root_pid=None):
-        self.run = Path(run)
-        self.cgroup = None
-        self.errors = {}
-        self.cap_bytes = 96*1024*1024
-        self.segment_bytes = 31*1024*1024
-        self.samples = 0
-        self.capped = False
-        self.rotations = 0
-        self.segment_started = None
-        self.previous_started = None
-        self.root_pid = os.getppid() if root_pid is None else root_pid
-        self.last_memory_detail_ns = 0
-        self.last_detail = {}
-        self.last_detail_success = {}
-        self.incidents_dropped = 0
-        self.last_sample_ns = None
-        self.recent = deque(maxlen=3)
-        self.previous_inventory = set()
-        self.previous_memory = None
-        self.previous_values = {}
-        root_process = process_identity(self.root_pid)
-        self.root_starttime = root_process.get('starttime')
-        self.membership = None
-        capabilities = {'kind': 'capabilities', 'collector': process_identity(os.getpid()),
-                        'interval_seconds': 2, 'max_processes_per_sample': 256,
-                        'cap_bytes': self.cap_bytes, 'host_signal_sender': 'unavailable', 'raw': {},
-                        'segment_bytes': self.segment_bytes, 'baseline_cap_bytes': 2*1024*1024,
-                        'root_pid': self.root_pid, 'clock_ticks': os.sysconf('SC_CLK_TCK'),
-                        'root_process': root_process,
-                        'page_size': os.sysconf('SC_PAGE_SIZE'),
-                        'selection_order': ['run-tree-by-depth', 'run-cwd', 'current-cgroup', 'other-visible'],
-                        'live_processes_first': True, 'memory_detail_interval_seconds': 10,
-                        'max_memory_detail_processes': 12, 'memory_detail_selection': 'six-largest-plus-oldest-attempt',
-                        'incident_cap_bytes': 16*1024*1024, 'critical_cap_bytes': 16*1024*1024,
-                        'errors': self.errors}
-        for name in ('/proc/self/cgroup', '/proc/self/mountinfo', '/proc/sys/kernel/random/boot_id'):
-            try:
-                capabilities['raw'][name] = Path(name).read_text()
-            except OSError as error:
-                self.errors[name] = evidence_error(error)
-        self.boot_id = capabilities['raw'].get('/proc/sys/kernel/random/boot_id', '').strip()
-        membership = next((line[3:] for line in capabilities['raw'].get('/proc/self/cgroup', '').splitlines()
-                           if line.startswith('0::')), None)
-        self.membership = capabilities['raw'].get('/proc/self/cgroup', '').strip()
-        for line in capabilities['raw'].get('/proc/self/mountinfo', '').splitlines():
-            before, separator, after = line.partition(' - ')
-            if not separator or after.split()[0] != 'cgroup2' or membership is None:
-                continue
-            fields = before.split()
-            mount_root, mount = (Path(re.sub(r'\\([0-7]{3})', lambda match: chr(int(match[1], 8)), fields[i]))
-                                for i in (3, 4))
-            if membership == '/':
-                candidate = mount
-            elif Path(membership).is_relative_to(mount_root):
-                candidate = mount/Path(membership).relative_to(mount_root)
-            else:
-                continue
-            if '..' in candidate.parts:
-                continue
-            self.cgroup = candidate
-            break
-        capabilities['cgroup_path'] = str(self.cgroup) if self.cgroup else None
-        capabilities['cgroup_mapping'] = 'visible-cgroup-v2' if self.cgroup else 'unavailable'
-        process_evidence(self.run, 'resources-baseline.jsonl', capabilities, cap_bytes=2*1024*1024)
-        self.sample('baseline')
-
-    def sample(self, kind='sample', *, request=None):
-        cpu_clock = time.thread_time_ns()
-        row = {'kind': kind, 'cgroup_path': str(self.cgroup) if self.cgroup else None,
-               'values': {}, 'errors': {}, 'processes': [], 'process_limit': 256,
-               'processes_omitted': 0, 'visible_processes': 0, 'sample_started': evidence_time(),
-               'boot_id': self.boot_id,
-               'scope_counts': {}, 'scope_omitted': {}, 'classification_errors': [],
-               'classification_errors_omitted': 0}
-        if request is not None:
-            row['scheduling'] = {**request,
-                                 'queue_delay_ns': row['sample_started']['monotonic_ns']-request['requested_monotonic_ns']}
-        row['memory_detail'] = []
-        if self.cgroup:
-            try:
-                info = self.cgroup.stat()
-                row['cgroup_identity'] = {'device': info.st_dev, 'inode': info.st_ino}
-            except OSError as error:
-                row['errors']['cgroup_identity'] = evidence_error(error)
-            for name in self.memory_files:
-                try:
-                    row['values'][name] = (self.cgroup/name).read_text().strip()
-                except OSError as error:
-                    row['errors'][name] = evidence_error(error)
-        try:
-            entries = sorted((entry for entry in Path('/proc').iterdir() if entry.name.isdigit()),
-                             key=lambda entry: int(entry.name))
-            row['visible_processes'] = len(entries)
-            inventory = {}
-            for entry in entries:
-                item = {'pid': int(entry.name), 'ppid': None, 'starttime': None, 'cgroup': None, 'cwd': None,
-                        'state': None, 'rss_pages': 0, 'counter_read_started': evidence_time(), 'counter_errors': {}}
-                for name in ('stat', 'io', 'cgroup', 'cwd'):
-                    try:
-                        if name == 'stat':
-                            fields = (entry/name).read_text().rsplit(')', 1)[1].split()
-                            item['ppid'], item['starttime'] = int(fields[1]), int(fields[19])
-                            item['state'], item['rss_pages'] = fields[0], int(fields[21])
-                            item['cpu_ticks'] = int(fields[11]) + int(fields[12])
-                        elif name == 'io':
-                            values = {}
-                            for line in (entry/name).read_text().splitlines():
-                                key, _, value = line.partition(':')
-                                if key and value.strip().isdigit(): values[key] = int(value.strip())
-                            item['io_bytes'] = values
-                        elif name == 'cgroup':
-                            item['cgroup'] = (entry/name).read_text().strip()
-                        else:
-                            item['cwd'] = Path(os.readlink(entry/name))
-                    except (OSError, ValueError, IndexError) as error:
-                        if name in {'stat', 'io'}:
-                            item['counter_errors'][name] = evidence_error(error)
-                        if len(row['classification_errors']) < 32:
-                            row['classification_errors'].append({'pid': item['pid'], 'field': name,
-                                                                 **evidence_error(error)})
-                        else:
-                            row['classification_errors_omitted'] += 1
-                inventory[item['pid']] = item
-            ranked = []
-            row['process_totals'] = {}
-            root_matches = (self.root_starttime is not None and
-                            inventory.get(self.root_pid, {}).get('starttime') == self.root_starttime)
-            for pid, item in inventory.items():
-                parent, depth, seen = pid, 0, set()
-                while parent in inventory and parent != self.root_pid and parent not in seen:
-                    seen.add(parent)
-                    parent = inventory[parent]['ppid']
-                    depth += 1
-                if root_matches and parent == self.root_pid:
-                    priority, scope = 0, 'run-tree'
-                elif item['cwd'] is not None and item['cwd'].is_relative_to(self.run):
-                    priority, scope = 1, 'run-cwd'
-                elif self.membership and item['cgroup'] == self.membership:
-                    priority, scope = 2, 'current-cgroup'
-                else:
-                    priority, scope = 3, 'other-visible'
-                item['scope_priority'], item['sampling_scope'] = priority, scope
-                row['scope_counts'][scope] = row['scope_counts'].get(scope, 0)+1
-                totals = row['process_totals'].setdefault(scope, {'live': 0, 'zombie_or_dead': 0, 'rss_pages': 0})
-                dead = item['state'] in {'Z', 'X'}
-                totals['zombie_or_dead' if dead else 'live'] += 1
-                totals['rss_pages'] += item['rss_pages']
-                ranked.append((int(dead), priority, depth if priority == 0 else 0,
-                               -item['rss_pages'], pid, scope))
-            ranked.sort()
-            for _dead, _priority, depth, _rss, pid, scope in ranked[:256]:
-                identity = process_identity(pid)
-                matches = identity.get('starttime') == inventory[pid]['starttime']
-                row['processes'].append({**identity, 'sampling_scope': scope,
-                                         'tree_depth': depth if scope == 'run-tree' else None,
-                                         'counter_identity_matches': matches,
-                                         **({key: inventory[pid][key] for key in ('cpu_ticks', 'io_bytes', 'counter_read_started', 'counter_errors')
-                                             if key in inventory[pid]} if matches else {})})
-            for _dead, _priority, _depth, _rss, _pid, scope in ranked[256:]:
-                row['scope_omitted'][scope] = row['scope_omitted'].get(scope, 0)+1
-            row['processes_omitted'] = max(0, len(entries)-256)
-            now_ns = row['sample_started']['monotonic_ns']
-            eligible = [item for item in inventory.values()
-                        if item['state'] not in {None, 'Z', 'X'} and item['starttime'] is not None]
-            identities = {(item['pid'], item['starttime']) for item in eligible}
-            new = identities-self.previous_inventory
-            current = row['values'].get('memory.current', '')
-            current = int(current) if current.isdigit() else None
-            growth = current is not None and self.previous_memory is not None and current-self.previous_memory >= 64*1024*1024
-            reasons = ([kind] if kind in {'baseline', 'resource_limit', 'final'} else [])
-            if new: reasons.append('process_start')
-            if growth: reasons.append('memory_growth')
-            peak = row['values'].get('memory.peak', '')
-            old_peak = self.previous_values.get('memory.peak', '')
-            if peak.isdigit() and old_peak.isdigit() and int(peak)-int(old_peak) >= 64*1024*1024:
-                reasons.append('memory_peak_growth')
-            for name in ('memory.events.local', 'pids.events'):
-                if name in self.previous_values and row['values'].get(name) != self.previous_values[name]:
-                    reasons.append(name)
-            if self.previous_inventory-identities: reasons.append('process_disappearance')
-            self.previous_values = dict(row['values'])
-            if now_ns-self.last_memory_detail_ns >= 10_000_000_000: reasons.append('periodic')
-            if request is not None:
-                reasons.extend(reason for reason in request.get('kinds', [])
-                               if reason != 'sample' and reason not in reasons)
-            row['resource_event_reasons'] = reasons
-            if reasons:
-                largest = sorted(eligible, key=lambda item: (item['scope_priority'], -item['rss_pages'], item['pid']))[:6]
-                selected = {(item['pid'], item['starttime']) for item in largest}
-                rotation = sorted((item for item in eligible if (item['pid'], item['starttime']) not in selected),
-                                  key=lambda item: (self.last_detail.get((item['pid'], item['starttime']), 0), item['pid']))[:12-len(largest)]
-                for item in largest+rotation:
-                    detail = process_memory_evidence(item['pid'], item['starttime'])
-                    detail.update(sampling_scope=item['sampling_scope'], observed_at=evidence_time())
-                    row['memory_detail'].append(detail)
-                    self.last_detail[(item['pid'], item['starttime'])] = now_ns
-                    if detail['identity_matches'] and 'smaps_rollup' in detail:
-                        self.last_detail_success[(item['pid'], item['starttime'])] = detail['observed_at']['monotonic_ns']
-                self.last_memory_detail_ns = now_ns
-            self.last_detail = {key: stamp for key, stamp in self.last_detail.items() if key in identities}
-            self.last_detail_success = {key: stamp for key, stamp in self.last_detail_success.items() if key in identities}
-            row['memory_detail_coverage'] = {
-                'eligible': len(eligible), 'attempted': len(row['memory_detail']),
-                'successful': sum(detail['identity_matches'] and 'smaps_rollup' in detail for detail in row['memory_detail']),
-                'not_attempted': len(eligible)-len(row['memory_detail']),
-                'selection': 'six-largest-by-scope-plus-oldest-attempt',
-                'last_attempts': [{'pid': pid, 'starttime': birth, 'monotonic_ns': self.last_detail.get((pid, birth)),
-                                   'last_success_monotonic_ns': self.last_detail_success.get((pid, birth))}
-                                  for pid, birth in sorted(identities)[:256]],
-                'freshness_entries_omitted': max(0, len(identities)-256)}
-            row['process_changes'] = {'started': [{'pid': pid, 'starttime': birth} for pid, birth in sorted(new)],
-                                      'no_longer_visible': [{'pid': pid, 'starttime': birth}
-                                                           for pid, birth in sorted(self.previous_inventory-identities)]}
-            self.previous_inventory, self.previous_memory = identities, current
-        except OSError as error:
-            row['errors']['process_scan'] = evidence_error(error)
-        row['sample_finished'] = evidence_time()
-        row['collection_duration_ns'] = row['sample_finished']['monotonic_ns']-row['sample_started']['monotonic_ns']
-        row['actual_interval_ns'] = (row['sample_started']['monotonic_ns']-self.last_sample_ns
-                                     if self.last_sample_ns is not None else None)
-        row['collector'] = {'pid': os.getpid(), 'sampling_thread_cpu_ns': time.thread_time_ns()-cpu_clock,
-                            'process_peak_rss': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
-                            'process_peak_rss_unit': 'bytes' if sys.platform == 'darwin' else 'KiB'}
-        self.last_sample_ns = row['sample_started']['monotonic_ns']
-        exceptional = any(reason != 'periodic' for reason in row.get('resource_event_reasons', []))
-        if exceptional:
-            # A separately capped journal survives ordinary segment replacement.
-            incident_written = process_evidence(self.run, 'resource-critical.jsonl' if any(reason in {'resource_limit', 'final', 'memory.events.local', 'pids.events'}
-                             for reason in row.get('resource_event_reasons', [])) else 'resource-incidents.jsonl',
-                             {'kind': 'resource_incident', 'preceding_samples': list(self.recent), 'sample': row},
-                             cap_bytes=16*1024*1024)
-            if not incident_written:
-                self.incidents_dropped += 1
-        self.recent.append(row)
-        if kind == 'baseline':
-            written = process_evidence(self.run, 'resources-baseline.jsonl', row, cap_bytes=2*1024*1024)
-        else:
-            path = self.run/'process-evidence/resources.jsonl'
-            previous = path.with_name('resources.previous.jsonl')
-            marker = path.with_suffix(path.suffix+'.capped.json')
-            try:
-                size = path.stat().st_size if path.exists() else 0
-                encoded_bytes = len(json.dumps(row, ensure_ascii=False).encode())+256
-                if path.exists() and (size+encoded_bytes > self.segment_bytes-4096 or marker.exists()):
-                    discarded = previous.stat().st_size if previous.exists() else 0
-                    path.replace(previous)
-                    marker.unlink(missing_ok=True)
-                    self.rotations += 1
-                    self.previous_started = self.segment_started
-                    self.segment_started = None
-                    process_evidence(self.run, 'resources.jsonl', {
-                        'kind': 'resource_rotation', 'rotation': self.rotations,
-                        'previous_bytes': size, 'discarded_previous_bytes': discarded,
-                        'previous_started_monotonic_ns': self.previous_started,
-                        'discarded_before_monotonic_ns': self.previous_started,
-                    }, cap_bytes=self.segment_bytes)
-                if self.segment_started is None:
-                    self.segment_started = row['sample_started']['monotonic_ns']
-                written = process_evidence(self.run, 'resources.jsonl', row, cap_bytes=self.segment_bytes)
-            except OSError as error:
-                row['errors']['rotation'] = evidence_error(error)
-                written = False
-        latest = self.run/'process-evidence/resource-latest.json'
-        temporary = latest.with_name(f'.{latest.name}.{uuid.uuid4().hex}.tmp')
-        try:
-            # Keep the observation snapshot small; the rotating journal owns process detail.
-            with temporary.open('x') as stream:
-                json.dump({key: row[key] for key in
-                           ('sample_started', 'sample_finished', 'collection_duration_ns', 'actual_interval_ns', 'cgroup_path', 'values', 'errors')}
-                          | {'cgroup_identity': row.get('cgroup_identity')}, stream)
-            temporary.replace(latest)
-        except OSError as error:
-            print(f'resource latest failed: {json.dumps(evidence_error(error))}', file=sys.stderr, flush=True)
-        finally:
-            temporary.unlink(missing_ok=True)
-        self.samples += 1
-        self.capped = (self.run/'process-evidence/resources.jsonl.capped.json').exists()
-        status = {'kind': 'resource_status', 'samples': self.samples, 'last_sample_kind': kind,
-                  'capped': self.capped, 'write_succeeded': written,
-                  'incidents_dropped': self.incidents_dropped,
-                  'incident_capped': (self.run/'process-evidence/resource-incidents.jsonl.capped.json').exists(),
-                  'critical_capped': (self.run/'process-evidence/resource-critical.jsonl.capped.json').exists(),
-                  'cgroup_mapping': 'visible-cgroup-v2' if self.cgroup else 'unavailable',
-                  'processes_omitted': row['processes_omitted'], 'errors': row['errors'],
-                  'scope_counts': row['scope_counts'], 'scope_omitted': row['scope_omitted'],
-                  'rotations': self.rotations, 'segment_bytes': self.segment_bytes,
-                  'current_started_monotonic_ns': self.segment_started,
-                  'previous_started_monotonic_ns': self.previous_started,
-                  'capability_errors': self.errors,
-                  'total_duration_ns': time.monotonic_ns()-row['sample_started']['monotonic_ns'],
-                  'collector_thread_cpu_ns': time.thread_time_ns()-cpu_clock,
-                  'collection_duration_ns': row['collection_duration_ns'],
-                  'actual_interval_ns': row['actual_interval_ns'], **evidence_time()}
-        try:
-            save(self.run/'process-evidence/resource-status.json', status)
-        except OSError as error:
-            print(f'resource status failed: {json.dumps(evidence_error(error))}', file=sys.stderr, flush=True)
+try:
+    from .resource_monitor import ResourceEvidence
+except ImportError:
+    from resource_monitor import ResourceEvidence
 
 def _signal_process(target, sig, run, reason, *, group=False):
     pid = target if isinstance(target, int) else target.pid
@@ -580,13 +298,8 @@ def start_shared_proxy(runtime, run, env):
     command = [str(runtime/'bin/node'), str(runtime/'node_modules/portless/dist/cli.js'),
                'proxy', 'start', '--foreground', '--skip-trust', '--no-tls', '-p', str(port)]
     log = run/'shared-proxy.log'
-    try:
-        from .state_writer import gate, spawn
-    except ImportError:
-        from state_writer import gate, spawn
-    gate(environment)
     with log.open('w') as stream:
-        child = spawn(command, cwd=run, environment=environment,role='service',start_new_session=True,
+        child = subprocess.Popen(command, cwd=run, env=environment,start_new_session=True,
                                  stdout=stream, stderr=subprocess.STDOUT)
     identity = process_identity(child.pid)
     process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'shared-proxy',
@@ -616,11 +329,6 @@ def stop_shared_proxy(child, run):
         _signal_process(child, signal.SIGKILL, run, 'shared-proxy-stop-timeout')
         result = _wait_process(child, run, 'shared-proxy-stop-timeout')
 
-    try:
-        from .state_writer import closed
-    except ImportError:
-        from state_writer import closed
-    closed(getattr(child,'_state_writer',None))
     return result
 
 def read_provider_environment(path, allowed=None):
@@ -644,165 +352,50 @@ def read_provider_environment(path, allowed=None):
     return value
 
 
-def start_model_gateway(runtime, run, env, config, *, bindings=None, gateway_routes=None,
-                        port=4011, host='127.0.0.1', provider_env=None,
-                        preserve_parameters=None):
-    """Start one run-owned frozen LiteLLM gateway and return its local contract.
+def start_model_gateway(*args, **kwargs):
+    """Use the shared gateway owner for both source and installed support."""
+    if __package__:
+        from .model_gateway_service import start_model_gateway as start
+    else:
+        from model_gateway_service import start_model_gateway as start
+    return start(*args, **kwargs)
 
-    ``bindings`` is the already-frozen native route map.  The returned
-    ``pi_environment`` contains only the local gateway token plus the rewritten
-    bindings; upstream provider secrets stay in the gateway child.
-    """
-    if preserve_parameters is None:
-        raise ValueError('gateway preserve_parameters must be frozen explicitly')
-    runtime = Path(runtime).resolve(strict=True)
-    run = Path(run).resolve(strict=True)
-    config = Path(config).resolve(strict=True)
-    launcher = runtime/'bin/litellm'
-    if not launcher.is_file() or not os.access(launcher, os.X_OK):
-        raise FileNotFoundError(f'冻结 runtime 缺少 LiteLLM launcher: {launcher}')
-    if not config.is_file() or not config.resolve().is_relative_to(run):
-        raise ValueError('gateway config must be a run-local frozen file')
-    if not 0 < int(port) < 65536 or host not in {'127.0.0.1', '::1'}:
-        raise ValueError('run-owned gateway must use a loopback unprivileged port')
-    environment = dict(env)
-    values = read_provider_environment(provider_env) if provider_env is not None else {}
-    if gateway_routes is not None:
-        if isinstance(gateway_routes, (str, Path)):
-            route_path = Path(gateway_routes).resolve(strict=True)
-            gateway_routes = json.loads(route_path.read_text())
-        if not isinstance(gateway_routes, dict):
-            raise ValueError('gateway-routes must be an object keyed by stable alias')
-        if any(not isinstance(alias, str) or not isinstance(chain, list) or
-               not chain or any(not isinstance(item, str) or not item for item in chain)
-               for alias, chain in gateway_routes.items()):
-            raise ValueError('gateway-routes values must be non-empty deployment ID lists')
-    environment.update(values)
-    state = run/'model-gateway'
-    state.mkdir(mode=0o700, exist_ok=True)
-    log = state/'gateway.log'
-    (state/'bindings').mkdir(mode=0o700, exist_ok=True)
-    code = state/'code'
-    code.mkdir(mode=0o700, exist_ok=True)
-    support_root = Path(__file__).resolve().parent
-    for name in ('hackathon_gateway_compat.py', 'responses_compat.py'):
-        shutil.copy2(support_root/name, code/name)
-    route_record = state/'gateway-routes.json'
-    if gateway_routes is not None:
-        route_record.write_text(json.dumps(gateway_routes, ensure_ascii=False, indent=2) + '\n')
-        route_record.chmod(0o600)
-    local_token = secrets.token_urlsafe(32)
-    master_key = secrets.token_urlsafe(32)
-    binding_id = hashlib.sha256(local_token.encode()).hexdigest()
-    binding_path = state/'bindings'/f'{binding_id}.json'
-    binding = {'binding_id': binding_id,
-               'run_id': environment.get('FACTORY26_EXP_RUN_ID', run.name),
-               'attempt_id': environment.get('FACTORY26_EXP_ATTEMPT_ID'),
-               'experiment_id': environment.get('FACTORY26_EXP_EXPERIMENT_ID'),
-               'incarnation': environment.get('FACTORY26_EXP_INCARNATION_ID'),
-               'config_sha256': None}
-    # Materialize the run-owned config so direct callers cannot accidentally
-    # omit auth/callbacks or leave upstream base URLs unresolved.
-    config_value = json.loads(config.read_text())
-    config_value.setdefault('general_settings', {}).update(
-        master_key='os.environ/LITELLM_MASTER_KEY',
-        custom_auth='hackathon_gateway_compat.user_api_key_auth')
-    config_value.setdefault('litellm_settings', {}).update(
-        telemetry=False, callbacks=['hackathon_gateway_compat.proxy_handler_instance'])
-    selected_env = set()
-    for entry in config_value.get('model_list', []):
-        params = entry.setdefault('litellm_params', {})
-        params.setdefault('use_chat_completions_api', True)
-        base = params.get('api_base')
-        if isinstance(base, str) and base.startswith('os.environ/'):
-            name = base.removeprefix('os.environ/')
-            selected_env.add(name)
-            if not environment.get(name):
-                raise ValueError(f'gateway config references missing provider endpoint: {name}')
-            params['api_base'] = environment[name]
-        key_ref = params.get('api_key')
-        if isinstance(key_ref, str) and key_ref.startswith('os.environ/'):
-            selected_env.add(key_ref.removeprefix('os.environ/'))
-    if set(values) - selected_env:
-        raise ValueError('provider-env contains credentials outside the selected gateway catalog')
-    config.write_text(json.dumps(config_value, ensure_ascii=False, indent=2) + '\n')
-    config.chmod(0o600)
-    binding['config_sha256'] = hashlib.sha256(config.read_bytes()).hexdigest()
-    binding_path.write_text(json.dumps(binding, ensure_ascii=False) + '\n')
-    binding_path.chmod(0o600)
-    environment.update(LITELLM_MASTER_KEY=master_key,
-                       GATEWAY_REQUEST_LOG=str(state/'request-metadata.jsonl'),
-                       GATEWAY_BINDINGS_DIR=str(state/'bindings'),
-                       GATEWAY_PRESERVE_PARAMETERS='1' if preserve_parameters else '0',
-                       PYTHONPATH=os.pathsep.join((str(code), str(runtime/'python'),
-                                                   environment.get('PYTHONPATH', ''))).strip(os.pathsep))
-    command = [str(launcher), '--config', str(config), '--host', host, '--port', str(port)]
-    with log.open('a') as stream:
-        child = subprocess.Popen(command, cwd=run, env=environment, stdout=stream,
-                                 stderr=subprocess.STDOUT, start_new_session=True)
-    identity = process_identity(child.pid)
-    process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'model-gateway',
-                                               'process': identity, 'log': str(log)})
-    try:
-        from urllib.request import urlopen
-        deadline = time.monotonic() + 30
-        while child.poll() is None and time.monotonic() < deadline:
-            try:
-                with urlopen(f'http://{host}:{port}/health/liveliness', timeout=1) as response:
-                    if response.status == 200:
-                        endpoint = f'http://{host}:{port}/v1'
-                        local_bindings = None
-                        if bindings is not None:
-                            local_bindings = {}
-                            for name, route in bindings.items():
-                                route = dict(route)
-                                route['base_url'] = endpoint
-                                route['credential_env'] = 'FACTORY26_GATEWAY_TOKEN'
-                                local_bindings[name] = route
-                        # Remove only the credentials explicitly assembled for this
-                        # gateway.  Tool credentials (for example Context7/Exa) have
-                        # a separate contract and must remain available to Pi.
-                        pi_environment = {key: value for key, value in env.items()
-                                          if key not in values}
-                        pi_environment['FACTORY26_GATEWAY_TOKEN'] = local_token
-                        if local_bindings is not None:
-                            pi_environment['FACTORY26_MODEL_BINDINGS'] = json.dumps(local_bindings, separators=(',', ':'))
-                        handle = {'owner': 'run', 'process': child, 'identity': identity,
-                                  'pid': child.pid, 'endpoint': endpoint, 'port': port,
-                                  'config': str(config), 'log': str(log),
-                                  'routes': str(route_record) if gateway_routes is not None else None,
-                                  'pi_environment': pi_environment}
-                        save(run/'model-gateway.json', {key: value for key, value in handle.items()
-                                                       if key not in {'process', 'pi_environment'}})
-                        return handle
-            except OSError:
-                pass
-            time.sleep(.2)
-        raise RuntimeError(f'model gateway readiness timed out; raw output: {log}')
-    except BaseException:
-        _signal_process(child, signal.SIGTERM, run, 'model-gateway-start-failed')
-        raise
 
 def stop_model_gateway(handle, run):
-    """Stop only the process owned by start_model_gateway."""
-    child = handle['process'] if isinstance(handle, dict) else handle
-    return _wait_process(child, run, 'model-gateway-stop', timeout=5) if child.poll() is not None else (
-        _signal_process(child, signal.SIGTERM, run, 'model-gateway-stop') or
-        _wait_process(child, run, 'model-gateway-stop', timeout=5))
+    """Close the service through the same owner that launched it."""
+    if __package__:
+        from .model_gateway_service import stop_model_gateway as stop
+    else:
+        from model_gateway_service import stop_model_gateway as stop
+    return stop(handle, run)
 
 
 def browser_executable(runtime):
     """Use the portable wrapper or the browser paired with this runtime's Playwright."""
     packaged = runtime/'bin/chromium'
-    if packaged.is_file():
+    if packaged.is_file() and any((runtime/'.playwright').glob('chromium-*/chrome-linux/chrome')):
         return packaged
-    binary = Path(subprocess.check_output(
-        ['node', '-e', "process.stdout.write(require('playwright').chromium.executablePath())"],
-        cwd=runtime, env=dict(os.environ, PLAYWRIGHT_BROWSERS_PATH=str(runtime/'.playwright')),
-        text=True))
-    if not binary.is_file():
-        raise FileNotFoundError(f'{binary}; run runtime.py prepare')
-    return binary
+    cache = os.environ.get('FACTORY26_BROWSER_CACHE_DIR')
+    browser_roots = [Path(cache)] if cache else []
+    browser_roots.append(runtime/'.playwright')
+    for root in browser_roots:
+        if root and root.is_dir():
+            matches = sorted(root.glob('chromium-*/chrome-linux*/chrome'))
+            if matches:
+                return matches[0]
+    for name in ('google-chrome', 'chromium', 'chromium-browser'):
+        candidate = shutil.which(name)
+        if candidate:
+            return Path(candidate)
+    try:
+        browsers_path = browser_roots[0] if browser_roots else runtime/'.playwright'
+        binary = Path(subprocess.check_output(
+            ['node', '-e', "process.stdout.write(require('playwright').chromium.executablePath())"],
+            cwd=runtime, env=dict(os.environ, PLAYWRIGHT_BROWSERS_PATH=str(browsers_path)),
+            text=True))
+    except (OSError, subprocess.CalledProcessError):
+        binary = None
+    return binary if binary is not None and binary.is_file() else None
 
 def copy_skill(source, destination):
     """Copy the published skill resources, excluding repository maintenance files.
@@ -895,49 +488,109 @@ def workspace_processes(work):
             elif line.startswith('n') and pid and Path(line[1:]).is_relative_to(work): found.append(pid)
     return [pid for pid in found if pid!=os.getpid()]
 
-def cleanup_workspace(work):
-    pids=workspace_processes(work)
-    for pid in pids:
-        try: _signal_process(pid,signal.SIGTERM,work,'workspace-cleanup')
-        except ProcessLookupError: pass
-    if pids: time.sleep(.2)
-    for pid in workspace_processes(work):
-        try: _signal_process(pid,signal.SIGKILL,work,'workspace-cleanup')
-        except ProcessLookupError: pass
-    remaining=workspace_processes(work)
-    if remaining: raise RuntimeError(f'workspace processes remain after cleanup: {remaining}')
-    return pids
+def cleanup_workspace(work, *, evidence=None):
+    """Best-effort cleanup; callers receive observed PIDs, not a stop guarantee.
+
+    The receipt preserves inspection/signal failures and remaining identities.
+    Delivery must not depend on cleanup succeeding; reclamation still requires
+    the receipt's explicit stopped status.
+    """
+    work = Path(work).resolve()
+    evidence = work if evidence is None else Path(evidence)
+    errors, observed = [], set()
+    def inspect():
+        try:
+            pids = workspace_processes(work)
+            observed.update(pids)
+            return pids
+        except Exception as exc:
+            errors.append({'operation':'inspect', 'type':type(exc).__name__, 'error':str(exc)})
+            return None
+    def signal_pids(pids, sig):
+        for pid in pids or []:
+            try:
+                _signal_process(pid, sig, evidence, 'workspace-cleanup')
+            except ProcessLookupError:
+                pass
+            except Exception as exc:
+                errors.append({'operation':'signal', 'signal':int(sig), 'pid':pid,
+                               'type':type(exc).__name__, 'error':str(exc)})
+    pids = inspect()
+    signal_pids(pids, signal.SIGTERM)
+    if pids:
+        time.sleep(.2)
+    signal_pids(inspect(), signal.SIGKILL)
+    deadline = time.monotonic() + 5
+    remaining = inspect()
+    while remaining and time.monotonic() < deadline:
+        time.sleep(.05)
+        remaining = inspect()
+    identities = []
+    for pid in remaining or []:
+        try:
+            identities.append(process_identity(pid))
+        except Exception as exc:
+            identities.append({'pid':pid, 'error':str(exc)})
+    receipt = {'workspace':str(work), 'status':'stopped' if remaining == [] else 'unconfirmed',
+               'observed_pids':sorted(observed), 'remaining_pids':remaining,
+               'remaining_identities':identities, 'errors':errors, 'recorded_at':time.time()}
+    try:
+        save(evidence/'workspace-cleanup.json', receipt)
+    except Exception as exc:
+        print(f'workspace cleanup receipt unavailable: {type(exc).__name__}: {exc}; {receipt}', file=sys.stderr)
+    return sorted(observed)
+
+def workspace_cleanup_stopped(evidence):
+    """A missing/unreadable receipt is not proof that workspace use ended."""
+    try:
+        return json.loads((Path(evidence)/'workspace-cleanup.json').read_text()).get('status') == 'stopped'
+    except (OSError, ValueError, AttributeError):
+        return False
+
 
 def logged(command, cwd, env, log, cleanup_errors=None):
-    try:
-        from .state_writer import gate, spawn, closed
-    except ImportError:
-        from state_writer import gate, spawn, closed
-    gate(env)
     with log.open("w") as output:
-        proc = spawn(command, cwd=cwd, environment=env,role='native',stdout=output,
+        proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=output,
                                 stderr=subprocess.STDOUT, start_new_session=True)
-        state_receipt=proc._state_writer
-        process_evidence(log.parent, 'operations.jsonl', {'kind': 'process_started', 'role': 'logged-command',
-                                                         'process': process_identity(proc.pid), 'log': str(log)})
+        primary_failure = False
+        # Nothing after successful Popen may bypass the owned cleanup finally.
         try:
-            return _wait_process(proc,log.parent,'logged-command')
+            try:
+                process_evidence(log.parent, 'operations.jsonl', {
+                    'kind': 'process_started', 'role': 'logged-command',
+                    'process': process_identity(proc.pid), 'log': str(log)})
+            except Exception:
+                traceback.print_exc()
+            return _wait_process(proc, log.parent, 'logged-command')
+        except BaseException:
+            primary_failure = True
+            raise
         finally:
-            try: stop(proc,log.parent)
-            except PermissionError as exc:
-                # Generation has an outer, verified workspace cleanup before freezing.
-                if cleanup_errors is None or proc.returncode is None: raise
-                cleanup_errors.append({'pid':proc.pid,'exit_code':proc.returncode,'error':str(exc)})
-            if proc.returncode is not None: closed(state_receipt)
+            try:
+                stop(proc, log.parent)
+            except BaseException as exc:
+                traceback.print_exc()
+                record = {'pid': proc.pid, 'exit_code': proc.returncode,
+                          'error_type': type(exc).__name__, 'error': str(exc)}
+                if cleanup_errors is not None:
+                    cleanup_errors.append(record)
+                # Preserve the wait/command exception if cleanup also fails.
+                # Otherwise keep the established strict cleanup contract;
+                # callers may defer a reaped PermissionError to workspace cleanup.
+                if not primary_failure and not (
+                        isinstance(exc, PermissionError) and cleanup_errors is not None
+                        and proc.returncode is not None):
+                    raise
 
-def validate_application(app):
+
+def validate_application(app, *, allow_platform_paths=False):
     for directory, script in (('frontend', 'build'), ('backend', 'start')):
         path = app/directory/'package.json'
         package = json.loads(path.read_text())
         if not isinstance(package.get('scripts', {}).get(script), str) or not package['scripts'][script].strip():
             raise ValueError(f'参赛应用缺少 {directory} 的 {script} script')
     forbidden = RESERVED.intersection(p.name for p in app.iterdir())
-    if forbidden or (app/'deploy.sh').exists():
+    if (forbidden and not allow_platform_paths) or (app/'deploy.sh').exists():
         raise ValueError('参赛应用包含平台保留路径或本地专用 deploy.sh')
 
 def deliver(app, output):
@@ -967,26 +620,46 @@ def verify_package(root):
     if platform.system() != 'Linux' or platform.machine() != 'x86_64' or sys.version_info[:2] != (3, 12):
         raise RuntimeError('参赛包需要 Linux x86_64、CPython 3.12')
     files = manifest['files']
+    cache_advice = {'requested_files':0, 'errors':[]}
     if not files or 'package-manifest.json' in files:
         raise ValueError('参赛载荷清单无效')
-    if any(p.is_symlink() for p in root.rglob('*')):
+    installed_runtime = (root/'runtime_install.py').is_file()
+    thin_runtime = installed_runtime and not any(name.startswith('runtime/') for name in files)
+    if any(p.is_symlink() and not (thin_runtime and p.relative_to(root).parts[0] == 'runtime')
+           for p in root.rglob('*')):
         raise ValueError('参赛载荷不得包含符号链接')
+    # Public packages install the runtime after delivery.  Those generated
+    # files are execution state, not an unregistered submitted payload; the
+    # manifest still covers every submitted member and runtime_install owns
+    # the executable/material checks at the actual install boundary.
     actual = {str(p.relative_to(root)) for p in root.rglob('*')
-              if p.is_file() and '__pycache__' not in p.parts and p != root/'package-manifest.json'}
+              if p.is_file() and '__pycache__' not in p.parts and p != root/'package-manifest.json'
+              and not (thin_runtime and p.relative_to(root).parts[0] in {'runtime', '.cache'})}
     if actual != set(files):
         raise ValueError('参赛包包含缺失或未登记载荷')
     for name, record in files.items():
         path = root/name
         if Path(name).is_absolute() or '..' in Path(name).parts or path.is_symlink() or not path.resolve().is_relative_to(root):
             raise ValueError('参赛载荷路径越界')
-        if hashlib.sha256(path.read_bytes()).hexdigest() != record['sha256']:
+        with path.open('rb') as stream:
+            actual_sha = hashlib.file_digest(stream, 'sha256').hexdigest()
+            # Verifying unused runtime payloads must not retain their file cache
+            # throughout a 2 GiB generation. This advises only files we read.
+            if hasattr(os, 'posix_fadvise'):
+                try:
+                    os.posix_fadvise(stream.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+                    cache_advice['requested_files'] += 1
+                except OSError as error:
+                    if len(cache_advice['errors']) < 4:
+                        cache_advice['errors'].append({'path':name, 'errno':error.errno, 'message':str(error)})
+        if actual_sha != record['sha256']:
             raise ValueError(f'参赛载荷哈希不匹配：{name}')
         # Python ZIP extraction does not preserve executable permission bits.
         if record['executable']:
             mode = path.stat().st_mode
             if mode & 0o111 != 0o111:
                 path.chmod(mode | 0o111)
-    return manifest
+    return {**manifest, 'verification_cache_advice':cache_advice}
 
 
 def model_bindings(base_url=None, visual_url=None, *, require_key=True):

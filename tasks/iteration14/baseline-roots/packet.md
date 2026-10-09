@@ -56,7 +56,7 @@ Console 阅读真实 Flash Issue 后定向核对根 Pi 原生 toolResult，确�
 
 Console 已把这个严格限定的首次未持久化状态改为 HTTP200/not-persisted，明确保留文件尚不存在事实；已有轮次、读过正文或其它错误仍报具体原因。当前 provider 实际读回等待状态，旧 provider 实际 50 条正文可读，主 Agent 独立 IAB 验收通过。新 8765 服务根 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261002-current-runs-reading`，service `5c80fa07-731a-4539-811b-1d8ca0f149d6`，PID99106；旧服务身份/history 保全，未修改生成或 Braid 调度。因果、原错、部署及原始证据归 `tasks/braid-console-control/current-runs.md` 和 `runs/braid-console-control/20261002-current-runs/flash-zero-turns/`。
 
-modelScope 修复仍待自然委派成功；此新 provider 没收到首轮输入，不能拿它当作该修复的成功调用证据。沿原唯一监控入口继续消费，不人为造调用。
+modelScope 修复仍待自然委派成功；此新 provider 没收到首轮输入，不能拿它当作该修复的成功调用证据。沿当时的唯一监控入口继续消费；该说明现已删除，不人为造调用。
 
 
 ## 2026-10-02 20:48 CST：立即暂停全部现有实验

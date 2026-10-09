@@ -4,11 +4,11 @@
 
 2026-10-08，用户明确授权：“好的，我同意这个方案；你现在可以开始修复这6个P0～P1的问题了”。实施范围为PSS覆盖、保护与重采样分离（含耗时/延迟）、事件现场、异常留存、CPU/I/O投影和出生身份/业务归属六项。P2深层profiling不在此次实施范围。不操作主线程运行、不启动模型或官网实验，不push。用户后续明确“可以提交”，授权本任务本地commit。
 
-当前六项源码修复及现有归档分析已经完成；新Linux采样的覆盖/轮转/开销量化与新制品实际消费尚未验收。不能据此称官网已生效，也不把历史归档分析当新采样性能验收。
+当前六项源码修复已提交为2cca0d0f；独立Linux正常服务运行已量化短时采样开销。用户随后授权将新材料正常原生接续到既有本地I15，目前接续派发在途。超过12进程的覆盖、长时轮转和真实负载验收仍待实际证据；官网生效尚未验收。
 
 任务目标是让运行证据支持回答：何时发生资源压力、哪些进程或工作阶段贡献占用、为何出现性能退化，以及证据有何缺口。资源文件存在、采集器启动成功或曲线有值均不足以证明达成目标。
 
-本任务负责共享采样、剖析和分析能力；I15 的参赛、恢复、费用与运行控制继续归 [I15 packet](../iteration15/packet.md)。已有 [official-runtime-observability](../official-runtime-observability/packet.md) 主要负责 ARC 追溯与 Git 历史，不与本任务合并。当前没有新增执行负责人或在途操作；本侧会话不调用主线程子 Agent、不修改主线程状态。
+本任务负责共享采样、剖析和分析能力；I15 的参赛、恢复、费用与运行控制继续归 [I15 packet](../iteration15/packet.md)。已有 [official-runtime-observability](../official-runtime-observability/packet.md) 主要负责 ARC 追溯与 Git 历史，不与本任务合并。本侧负责用户新增授权的这一次本地I15材料生产、正常接续和初始采用验收，不调用主线程子Agent。后续既定终态及评分义务继续由I15原监控承接。
 
 ## 已有基础与事实边界
 
@@ -91,3 +91,19 @@ P0/P1证据与误导性缺口解决、实际开销已量化、可从归档独立
 Mac产物仅WorkSSD，不commit/push、不操作主线程运行。当前单一packet足以承接调查与线性实施；有真实并行负责人或文档压力时再拆分，暂不建立额外空模板。
 
 2026-10-08本地提交授权：用户“可以提交”。仅提交本任务及其必要采样接线，按改动块排除agent_support网关/catalog/browser、Hosted用量与归档保留、其它README改动。原始分析产物不入Git；没有部署、push或控制运行。
+
+2026-10-08用户授权“在本地启动下，试试看效果”：在现有WSL Docker独立容器运行正常receiver和受登记文件服务约65秒，模型0；不控制其它容器、不造压力或改日志容量，不运行Factory/Braid测试。此短服务运行不声称覆盖>12进程、长时轮转或OOM。操作材料保存于/Volumes/WorkSSD/Development/factory26/runs/runtime-performance/local-20261008-153249。
+
+用户新增授权：“好像I15在本地有个运行哦，你可以将新的I15改动接续上去来验收”。当前来源ea119b6b8a50435cbb68ae9fcda93d4d、scope e4bdfc124b444524b4b13e4533a22740、SFP7、4GiB、去ARC自费路由，现有runtime未含新容量池与serviceyield。先正常生产独立新Linux runtime，材料完成后沿Lab正常stop/save/native resume接续，不直接覆盖正在执行的材料或改应用/DB。控制可能中断在途模型/工具、丢弃未落盘进度或重复耗用；来源完整保存及停止证明不足则不派发新写者。还未控制I15。
+
+独立服务最终实际反馈：attempt3 exit0，33次正常HTTP读取；35采样，collection中位2.436ms/最大5.387ms，采样线程CPU中位2.323ms/最大5.308ms，普通间隔中位2.063s/最大2.137s，最大4进程；PSS成功35条，CPU/I/O速率126条，真实新namespace登记32条进程观测直接关联。final保存完成，无采样错误、遗漏、OOM或capped；最终全采样含落盘81.910ms。资源证据428404字节。attempt1依赖opentelemetry缺失、attempt2操作脚本kind错误均完整保留；attempt3补已有公共依赖、修正实际launcher参数。原件local-20261008-153249/final-evidence，摘要summary.json。短服务数据不能证明>12轮转、长时轮转或高负载开销。
+
+新Linux runtime公共生产exit0，E2E由copy_e2e_addon正常复用锁定旧addon；独立LAB_CONFIG冻结目标runtime/max_active_agents=4，未修改共享target。原ea119已正常stopped、saved=true/errors=[]。Lab新切片22a576d946f0460cb235908a74366cce已正常启动，restart命令exit0。来源data和約5.1GiB原生状态经正常执行器复制/同步；manifest和lab-run输入确认同scope/native_resume=true、Local容量4、competition=false；共享target未改。
+
+2026-10-08 08:02Z初始真实采用验收：新容器16e148eb161a运行，observer583161/default595003/Macrelay81898由正常restart自动启动，未增加collector。Braid status实际execution_pool=max_active_agents4/reserved_slots4，active_turns4；PR8、PR9、review5/7沿原native_session_id产生新assistant与成功bash/edit结果。新producer gateway原件有12个terminal complete，deployment均ark-coding-plan-glm-5.3-flash，无ARC路径。
+
+采样独立worker及新字段已实际采用。初始41条资源样本、最多20进程，collection中位12.787ms/最大188.500ms；最大值对应memory_growth/memory_peak_growth事件。>12进程明细9条，每条最多12PSS；窗口累计24个出生身份取得明细，末样本20个可见出生身份全部具有最近成功记录，不表示同期全覆盖。无采样错误/进程遗漏/capped/日志轮转/OOM。最新memory.current约1.466GiB、peak约2.171GiB，不能用此初始窗口推断长期稳定。
+
+正常只读离线关联对当前生产证据exit0、2816登记身份无解析错误；1004逐样本进程观测中537匹配（299出生身份直接、238样本祖先），467unknown；匹配均有新namespace证据；954条同出生身份CPU/I/O速率观测。关联到PR8/9及review5/7。约2.154GiB样本中review5 Pi PSS515099KiB、PR8 Pi512631KiB、review7 Pi183164KiB、PR9 Pi181827KiB，均直接出生身份关联，不能与cgroup记账配平。原件、summary、native-continuation、memory-attribution-example位于runs/runtime-performance/i15-adoption；本次只读分析不向生成注入内容。
+
+此次接续及初始采用已完成；运行继续由既有observer/default/Macrelay承接终态保存和独立评分义务。尚未验证长时轮转保全、真实OOM边界、高负载长期开销或Hosted采用；不把初始反馈称六项全部验收完成。不push、不追加提交、不运行Factory/Braid测试。

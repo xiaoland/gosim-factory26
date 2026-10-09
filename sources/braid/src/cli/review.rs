@@ -19,6 +19,7 @@ pub(super) enum ReviewCommand {
         json: bool,
     },
     /// 只改变review执行责任，不改派PR实施者。
+    /// 指派当前候选；已认领同职责旧名可自动保留有效现负责人，回执明确说明。新候选才改派。
     Assign {
         pr: i64,
         request: i64,

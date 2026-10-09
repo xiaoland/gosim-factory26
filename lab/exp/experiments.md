@@ -22,6 +22,10 @@ Targets 是显式列表，每项为 `{id, case, variant, model}`。Compiler 不�
 
 ARC 本地独立生成使用 `variants.<name>.generate` 的 `operation: "arc-local-generate"`、`purpose: "generate"`、inputs 和 limits；inputs 包含 agent，case 提供 requirements 及 backend.competition_id/task。agent 或 requirements 可以引用 `{from_production: NAME}`，无需编译前先生产材料。此操作由公共 ARC job 构造器生成 SDK 参数与 application 输出，不接受手填 command/backend。模型必须声明 native bindings。Environment 的 `arc` 声明 `sdk_source` 和 `target`；sdk_source 指实际宿主 SDK 的目录，包含 local_submit.py，不是镜像内的 local_runner.py。target 使用现有 external_docker 的 endpoint、不可变 image_id、slots、admission_volume 和 authority_handoff。宿主 Python、宿主 SDK 与 Linux Harness 材料各有用途；远端 Docker 的 Linux 材料不由控制宿主的平台推断。
 
+需要接续应用时，case.inputs 可提供 `template`，由官方宿主 SDK 的 `--template` 复制来源应用，再覆盖本阶段公开需求。生成任务不能通过 `from_job` 自动消费前一生成任务；先冻结已发布的 application，再为下一阶段建立引用该确切来源的独立 intent。
+
+旧 Pi 自包含包使用显式 `delivery_mode: "copied-tree"`，编译后冻结到 arc_contract。此模式在真实子域只读保留 agent artifact，并核对 SDK 可写执行副本与来源字节；Pi 原生入口会修改包内权限和创建 home 链接，因此不直接从只读源执行。它保留受管 Docker state、完整 SDK workspace 封存与回收，不声明组件定义、Braid 角色或 bootstrap Harness checkpoint。新组件 Harness 继续使用实际 definition composition。
+
 Compile 核对声明与元数据，保留待生产引用；build 在实际绑定材料后核对 SDK 身份、Linux/amd64 材料与需求目录。Doctor 对未解析计划显示待绑定状态；对已经构建的目标按当前 admission 协议只读查询已有域，不修改域。实际启动时 adapter 向 SDK 提供显式模型环境文件；子容器在启动前读回变量名和公开配置摘要，组合入口在真实子容器内提供 ResourceEvidence 与 telemetry。静态角色核对不能证明容器或模型成功启动，子容器环境读回也不证明供应商已经受理请求。
 
 selection_policy 支持 `{"kind":"explicit"}`，此时 target.model 是 models 中的名字；或 `final-score-margin`，明确 baseline、candidate、minimum_margin（百分点评分差）、scores 和 on_incomplete。scores 以两个模型名和相同非空 case 集合组织，每项 `{source, run_id}` 引用保存的 GET；旧 journal state 另声明 task。必须绑定实际 run ID、终态 PASSED/FAILED、有效百分数及完整测试数量。完整时按声明 case 数量求均值，candidate 达到分差才被选择；缺失原件/未终态时仅按显式 on_incomplete=block 或 baseline 处理。身份冲突和损坏 JSON 是错误，不降为 baseline。采用政策的 target.model 显式写 `{"selection":true}`。

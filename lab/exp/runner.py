@@ -437,6 +437,14 @@ def _assemble(directory, attempt, deployment):
     if not job.get('prepared'):
         from .assembly import fresh
         return fresh(directory, attempt, deployment)
+    # A local ARC job may carry a Hosted prepared source only as its launch
+    # gate.  The complete Linux projection is consumed by the official child
+    # runner; the Mac outer runner must keep its own short lived SDK workspace
+    # and never attempt to materialize the Linux logical root locally.
+    prepared_delivery = job.get('arc_contract', {}).get('prepared_delivery', {})
+    if prepared_delivery.get('mode') == 'hosted-prepared':
+        from .assembly import fresh
+        return fresh(directory, attempt, deployment)
     prepared = directory / 'inputs' / 'prepared'
     from tooling.linux.exp_checkpoint import validate, inventory
     from .artifacts import copy_file
@@ -935,7 +943,8 @@ def worker(attempt_dir):
             environment = _environment(job, deployment)
             environment['FACTORY26_EXP_INPUT_BINDINGS'] = _input_bindings(directory, attempt)
             environment['FACTORY26_EXP_RESOURCE_SAMPLE'] = str(directory / 'process-evidence/resource-latest.json')
-            if job.get('prepared'):
+            if (job.get('prepared')
+                    and job.get('arc_contract', {}).get('prepared_delivery', {}).get('mode') != 'hosted-prepared'):
                 manifest_path = directory / 'inputs/prepared/harness-manifest.json'
                 from .core import digest
                 environment['FACTORY26_EXP_ASSEMBLY'] = str(directory / 'assembly.json')
@@ -1292,7 +1301,7 @@ def payload_worker(directory):
         environment['FACTORY26_EXP_INPUT_BINDINGS'] = _input_bindings(directory, attempt)
         environment.update(FACTORY26_EXP_ATTEMPT_DIR=str(directory), FACTORY26_EXP_ATTEMPT_ID=attempt['attempt_id'],
                            FACTORY26_EXP_INCARNATION=binding['incarnation_id'], FACTORY26_EXP_RESOURCE_SAMPLE=str(directory / 'process-evidence/resource-latest.json'), FACTORY26_EXP_SERVICES=json.dumps(services), PYTHONPATH=deployment['runtime']['source'])
-        if job.get('prepared'):
+        if job.get('prepared') and job.get('arc_contract', {}).get('prepared_delivery', {}).get('mode') != 'hosted-prepared':
             environment['FACTORY26_EXP_ASSEMBLY'] = str(directory / 'assembly.json')
             from .core import digest
             environment['FACTORY26_EXP_PREPARED_BINDING'] = json.dumps({'manifest_path': str(directory / 'inputs/prepared/harness-manifest.json'),

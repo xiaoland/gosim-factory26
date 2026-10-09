@@ -8,7 +8,7 @@
 | M02 | verification入口及四篇reference全文，金字塔/保存设置例/盲区 | 旧窄PASS、同属性反证来自既有报告；未观察新模型如何选层。 |
 | M03 | 七技能入口；investigation三reference、design四reference、sub-agents全文、packet三reference、implementation三reference | task-packet模板仅实读index、plan、packet，其余旧模板不逐字复审。案例可理解性是文本判断，无采用实验。 |
 | M04 | planning全文、workflow迁移导航、task-packet规划入口与模板提示 | 已核制定/保存职责不重叠；未执行预演或验证应用计划。 |
-| M05 | run-analysis全文及Sheet method-retrospective全文；两题coverage来源/范围声明 | 复用旧审查的实际返工记录，未取得独立审查耗时或Luna质量对照；不重新全读原生。 |
+| M05 | 当时的运行分析说明（现已删除）及Sheet method-retrospective全文；两题coverage来源/范围声明 | 复用旧审查的实际返工记录，未取得独立审查耗时或Luna质量对照；不重新全读原生。 |
 | R02、R03、R08 | run.py公共条件/根prompt、五主指令、角色继承配置；两run除常量相同 | 当前装配链成立，fresh输入实际生成与Braid设计/实现流程采用未验。 |
 | R04、R05 | product、check-design、根分工prompt；session03 L23直接证实已知冲突仍选派生权威 | 后续中央seed已修及其余遗漏复用GitHub报告；不归因隐藏评分。 |
 | R06 | technical、implementation、check-design/documentation；Sheet契约/PR19原正文 | 双算法与pivot静态路径复用Sheet最终报告；本轮不再读冻结应用或重做终态判断。 |

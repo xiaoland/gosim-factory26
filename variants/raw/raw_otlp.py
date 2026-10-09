@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+import sys
 import time
 from urllib.request import Request, urlopen
 
@@ -54,17 +55,26 @@ class LogExporter:
     def flush(self):
         if not self.pending or not self.endpoint:
             return
-        resource = field(1, attribute("service.name", "raw-" + self.core)) + field(1, attribute("model", self.model))
-        scope = field(1, field(1, b"raw-core-wrapper")) + b"".join(field(2, row) for row in self.pending)
-        payload = field(1, field(1, resource) + field(2, scope))
-        request = Request(self.endpoint + "/v1/logs", data=payload,
-                          headers={"Content-Type": "application/x-protobuf", **self.headers})
         try:
+            resource = field(1, attribute("service.name", "raw-" + self.core)) + field(1, attribute("model", self.model))
+            scope = field(1, field(1, b"raw-core-wrapper")) + b"".join(field(2, row) for row in self.pending)
+            payload = field(1, field(1, resource) + field(2, scope))
+            request = Request(self.endpoint + "/v1/logs", data=payload,
+                              headers={"Content-Type": "application/x-protobuf", **self.headers})
             with urlopen(request, timeout=3) as response:
                 if response.status != 200:
                     raise RuntimeError(f"OTLP HTTP {response.status}")
         except Exception as exc:
-            with (self.evidence / "otlp-errors.log").open("a") as output:
-                output.write(f"{type(exc).__name__}: {exc}\n")
-        self.pending.clear()
-        self.last_flush = time.monotonic()
+            message = f"{type(exc).__name__}: {exc}\n"
+            try:
+                with (self.evidence / "otlp-errors.log").open("a") as output:
+                    output.write(message)
+            except OSError as diagnostic_error:
+                # Optional telemetry must not replace the native agent outcome.
+                try:
+                    sys.stderr.write(message + f"OTLP diagnostic write failed: {type(diagnostic_error).__name__}: {diagnostic_error}\n")
+                except (OSError, ValueError):
+                    pass
+        finally:
+            self.pending.clear()
+            self.last_flush = time.monotonic()

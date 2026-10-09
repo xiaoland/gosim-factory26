@@ -8,11 +8,61 @@ import subprocess
 import tarfile
 import zipfile
 import io
+import sys
+import tempfile
+import shutil
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tooling/scripts"))
+from runtime import native_patch_specs, require_native_baseline
+from agent_support import copy_skill
+from pi_extensions import extension_sources, extension_identity
 
 HERE = Path(__file__).resolve().parent
+VARIANT = 'pi-braid-i15-reviewer-cleaner-e2e'
 BASE_SHA256 = 'e9f7b7d2a7ad88728dcf5c589db552dd1dde1731055d10563d161baf7b8733f5'
 
+def shared_skill_files(skills_root, destination):
+    """Materialize the current shared library using its published resource boundary."""
+    for source in sorted(skills_root.iterdir()):
+        if source.is_dir() and (source/'SKILL.md').is_file():
+            copy_skill(source, destination/source.name)
+    return {'skills/'+path.relative_to(destination).as_posix(): path
+            for path in sorted(destination.rglob('*')) if path.is_file()}
+
+def public_material(runtime, skills, directory):
+    """Consume public producer components without the historical base package."""
+    from tooling.scripts.package_agent import produce, gateway_sources
+    repository = HERE.parents[1]
+    material = produce(HERE.name, repository/'runs/material-cache', runtime,
+                       skill_source=skills)
+    directory.mkdir(parents=True, exist_ok=False)
+    shutil.copytree(material['components']['agent']['root'], directory, dirs_exist_ok=True)
+    shutil.copytree(material['components']['support']['root'], directory/'support')
+    shutil.copy2(HERE/'submission-models.json', directory/'submission-models.json')
+    for name, source in gateway_sources().items():
+        shutil.copy2(source, directory/'support'/name)
+    shared_skill_files(skills, directory/'skills')
+    if (HERE/'skills').is_dir():
+        shutil.copytree(HERE/'skills', directory/'skills', dirs_exist_ok=True)
+    (directory/'package-manifest.json').write_text(json.dumps({
+        'schema_version': 1, 'backend': 'pi', 'platform': 'linux-x86_64',
+        'sources': {'material': material['dependencies']},
+        'capabilities': {'material_id': material['material_id']}
+    }, ensure_ascii=False, indent=2)+'\n')
+
+
 def main():
+    if '--variant-only' in sys.argv:
+        parser = argparse.ArgumentParser(description='当前公共组件的I15材料')
+        parser.add_argument('--runtime', type=Path, required=True)
+        parser.add_argument('--skills', type=Path, required=True)
+        parser.add_argument('--directory', type=Path, required=True)
+        parser.add_argument('--variant-only', action='store_true', required=True)
+        args = parser.parse_args()
+        public_material(args.runtime.resolve(strict=True), args.skills.resolve(strict=True),
+                        args.directory.resolve())
+        return
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-zip', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -38,6 +88,7 @@ def main():
             or 'x86_64' not in build_receipt.get('target', '')):
         raise ValueError('编译receipt须绑定实际binary SHA、Linux target与source identity')
     protocol = args.protocol_runtime.resolve(strict=True)
+    protocol_baseline = require_native_baseline(protocol)
     helper = args.resource_helper.resolve(strict=True)
     support_source = args.agent_support_source.resolve(strict=True)
     output = args.output.resolve()
@@ -56,8 +107,11 @@ def main():
             hasher.update(chunk)
     if hasher.hexdigest() != BASE_SHA256:
         raise ValueError('底包不是冻结的完整 standalone 自费 baseline；不得使用 official 包或 stage 目录')
-    with zipfile.ZipFile(base) as archive:
+    with zipfile.ZipFile(base) as archive, tempfile.TemporaryDirectory(prefix='i15-skills-', dir=output) as staged:
         manifest = json.loads(archive.read('package-manifest.json'))
+        base_runtime_source = json.loads(archive.read('runtime/runtime-source.json'))
+        if base_runtime_source.get('npm_sha256') != protocol_baseline['npm_sha256']:
+            raise ValueError('Pi baseline npm lock differs from retained dependency tree; rebuild the complete runtime before overlaying shared targets')
         required = ['.private/provider-env.json', 'support/standalone_model_gateway.py',
                     'runtime/bin/factory26-model-proxy', 'runtime/native-managed.mjs',
                     'runtime/e2e/node_modules/e2e/dist/cli/bin.js', 'skills/e2e/SKILL.md']
@@ -70,20 +124,26 @@ def main():
         members = {}
         for name in ('main.py', 'run.py', 'README.md', 'requirements.txt', 'materials.json'):
             members[name] = (HERE/name).read_bytes()
-        for folder in ('agents', 'extensions', 'tools', 'skills'):
+        for folder in ('agents', 'tools'):
             for path in sorted((HERE/folder).rglob('*')):
                 if path.is_file():
                     members[path.relative_to(HERE).as_posix()] = path.read_bytes()
-        skill_members = {}
+        extension_record = extension_identity(VARIANT)
+        for name, path in extension_sources(VARIANT).items():
+            members['extensions/'+name] = path.read_bytes()
+        if extension_identity(VARIANT) != extension_record:
+            raise ValueError('Pi extension source changed during overlay selection')
         skills_root = args.skills_root.resolve(strict=True)
-        for folder in ('arc-bench', 'braid-collaboration', 'agent-browser', 'handsontable',
-                       'svc-task-packet', 'svc-documentation', 'svc-sub-agents'):
-            (skills_root/folder/'SKILL.md').resolve(strict=True)
-            for path in sorted((skills_root/folder).rglob('*')):
-                if path.is_file():
-                    name = 'skills/'+path.relative_to(skills_root).as_posix()
-                    skill_members[name] = path
-                    members[name] = path.read_bytes()
+        skill_members = shared_skill_files(skills_root, Path(staged))
+        variant_skill_members = {path.relative_to(HERE).as_posix(): path
+                                 for path in sorted((HERE/'skills').rglob('*')) if path.is_file()}
+        # Shared source is the default; only explicit variant files override it.
+        skill_members.update(variant_skill_members)
+        for skill in json.loads(members['materials.json'])['skills']:
+            if f'skills/{skill}/SKILL.md' not in skill_members:
+                raise FileNotFoundError(f'已声明技能缺少当前共享源或variant覆盖：{skill}')
+        for name, path in skill_members.items():
+            members[name] = path.read_bytes()
         members['runtime/bin/braid'] = braid
         protocol_members = {
             'runtime/bin/pi': protocol/'bin/pi',
@@ -92,16 +152,21 @@ def main():
             'support/runtime_resources.py': helper,
             'runtime/runtime_resources.py': helper,
         }
-        dist_root = protocol/'node_modules/@earendil-works/pi-coding-agent/dist'
-        # Pi 0.85.1 uses a thin bundle entry; the protocol change lives in these modules.
-        for relative in ('bundle/cli.js', 'core/agent-session.js',
-                         'core/extensions/types.d.ts', 'modes/rpc/rpc-mode.js'):
-            path = dist_root/relative
-            if not path.is_file():
-                raise FileNotFoundError(path)
-            protocol_members['runtime/'+path.relative_to(protocol).as_posix()] = path
+        # Reuse the producer's complete patch target set; a hand-picked list can
+        # silently leave retry, tools, subagents or PBB behavior in the frozen base.
+        for package, _, relatives in native_patch_specs():
+            for relative in relatives:
+                path = protocol/'node_modules'/package/relative
+                if not path.is_file():
+                    raise FileNotFoundError(path)
+                protocol_members['runtime/'+path.relative_to(protocol).as_posix()] = path
         for name, path in protocol_members.items():
             members[name] = path.read_bytes()
+        assembled_source = dict(base_runtime_source)
+        assembled_source.update(protocol_baseline)
+        assembled_source['pi_execution_mode'] = 'managed'
+        assembled_source['native_baseline_source'] = str(protocol/'runtime-source.json')
+        members['runtime/runtime-source.json'] = (json.dumps(assembled_source, indent=2)+'\n').encode()
         # Replace only the ownership setup function; keep frozen gateway/telemetry behavior.
         current_support = support_source.read_text()
         node = next(n for n in ast.parse(current_support).body
@@ -119,6 +184,8 @@ def main():
         for name, data in members.items():
             if name in {'runtime/bin/braid', 'runtime/bin/pi'}:
                 executable = True
+            elif name == 'runtime/runtime-source.json':
+                executable = False
             elif name == 'support/agent_support.py':
                 executable = manifest['files'][name]['executable']
             else:
@@ -152,17 +219,22 @@ def main():
             'material_id': capabilities['material_id'], 'fresh': True,
             'application_seed': False, 'prepared_state': False,
             'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=HERE, text=True).strip(),
+            'pi_extensions': {'files': extension_record,
+                'selector_sha256': hashlib.sha256((HERE.parents[1]/'tooling/scripts/pi_extensions.py').read_bytes()).hexdigest()},
             'variant_files': records, 'overlay_members': sorted(changed), 'removed_members': [],
             'model_routes': json.loads(archive.read('support/gateway-routes.json')),
             'base_runtime_source': runtime,
+            'pi_execution_mode': 'managed',
+            'native_baseline': protocol_baseline,
             'braid_replacement': {'previous': old_braid, 'binary': str(braid_binary),
                 'sha256': braid_sha, 'build_receipt': build_receipt,
                 'build_receipt_path': str(build_receipt_path),
                 'build_receipt_sha256': hashlib.sha256(build_receipt_path.read_bytes()).hexdigest()},
             'skills_overlay': {'source_root': str(skills_root),
+                'variant_overrides': sorted(variant_skill_members),
                 'files': {name: records[name] for name in skill_members}},
             'protocol_overlay': {'runtime': str(protocol),
-                'runtime_source': json.loads((protocol/'runtime-source.json').read_text()),
+                'runtime_source': protocol_source,
                 'resource_helper': str(helper), 'agent_support_source': str(support_source),
                 'agent_support_function_sha256': hashlib.sha256(function.encode()).hexdigest(),
                 'files': {name: records[name] for name in [*protocol_members, 'support/agent_support.py']}},

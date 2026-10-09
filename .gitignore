@@ -25,6 +25,13 @@ AGENTS.local.md
 **/__pycache__/
 **/target/
 
+# Generated experiment compilations and local validation databases/logs.
+/experiments/**/*compiled*/
+/tasks/iteration14/overnight-plan/validation/brief-notifications/braid-notify-state/
+/tasks/iteration14/overnight-plan/validation/brief-notifications/braid-notify-work/
+/tasks/iteration14/overnight-plan/validation/brief-notifications/braid-notify-*.out
+/tasks/iteration14/overnight-plan/validation/brief-notifications/braid-notify-*.err
+
 # Local Console tunnel state; PID and tunnel logs are rebuildable and untracked.
 .runtime/
 

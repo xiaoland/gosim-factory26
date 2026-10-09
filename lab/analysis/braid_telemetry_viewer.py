@@ -12,6 +12,7 @@ import sys
 
 from lab.otlp import database_for_run, list_batches, read_batch
 from lab.analysis.native_profile import profile as native_profile
+from sources.braid.viewer.reader import read_projection
 
 ROOT = Path(__file__).resolve().parents[2]
 ANSI = re.compile(r'\x1b\[[0-9;]*m')
@@ -147,6 +148,21 @@ def source_errors(generation, run, output):
 
 
 def generate(run, output, braid, braid_run_id):
+    # New runs publish a Braid-owned projection. Keep this adapter offline and
+    # thin: copy only the projection/index, never materialize every native body
+    # or render Markdown into one HTML document.
+    published = run / 'records' / 'braid_projection.json'
+    if published.is_file():
+        output.mkdir(parents=True, exist_ok=False)
+        projection = read_projection(published, cursor=0, limit=200)
+        write_json(output / 'projection.json', projection)
+        (output / 'index.html').write_text('''<!doctype html><meta charset="utf-8"><title>Braid projection</title><pre id="view">loading…</pre><script>fetch("projection.json").then(r=>r.json()).then(v=>document.querySelector("#view").textContent=JSON.stringify(v,null,2))</script>''', encoding='utf-8')
+        write_json(output / 'analysis.json', {'schema_version': 2, 'title': 'Braid projection view',
+            'source_projection': str(published), 'batch_until_id': projection.get('as_of'),
+            'braid_run_id': braid_run_id or projection.get('run_id'), 'result': 'index.html'})
+        return {'index': str(output / 'index.html'), 'braid_run_id': braid_run_id or projection.get('run_id'),
+                'evidence_status': projection.get('status', 'unknown'), 'sessions': len(projection.get('sessions', [])),
+                'batches': projection.get('batches', 0)}
     database = database_for_run(run)
     if not database.is_file():
         raise ValueError(f'实验 run 的 OTLP Backend 不存在：{database}')

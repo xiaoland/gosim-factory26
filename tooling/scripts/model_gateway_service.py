@@ -1,5 +1,5 @@
 """Explicitly selected run-owned native model gateway service."""
-import hashlib,json,os,secrets,time,subprocess,signal
+import hashlib,json,os,secrets,time,subprocess,signal,threading,importlib.util
 from pathlib import Path
 if __package__:
     from .agent_support import save,_signal_process,_wait_process,process_identity,process_evidence
@@ -27,8 +27,23 @@ def read_provider_environment(path, allowed=None):
 
 def start_model_gateway(runtime, run, env, config, *, bindings=None, gateway_routes=None,
                         port=4011, host='127.0.0.1', provider_env=None,
-                        preserve_parameters=None):
-    """Start one run-owned frozen LiteLLM gateway and return its local contract.
+                        preserve_parameters=None, implementation='litellm', binary_sha256=None):
+    """Start the explicitly selected gateway; keep provider secrets out of clients."""
+    if implementation == 'rust':
+        return _start_rust_gateway(runtime, run, env, config, bindings=bindings,
+            gateway_routes=gateway_routes, port=port, host=host, provider_env=provider_env,
+            preserve_parameters=preserve_parameters, binary_sha256=binary_sha256)
+    if implementation != 'litellm':
+        raise ValueError(f'unknown model gateway implementation: {implementation}')
+    return _start_litellm_gateway(runtime, run, env, config, bindings=bindings,
+        gateway_routes=gateway_routes, port=port, host=host, provider_env=provider_env,
+        preserve_parameters=preserve_parameters)
+
+
+def _start_litellm_gateway(runtime, run, env, config, *, bindings=None, gateway_routes=None,
+                           port=4011, host='127.0.0.1', provider_env=None,
+                           preserve_parameters=None):
+    """Retain the frozen LiteLLM contract for callers selecting the historical backend.
 
     ``bindings`` is the already-frozen native route map.  The returned
     ``pi_environment`` contains only the local gateway token plus the rewritten
@@ -149,7 +164,7 @@ def start_model_gateway(runtime, run, env, config, *, bindings=None, gateway_rou
                         pi_environment['FACTORY26_GATEWAY_TOKEN'] = local_token
                         if local_bindings is not None:
                             pi_environment['FACTORY26_MODEL_BINDINGS'] = json.dumps(local_bindings, separators=(',', ':'))
-                        handle = {'owner': 'run', 'process': child, 'identity': identity,
+                        handle = {'owner': 'run', 'implementation': 'litellm', 'process': child, 'identity': identity,
                                   'pid': child.pid, 'endpoint': endpoint, 'port': port,
                                   'config': str(config), 'log': str(log),
                                   'routes': str(route_record) if gateway_routes is not None else None,
@@ -162,14 +177,168 @@ def start_model_gateway(runtime, run, env, config, *, bindings=None, gateway_rou
             time.sleep(.2)
         raise RuntimeError(f'model gateway readiness timed out; raw output: {log}')
     except BaseException:
-        _signal_process(child, signal.SIGTERM, run, 'model-gateway-start-failed')
+        stop_model_gateway({'process': child}, run)
         raise
+
+
+def _capture_gateway_log(child, log, run, *, cap_bytes=8*1024*1024):
+    """Drain stdout after the retention cap so diagnostics cannot block the proxy."""
+    def capture():
+        retained, dropped = 0, 0
+        try:
+            with log.open('xb', buffering=0) as output, child.stdout:
+                while chunk := child.stdout.read1(65536):
+                    keep = chunk[:max(0, cap_bytes-retained)]
+                    if keep:
+                        output.write(keep)
+                        retained += len(keep)
+                    dropped += len(chunk)-len(keep)
+                    if dropped and not log.with_suffix('.capped.json').exists():
+                        save(log.with_suffix('.capped.json'), {'cap_bytes': cap_bytes,
+                            'retained_bytes': retained, 'later_output': 'drained-without-retention'})
+        except OSError as error:
+            process_evidence(run, 'operations.jsonl', {'kind': 'gateway_log_error',
+                'log': str(log), 'error': {'type': type(error).__name__, 'message': str(error)}})
+    thread = threading.Thread(target=capture, name='model-gateway-log', daemon=True)
+    thread.start()
+    return thread
+
+
+def _start_rust_gateway(runtime, run, env, config, *, bindings, gateway_routes,
+                        port, host, provider_env, preserve_parameters, binary_sha256):
+    from lab.control import process_identity as physical_identity, process_state
+    if preserve_parameters is not True:
+        raise ValueError('Rust gateway requires preserve_parameters=True')
+    runtime, run, config = (Path(path).resolve(strict=True) for path in (runtime, run, config))
+    if not config.is_file() or not config.is_relative_to(run):
+        raise ValueError('gateway config must be a run-local frozen file')
+    if type(port) is not int or not 1024 <= port < 65536 or host not in {'127.0.0.1', '::1'}:
+        raise ValueError('run-owned gateway must use a loopback unprivileged port')
+    launcher = runtime/'bin/factory26-model-proxy'
+    if not launcher.is_file() or not os.access(launcher, os.X_OK):
+        raise FileNotFoundError(f'冻结 runtime 缺少 Rust proxy: {launcher}')
+    actual_binary_sha = hashlib.sha256(launcher.read_bytes()).hexdigest()
+    if binary_sha256 is not None and actual_binary_sha != binary_sha256:
+        raise ValueError('Rust proxy binary differs from the explicitly frozen identity')
+    if provider_env is None or gateway_routes is None:
+        raise ValueError('Rust gateway requires explicit private provider-env and ordered routes')
+    source_routes = Path(gateway_routes).resolve(strict=True) if isinstance(gateway_routes, (str, Path)) else None
+    source_route_bytes = source_routes.read_bytes() if source_routes else None
+    routes = json.loads(source_route_bytes) if source_route_bytes is not None else gateway_routes
+    route_bytes = (json.dumps(routes, ensure_ascii=False, sort_keys=True, indent=2)+'\n').encode()
+    route_sha = hashlib.sha256(route_bytes).hexdigest()
+    source_bytes = config.read_bytes()
+    source_sha = hashlib.sha256(source_bytes).hexdigest()
+    selected = json.loads(source_bytes)
+    code = Path(__file__).resolve().parent
+    adapter = code/'model_proxy_prepare.py'
+    if not adapter.is_file():
+        adapter = code.parents[1]/'sources/model-proxy/prepare.py'
+    spec = importlib.util.spec_from_file_location('model_proxy_prepare', adapter)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    listen = f'[{host}]:{port}' if host == '::1' else f'{host}:{port}'
+    state = run/'model-gateway'
+    values = read_provider_environment(provider_env)
+    frozen = module.freeze_proxy(selected, routes, values, state,
+        env.get('FACTORY26_EXP_RUN_ID', run.name), listen,
+        catalog_sha256=source_sha, routes_sha256=route_sha)
+    (state/'gateway-routes.json').write_bytes(route_bytes)
+    (state/'gateway-routes.json').chmod(0o444)
+    endpoint = f'http://{listen}/v1'
+    # Strip every catalog-declared provider variable, including inactive rows,
+    # without stripping separately authorized tool credentials.
+    provider_names = set(values)
+    catalog = code/'model-gateway.json'
+    if not catalog.is_file():
+        catalog = code.parents[1]/'materials/model-gateway.json'
+    for entry in json.loads(catalog.read_text())['model_list']:
+        for field in ('api_base', 'api_key'):
+            provider_names.add(entry['litellm_params'][field].removeprefix('os.environ/'))
+    provider_names.update(('OPENAI_API_KEY', 'FACTORY26_API_KEY', 'VISUAL_API_KEY',
+                           'FACTORY26_VISUAL_API_KEY', 'LITELLM_MASTER_KEY', 'FACTORY26_PROVIDER_ENV'))
+    pi_environment = {key: value for key, value in env.items() if key not in provider_names}
+    pi_environment.update(FACTORY26_GATEWAY_TOKEN=frozen['token'], FACTORY26_BASE_URL=endpoint)
+    if any(key.startswith('E2E_') for key in env):
+        pi_environment.update(E2E_API_KEY=frozen['token'], E2E_BASE_URL=endpoint)
+    local_bindings = None
+    if bindings is not None:
+        local_bindings = {name: dict(route, base_url=endpoint, credential_env='FACTORY26_GATEWAY_TOKEN')
+                          for name, route in bindings.items()}
+        pi_environment['FACTORY26_MODEL_BINDINGS'] = json.dumps(local_bindings, separators=(',', ':'))
+    # Rust reads selected secrets from its private file. Even the proxy does not
+    # need to inherit provider or tool credentials in its process environment.
+    environment = {key: value for key, value in pi_environment.items()
+                   if key not in {'FACTORY26_GATEWAY_TOKEN', 'CONTEXT7_API_KEY', 'EXA_API_KEY', 'E2E_API_KEY'}}
+    log = state/'gateway.log'
+    command = [str(launcher), '--config', str(state/'config.json'),
+               '--credentials', str(state/'.private/provider-env.json')]
+    child = spawn(command, environment=environment, role='service', cwd=run,
+                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
+    physical = physical_identity(child.pid)
+    capture = _capture_gateway_log(child, log, run)
+    handle = {'owner': 'run', 'implementation': 'rust', 'process': child,
+              'identity': process_identity(child.pid), 'physical': physical, 'pid': child.pid,
+              'endpoint': endpoint, 'port': port, 'config': str(state/'config.json'),
+              'config_sha256': frozen['config_sha256'], 'source_config': str(config),
+              'source_config_sha256': source_sha, 'binary': str(launcher),
+              'binary_sha256': actual_binary_sha, 'routes': str(state/'gateway-routes.json'),
+              'routes_sha256': route_sha, 'source_routes': str(source_routes) if source_routes else None,
+              'source_routes_sha256': hashlib.sha256(source_route_bytes).hexdigest() if source_route_bytes is not None else None,
+              'log': str(log), 'log_thread': capture,
+              'shutdown_seconds': frozen['shutdown_seconds'], 'bindings': local_bindings,
+              'pi_environment': pi_environment}
+    process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'model-gateway',
+        'implementation': 'rust', 'process': physical, 'log': str(log), 'binary_sha256': actual_binary_sha})
+    try:
+        from urllib.request import build_opener, ProxyHandler
+        opener = build_opener(ProxyHandler({}))
+        deadline = time.monotonic()+30
+        while child.poll() is None and time.monotonic() < deadline:
+            if not physical.get('boot_id') or not physical.get('process_start'):
+                raise RuntimeError(f'gateway birth identity unavailable: {physical}')
+            if log.is_file():
+                with log.open('rb') as output:
+                    lines = output.read(65536).split(b'\n')[:-1]
+                ready = any(row.get('event') == 'ready' and row.get('run_id') == frozen['run_id']
+                            and row.get('listen') == listen and row.get('config_sha256') == frozen['config_sha256']
+                            for line in lines if line.startswith(b'{') for row in [json.loads(line)])
+                if ready:
+                    try:
+                        with opener.open(f'http://{listen}/health/liveliness', timeout=1) as response:
+                            if response.status == 200 and process_state(physical) == 'alive':
+                                save(run/'model-gateway.json', {key: value for key, value in handle.items()
+                                    if key not in {'process', 'pi_environment', 'log_thread'}})
+                                return handle
+                    except OSError:
+                        pass
+            time.sleep(.1)
+        raise RuntimeError(f'Rust gateway failed readiness: exit={child.poll()}; raw output: {log}')
+    except BaseException:
+        stop_model_gateway(handle, run)
+        raise
+
 
 def stop_model_gateway(handle, run):
     """Close the exact run-owned service and its authority registration."""
+    from lab.control import process_state
     child = handle['process'] if isinstance(handle, dict) else handle
+    physical = handle.get('physical') if isinstance(handle, dict) else None
+    def signal_owned(sig):
+        if child.poll() is not None:
+            return
+        if physical is not None and process_state(physical) != 'alive':
+            raise RuntimeError(f'gateway signal refused: birth identity is not confirmed: {physical}')
+        _signal_process(child, sig, run, 'model-gateway-stop')
     if child.poll() is None:
-        _signal_process(child, signal.SIGTERM, run, 'model-gateway-stop')
-    result = _wait_process(child, run, 'model-gateway-stop', timeout=5)
+        signal_owned(signal.SIGTERM)
+    grace = handle.get('shutdown_seconds', 3)+2 if isinstance(handle, dict) else 5
+    try:
+        result = _wait_process(child, run, 'model-gateway-stop', timeout=grace)
+    except subprocess.TimeoutExpired:
+        signal_owned(signal.SIGKILL)
+        result = _wait_process(child, run, 'model-gateway-kill', timeout=5)
+    if isinstance(handle, dict) and handle.get('log_thread'):
+        handle['log_thread'].join(timeout=2)
     closed(getattr(child, '_state_writer', None))
     return result

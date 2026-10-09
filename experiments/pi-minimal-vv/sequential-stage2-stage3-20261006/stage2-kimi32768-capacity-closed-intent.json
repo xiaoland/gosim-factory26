@@ -1,0 +1,109 @@
+{
+  "kind": "factory26.exp.intent",
+  "schema_version": 2,
+  "experiment_id": "pi-minimal-vv-stage2-kimi32768-capacity-closed-20261006",
+  "authorization": "用户明确“请停下，修正这一点之后，再重头运行”，授权停止旧attempt并丢弃本次Stage2进度、保持原Flash/high与ArkKimi-K2.7-code模型及其它参数，只修正Kimi maxTokens32768，从同一官网Stage1干净应用重新Stage2；启动后放手，不周期监控、不自动Stage3或评分。 最新Kimi32768 attempt在reserve容量失败、0模型；现经原冻结接口关闭自家已停generation writer并release槽，历史I14不动，必要设施闭环独立重头Stage2。",
+  "execution": {
+    "max_parallel": 1,
+    "budget": {
+      "max_attempts": 1
+    },
+    "storage": {
+      "host_reserve_bytes": 21474836480
+    }
+  },
+  "cases": {
+    "stage2": {
+      "backend": {
+        "competition_id": "hackathon",
+        "task": "github-stage-2"
+      },
+      "inputs": {
+        "requirements": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/sequential-stage2-stage3-20261006/source/stage2-public-requirements"
+        },
+        "template": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/sequential-stage2-stage3-20261006/source/stage1-application"
+        }
+      }
+    }
+  },
+  "variants": {
+    "pi-frozen": {
+      "generate": {
+        "operation": "arc-local-generate",
+        "purpose": "generate",
+        "inputs": {
+          "agent": {
+            "artifact_id": "artifact-8fdb8b2b1dda460e9151b7cf",
+            "manifest_sha256": "d31674c8174c5705dfa925d85aa212657f3ca6aae927e645b1397b349f2b7144",
+            "store": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/sequential-stage2-stage3-20261006/lab-cache/artifacts"
+          }
+        },
+        "limits": {
+          "wall_seconds": 43200,
+          "storage_bytes": 17179869184,
+          "telemetry_bytes": 1073741824,
+          "memory_bytes": 4294967296,
+          "cpus": 2.0,
+          "pids": 512
+        },
+        "delivery_mode": "copied-tree"
+      }
+    }
+  },
+  "models": {
+    "i14-local-flash-ark-k27": {
+      "config": {
+        "model": "glm-5.3-flash",
+        "visual_model": "glm-5.3-flash",
+        "provider": "I14_LOCAL_MULTI_PROVIDER_WITH_ARK_K27",
+        "base_url": "http://127.0.0.1:4011/v1"
+      },
+      "bindings": {
+        "factory26": {
+          "provider": "openai",
+          "base_url": "http://127.0.0.1:4011/v1",
+          "credential_env": "OPENAI_API_KEY",
+          "model": "glm-5.3-flash"
+        },
+        "factory26/kimi-k2.7-code": {
+          "provider": "openai",
+          "base_url": "http://127.0.0.1:4011/v1",
+          "credential_env": "OPENAI_API_KEY",
+          "model_id": "kimi-k2.7-code"
+        }
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "pi-stage2",
+      "case": "stage2",
+      "variant": "pi-frozen",
+      "model": "i14-local-flash-ark-k27"
+    }
+  ],
+  "selection_policy": {
+    "kind": "explicit"
+  },
+  "evaluation_policy": {
+    "kind": "none"
+  },
+  "labels": {
+    "source_submission": "aea08b61772c",
+    "source_stage1_run": "4eab9465931a",
+    "variant_package_sha256": "22d74bb4701e662b0c6786991714b5c7ee0740e6d6ab88e957ed85e6d88487aa",
+    "stage1_zip_sha256": "53c0bf7984b59c7ada4f8a821794a525d9c26218d2ecc79a4aa130403045d905",
+    "continuation": "application-only-fresh-Pi",
+    "hidden_feedback": "excluded",
+    "spending_boundary": "user-directed-existing-I14-self-funded-provider-configuration",
+    "model_route_source_run": "20261004-023236-a69535b2",
+    "arc_api": "disabled",
+    "advisor": "kimi-k2.7-code",
+    "provider_endpoints": "{\"ARK_CODING_PLAN_BASE_URL\": \"https://ark.cn-beijing.volces.com/api/coding/v3\", \"QIANFAN_TOKEN_PLAN_BASE_URL\": \"https://qianfan.baidubce.com/v2/tokenplan/personal\", \"QWEN_BASE_URL\": \"https://maas.qianwenaiapi.com/compatible-mode/v1\"}",
+    "parent_user_stopped_attempt": "attempt-262e787902e49ac7219e56d5",
+    "advisor_max_tokens": "32768",
+    "preentry_capacity_failed_attempt": "attempt-ca3155869da3166b303fadac"
+  }
+}

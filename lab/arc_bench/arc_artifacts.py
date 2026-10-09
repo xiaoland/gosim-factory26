@@ -52,8 +52,16 @@ def package_metadata(package):
         names = archive.namelist()
         value = json.loads(archive.read("package-manifest.json")) if "package-manifest.json" in names else {}
         replay = json.loads(archive.read("replay-manifest.json")) if "replay-manifest.json" in names else None
+        incremental = json.loads(archive.read("incremental-replay.json")) if "incremental-replay.json" in names else None
     if not isinstance(value, dict) or not isinstance(value.get("capabilities", {}), dict):
         raise ValueError("invalid package identity manifest")
+    if incremental is not None:
+        if not isinstance(incremental, dict) or incremental.get('schema_version') != 1 or not isinstance(incremental.get('source'), dict):
+            raise ValueError('invalid incremental replay identity manifest')
+        return {'variant': package_variant(value), 'operation': 'replay',
+                'source_applications': [dict(incremental['source'],
+                                             baseline_sha256=incremental['baseline_sha256'],
+                                             final_sha256=incremental['final_sha256'])]}
     if replay is not None and (not isinstance(replay, dict) or replay.get("mode") != "artifact-replay"
                                or not isinstance(replay.get("cases"), list)):
         raise ValueError("invalid replay identity manifest")

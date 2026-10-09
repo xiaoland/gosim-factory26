@@ -37,6 +37,7 @@ def _source_files(role='runner'):
         scripts += ('runtime.py','package_agent.py','braid_runtime.py','core.py','model_budget.mjs',
                     'hackathon_gateway.py','hackathon_gateway_compat.py','responses_compat.py','model_gateway_service.py')
         files += [ROOT/'__main__.py',ROOT/'arc_bench/score_evidence.py',ROOT/'arc_bench/hosted_monitor.py',ROOT/'arc_bench/provider_liveness.py',ROOT/'requirements.txt',ROOT.parent/'materials/model-gateway.json']
+        files += [ROOT.parent/'sources/model-proxy/prepare.py']
     files += [ROOT.parent/'tooling/__init__.py', ROOT.parent/'tooling/linux/__init__.py']
     if role == 'controller':
         files += [ROOT.parent/'tooling/linux/browser_runtime.py']
@@ -711,7 +712,11 @@ def source_stop_binding(prepared, stop):
     """Check the saved binding; a matching record is not a current stop proof."""
     if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 3:
         raise Blocked('prepared artifact needs the public Harness prepared contract')
-    if prepared.get('status') != 'complete' or prepared.get('acquisition', {}).get('status') != 'writer-closed':
+    acquisition_status = prepared.get('acquisition', {}).get('status')
+    legacy_terminal = (acquisition_status == 'legacy-terminal-export'
+                       and prepared.get('source_identity', {}).get('backend_identity', {}).get('kind') == 'hosted'
+                       and not prepared.get('readback', {}).get('gaps', ['missing-readback']))
+    if (prepared.get('status') != 'complete' or acquisition_status != 'writer-closed') and not legacy_terminal:
         raise Blocked('prepared input lacks complete semantics or continuous writer-closed acquisition')
     if not stop:
         raise Blocked('prepared input valid; source stop evidence missing')
@@ -734,7 +739,11 @@ def _launch_gate(attempt_dir, attempt):
         holder = state.query(binding)['holder']
         if holder['generation'] != binding['generation'] or holder['phase'] != 'repaired' or not holder.get('capture'):
             raise Blocked('domain-state entry requires the unchanged repaired holder capture')
-        if descriptor.get('status') != 'complete' or descriptor.get('acquisition', {}).get('status') != 'writer-closed':
+        acquisition_status = descriptor.get('acquisition', {}).get('status')
+        legacy_terminal = (acquisition_status == 'legacy-terminal-export'
+                           and descriptor.get('source_identity', {}).get('backend_identity', {}).get('kind') == 'hosted'
+                           and not descriptor.get('readback', {}).get('gaps', ['missing-readback']))
+        if (descriptor.get('status') != 'complete' or acquisition_status != 'writer-closed') and not legacy_terminal:
             raise Blocked('domain-state semantic readback is incomplete')
         atomic(attempt_dir / 'launch-gate.json', record('launch-gate', prepared=job['prepared'],
             holder=binding, snapshot=holder['snapshot'], execution_permission=False, verified_at=time.time()))
@@ -799,7 +808,26 @@ def _allocate(directory, manifest, job, *, attempt_id, request_id, retry_of=None
         return path, value
     try:
         if job['backend']['kind'] != 'docker':
+            control_inputs = {}
+            prepared_delivery = job.get('arc_contract', {}).get('prepared_delivery', {})
+            child_prepared = (job['backend']['kind'] == 'hosted' and job.get('prepared')) or (
+                prepared_delivery.get('mode') == 'hosted-prepared'
+                and job['backend']['kind'] == 'local'
+                and job['backend'].get('external_docker'))
+            if child_prepared and job.get('prepared'):
+                # Hosted restores the prepared state inside its delivery ZIP.
+                # These references prove dispatch permission; their Linux
+                # logical links must not be assembled in the Mac controller.
+                control_inputs = {name: job[name] for name in ('checkpoint', 'prepared') if name in job}
+                control_inputs.update({'definition-' + row['name']: row['artifact']
+                                      for row in job.get('prepared_descriptor', {}).get('definition_assets', [])})
             for name, ref in job['inputs'].items():
+                if name in control_inputs:
+                    if ref != control_inputs[name]:
+                        raise ValueError('Hosted control input differs from its prepared binding: ' + name)
+                    artifacts.resolve(directory / 'artifacts', ref,
+                                      path=job.get('input_members', {}).get(name, '.'))
+                    continue
                 artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name,
                                       path=job.get('input_members', {}).get(name, '.'))
         _launch_gate(path, value)
@@ -909,7 +937,10 @@ def _request_capacity(directory, manifest, current_attempt=None):
 
 
 def _control_source(directory, manifest):
-    return Path(directory) / ('controller-source' if manifest.get('schema_version') == 3 else 'source')
+    # Frozen experiments may bind their source tree through an artifact-store
+    # symlink.  Control authenticates the resolved payload bytes; treating the
+    # symlink itself as a regular directory incorrectly blocks terminal export.
+    return (Path(directory) / ('controller-source' if manifest.get('schema_version') == 3 else 'source')).resolve(strict=True)
 
 
 def _retry_terminal(path, attempt, observed):

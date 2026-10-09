@@ -122,6 +122,10 @@ def main(argv=None):
         restart.add_argument(f"--{name}")
     restart.add_argument("--keep-data", action="store_true",
                          help="显式迁移来源 data/workspace 与 native 状态")
+    restart.add_argument("--allow-route-change", action="store_true",
+                         help="显式授权I15原生恢复改变既有供应商链；保留模型alias")
+    restart.add_argument("--model-catalog", help="本地自费I15显式授权临时模型替换catalog，保留来源输入")
+    restart.add_argument("--route-change-reason", help="保存该路由变更的具体用户授权原因")
     status = commands.add_parser("status", help="默认显示未归档且未正常完成的运行")
     status.add_argument("run", nargs="?")
     status.add_argument("--all", action="store_true")
@@ -167,7 +171,8 @@ def main(argv=None):
         elif args.command == "restart":
             value = run.restart(args.run, target=args.target, task=args.task,
                                 route=args.route, snapshot=args.snapshot,
-                                keep_data=args.keep_data)
+                                keep_data=args.keep_data, allow_route_change=args.allow_route_change,
+                                route_change_reason=args.route_change_reason, model_catalog=args.model_catalog)
         elif args.command == "status":
             if args.follow:
                 if not args.run:

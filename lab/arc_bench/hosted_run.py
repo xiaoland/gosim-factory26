@@ -186,7 +186,12 @@ def _live_member(path):
         return True
     # Native session files are copied only into a temporary selected-facts tree;
     # the complete platform environment is never extracted or retained here.
-    return name in {"session.jsonl", "pi-timing.jsonl"}
+    return name == "pi-timing.jsonl" or _native_session_member(path)
+
+
+def _native_session_member(path):
+    return path.name == "session.jsonl" or (
+        path.suffix == ".jsonl" and "native-homes" in path.parts and "sessions" in path.parts)
 
 
 def _fact_path(relative):
@@ -307,8 +312,9 @@ def _workspace_resources(workspace):
 
 
 def _collect_workspace_observation(directory, client, run_id, *, created_at=None,
-                                   native_scope_id=None, producer_run_id=None):
-    """Read the live platform bundle without extracting or retaining its environment."""
+                                   native_scope_id=None, producer_run_id=None,
+                                   retain_archive=False):
+    """Read selected facts; retain the downloaded bundle only when explicitly configured."""
     endpoint = run_path(run_id) + "/workspace/template-bundle"
     stamp = time.time()
     temporary = directory / f".workspace-observation-{time.time_ns()}.zip"
@@ -318,6 +324,11 @@ def _collect_workspace_observation(directory, client, run_id, *, created_at=None
                "requested_at": stamp, "status": "unknown"}
     try:
         client.download(endpoint, temporary)
+        if retain_archive:
+            archived = directory / "workspace-archives" / f"project-{time.time_ns()}.zip"
+            archived.parent.mkdir(exist_ok=True)
+            shutil.copy2(temporary, archived)
+            receipt["archive_path"] = str(archived)
         selected, jsonl_members, braid_statuses, parse_errors = [], [], [], []
         with ZipFile(temporary) as archive:
             for item in archive.infolist():
@@ -338,8 +349,13 @@ def _collect_workspace_observation(directory, client, run_id, *, created_at=None
                     if ((native_scope_id and observed_scope != native_scope_id) or
                             (producer_run_id and observed_run != producer_run_id)):
                         continue
+                native_jsonl = member.name == "pi-timing.jsonl" or _native_session_member(member)
+                if native_jsonl:
+                    fact_path = _fact_path(relative)
+                    if native_scope_id and fact_path.parts[2] != native_scope_id:
+                        continue
                 entry = {"member": relative, "bytes": item.file_size, "crc": item.CRC}
-                if member.name in {"session.jsonl", "pi-timing.jsonl"}:
+                if native_jsonl:
                     fact_path = _fact_path(relative)
                     target = live_root / fact_path
                     target.parent.mkdir(parents=True, exist_ok=True)
@@ -516,7 +532,8 @@ def observe(run):
             workspace = _collect_workspace_observation(directory, client, platform_run_id,
                                                        created_at=value.get("created_at"),
                                                        native_scope_id=value.get("native_scope_id"),
-                                                       producer_run_id=value.get("run_id"))
+                                                       producer_run_id=value.get("run_id"),
+                                                       retain_archive=bool(target.get("retain_workspace_archives")))
     platform_usage = {key: redact(remote.get(key)) for key in
                       ("token_count", "token_usage", "usage", "model_usage", "models")
                       if remote.get(key) is not None}
@@ -528,15 +545,12 @@ def observe(run):
     amount = remote.get("token_cost_usd")
     currency = remote.get("token_cost_currency")
     if amount is not None:
-        cost = {"amount": amount, "currency": currency, "source": run_path(platform_run_id),
-                "as_of": status_observed_at, "scope": "platform-run"}
-        if phase in TERMINAL:
-            cost.update(kind="actual", status="terminal-platform-bill")
-            write_json(run / "records/cost.json", cost)
-        else:
-            cost.update(kind="unknown", status="unverified-platform-running-field", platform_field=amount,
-                        note="Running Hosted field semantics are unverified; not used as spend.")
-            write_json(directory / "platform-meter.json", cost)
+        write_json(directory / "platform-meter.json", {
+            "kind": "unknown", "status": "platform-reported-field",
+            "platform_field": amount, "currency": currency,
+            "source": run_path(platform_run_id), "as_of": status_observed_at,
+            "scope": "platform-run", "platform_status": phase,
+            "note": "Retained platform fact; native usage and frozen ARC prices determine the estimate."})
     workspace_error = workspace.get("error") if workspace.get("status") == "error" else None
     native = workspace.get("native") or {}
     provider_usage = workspace.get("provider_usage") or {"status": "unknown", "attempts": []}
@@ -548,24 +562,23 @@ def observe(run):
                 write_json(directory / "material-consumption.json", value)
                 break
     estimate = None
-    if target.get('model_transport') == 'platform' and not (amount is not None and phase in TERMINAL):
+    if target.get('model_transport') == 'platform':
         from .arc_spend import estimate as estimate_arc
         prices_path = directory / 'arc-prices.json'
         if not prices_path.exists():
             shutil.copy2(Path(__file__).with_name('arc-prices.json'), prices_path)
         estimate = estimate_arc(native.get('usage'), json.loads(prices_path.read_text()))
         write_json(directory / 'spend-estimate.json', estimate)
+        if phase in TERMINAL:
+            write_json(run / 'records/cost.json', estimate)
     return {"lifecycle": lifecycle, "activity": "unknown", "as_of": status_observed_at,
             "platform_run_id": platform_run_id, "platform_status": phase,
             "logs_error": log_error, "workspace_observation": workspace,
             "workspace_error": workspace_error, "native": native,
             "resources": resources,
             "brief": remote.get("failure_reason") or phase, "spend": {
-                "kind": "actual" if amount is not None and phase in TERMINAL else "unknown",
-                "status": "terminal-platform-bill" if amount is not None and phase in TERMINAL else
-                          "unverified-platform-running-field" if amount is not None else "not-returned",
-                "amount": amount if phase in TERMINAL else None,
-                "platform_field": amount if phase not in TERMINAL else None,
+                "kind": "unknown", "status": "native-usage-or-price-unavailable",
+                "amount": None, "platform_field": amount,
                 "currency": currency, "usage": native.get("usage"),
                 "provider_usage": provider_usage, "source": run_path(platform_run_id),
                 "as_of": status_observed_at, **(estimate or {})}}

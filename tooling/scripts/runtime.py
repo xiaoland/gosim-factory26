@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import platform
 import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -49,6 +50,131 @@ def cache_path(lock_dir):
     return ROOT/'runs/runtime-cache'/('runtime-'+hashlib.sha256(lock.read_bytes()).hexdigest()[:16])
 
 
+PI_RETRY_MEMBER = 'node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/utils/retry.js'
+# Pinned npm lock + connection-reset patch output; reject historical inputs rather
+# than silently changing the SDK bytes and their frozen runtime identity.
+PI_RETRY_SHA256 = 'd92542c68b9026030708ff07c2b0f6ad2f8aa097e7e03f64ea809223da32cfbf'
+
+
+def require_pi_retry_source(runtime):
+    target = Path(runtime)/PI_RETRY_MEMBER
+    actual = hashlib.sha256(target.read_bytes()).hexdigest() if target.is_file() else None
+    if actual != PI_RETRY_SHA256:
+        raise ValueError(f'Pi retry SDK missing or mismatched pi-ai-0.85.1-connection-reset.patch: {target}; sha256={actual}; expected={PI_RETRY_SHA256}; rebuild or explicitly derive a patched runtime')
+
+
+def native_patch_specs():
+    """Ordered patch inputs and target files shared by native runtime producers."""
+    return (
+        ('pi-background-bash', 'pi-background-bash-1.0.5.patch', ('extensions/background-bash.ts', 'bin/pbb.js')),
+        ('pi-subagents', 'pi-subagents-0.56.0-completion-boundary.patch',
+         ('src/extension/index.ts', 'src/runs/background/notify.ts', 'src/runs/background/result-watcher.ts', 'src/shared/utils.ts')),
+        ('pi-subagents', 'pi-subagents-0.56.0-model-exclusion-boundary.patch',
+         ('src/runs/shared/model-exclusions.ts', 'src/runs/shared/model-fallback.ts', 'src/runs/background/subagent-runner.ts')),
+        ('pi-subagents', 'pi-subagents-0.56.0-open-tools.patch',
+         ('src/runs/shared/pi-args.ts', 'src/runs/shared/subagent-prompt-runtime.ts')),
+        ('pi-subagents', 'pi-subagents-0.56.0-acceptance-off.patch',
+         ('README.md',
+          'docs/agents.md',
+          'docs/tool-reference.md',
+          'docs/workflows.md',
+          'skills/pi-subagents/SKILL.md',
+          'skills/pi-subagents/references/constraints-and-recipes.md',
+          'skills/pi-subagents/references/execution-controls.md',
+          'skills/pi-subagents/references/multi-lane-orchestration.md',
+          'skills/pi-subagents/references/prompting-and-roles.md',
+          'src/extension/schemas.ts',
+          'src/extension/tool-description.ts',
+          'src/runs/background/async-execution.ts',
+          'src/runs/background/async-resume.ts',
+          'src/runs/background/async-status.ts',
+          'src/runs/background/run-status.ts',
+          'src/runs/background/subagent-runner.ts',
+          'src/runs/background/wait-tool.ts',
+          'src/runs/foreground/execution.ts',
+          'src/runs/foreground/subagent-executor.ts',
+          'src/runs/shared/acceptance.ts',
+          'src/runs/shared/single-output.ts',
+          'src/runs/shared/structured-output.ts')),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js', 'dist/core/extensions/types.d.ts', 'dist/core/tools/edit.js', 'dist/core/tools/grep.js', 'dist/core/tools/find.js', 'dist/core/resource-loader.js', 'dist/bundle/cli.js', 'dist/bundle/rpc-entry.js')),
+        ('@earendil-works/pi-coding-agent', 'pi-ai-0.85.1-connection-reset.patch',
+         ('node_modules/@earendil-works/pi-ai/dist/utils/retry.js',)),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-compaction-threshold.patch',
+         ('dist/core/compaction/compaction.js', 'dist/core/compaction/compaction.d.ts',
+          'dist/core/settings-manager.js', 'dist/core/settings-manager.d.ts')),
+        ('@upstash/context7-pi', 'context7-pi-0.1.2.patch', ('lib/prompts.ts', 'lib/api.ts', 'skills/context7-docs/SKILL.md')),
+        ('@ff-labs/pi-fff', 'pi-fff-0.11.0.patch', ('src/index.ts',)),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-i13-2-managed.patch',
+         ('dist/modes/rpc/rpc-mode.js', 'dist/core/tools/bash.js')),
+        ('pi-background-bash', 'pi-background-bash-1.0.5-i13-2-managed.patch',
+         ('extensions/background-bash.ts',)),
+        ('pi-subagents', 'pi-subagents-0.56.0-i13-2-managed.patch',
+         ('src/runs/foreground/execution.ts', 'src/runs/background/async-execution.ts',
+          'src/runs/background/subagent-runner.ts', 'src/runs/background/result-watcher.ts',
+          'src/extension/index.ts')),
+        ('pi-subagents', 'pi-subagents-0.56.0-catalog-hook.patch', ('src/extension/index.ts',)),
+        ('pi-background-bash', 'pi-background-bash-1.0.5-native-result.patch', ('extensions/background-bash.ts', 'skills/pbb/SKILL.md')),
+        ('pi-subagents', 'pi-subagents-0.56.0-wait-handle.patch', ('src/runs/background/subagent-wait.ts',)),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-capacity-handoff.patch', ('dist/modes/rpc/rpc-mode.js',)),
+        ('pi-background-bash', 'pi-background-bash-1.0.5-capacity-handoff.patch', ('extensions/background-bash.ts',)),
+        ('mcporter', 'mcporter-0.14.0-managed-service.patch', ('dist/daemon/launch.js',)),
+        ('pi-background-bash', 'pi-background-bash-1.0.5-visible-handle.patch', ('extensions/background-bash.ts', 'skills/pbb/SKILL.md')),
+        ('pi-subagents', 'pi-subagents-0.56.0-owner-lifecycle.patch', ('src/runs/shared/session-lease.ts', 'src/shared/types.ts', 'src/runs/foreground/subagent-executor.ts', 'src/runs/background/subagent-runner.ts', 'src/runs/background/stale-run-reconciler.ts', 'src/runs/background/subagent-wait.ts')),
+    )
+
+
+def apply_native_patches(runtime, lock_dir, env=None):
+    """Apply the maintained ordered patches to freshly installed npm packages."""
+    runtime, lock_dir = Path(runtime), Path(lock_dir)
+    for package, name, _ in native_patch_specs():
+        subprocess.run(['patch', '--batch', '--fuzz=0', '-p1', '-d',
+                        str(runtime/'node_modules'/package), '-i', str(lock_dir/'patches'/name)],
+                       check=True, env=env)
+    for name in ('native-managed.mjs', 'v8-observation.mjs'):
+        shutil.copy2(lock_dir/name, runtime/name)
+    return native_baseline_manifest(runtime, lock_dir)
+
+
+def native_baseline_manifest(runtime, lock_dir):
+    """Record final shared patch targets after every ordered patch is applied."""
+    runtime, lock_dir = Path(runtime), Path(lock_dir)
+    def sha(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    specs = native_patch_specs()
+    targets = sorted({f'node_modules/{package}/{relative}'
+                      for package, _, relatives in specs for relative in relatives})
+    return {'npm_sha256': sha(lock_dir/'package-lock.json'),
+            'native_patch_order': [name for _, name, _ in specs],
+            'native_patch_sha256': {name: sha(lock_dir/'patches'/name) for _, name, _ in specs},
+            'native_target_sha256': {name: sha(runtime/name) for name in targets},
+            'native_modules_sha256': {name: sha(runtime/name) for name in ('native-managed.mjs', 'v8-observation.mjs')}}
+
+
+def require_native_baseline(runtime, lock_dir=None):
+    """Require current shared inputs and the producer's final bytes, not a variant overlay."""
+    runtime = Path(runtime)
+    lock_dir = Path(lock_dir) if lock_dir else ROOT/'materials/npm'
+    source = json.loads((runtime/'runtime-source.json').read_text())
+    actual = native_baseline_manifest(runtime, lock_dir)
+    expected_module = hashlib.sha256((lock_dir/'native-managed.mjs').read_bytes()).hexdigest()
+    if actual['native_modules_sha256']['native-managed.mjs'] != expected_module:
+        raise ValueError('Pi baseline managed module differs from current shared source')
+    for field, value in actual.items():
+        if source.get(field) != value:
+            raise ValueError(f'Pi native baseline {field} missing or mismatched: {runtime}; rebuild with the current shared producer; do not patch a variant copy')
+    require_pi_retry_source(runtime)
+    return actual
+
+
+def native_patch_script():
+    """Docker consumes the same ordered patch inventory as the native producer."""
+    lines = ['#!/bin/sh', 'set -eu']
+    for package, name, _ in native_patch_specs():
+        lines.append('patch --batch --fuzz=0 -p1 -d '+shlex.quote('/runtime/node_modules/'+package)+
+                     ' -i '+shlex.quote('/build/patches/'+name))
+    return '\n'.join(lines)+'\n'
+
+
 def derive_linux(output, package, braid_source, cache_root):
     """Derive a current Linux runtime from an immutable package, without Docker."""
     from tooling.scripts.package_agent import copy_file
@@ -68,9 +194,19 @@ def derive_linux(output, package, braid_source, cache_root):
         lock = ROOT/'materials/npm'
         if records['npm_sha256'] != digest(lock/'package-lock.json'):
             raise ValueError('retained Linux npm lock differs from current input')
-        for name, expected in records['native_patch_sha256'].items():
-            if digest(lock/'patches'/name) != expected:
-                raise ValueError(f'retained Linux native patch differs: {name}')
+        current_patches = {name: digest(lock/'patches'/name) for _, name, _ in native_patch_specs()}
+        if records['native_patch_sha256'] != current_patches:
+            raise ValueError('retained Linux native patch inventory differs from current input; rebuild or explicitly derive a patched package')
+        target_names = {f'node_modules/{package}/{relative}' for package, _, relatives in native_patch_specs() for relative in relatives}
+        target_records = records.get('native_target_sha256', {})
+        if (records.get('native_patch_order') != [name for _, name, _ in native_patch_specs()] or
+                set(target_records) != target_names):
+            raise ValueError('retained Linux native baseline final-target manifest missing or mismatched; rebuild the shared producer')
+        for member, expected in target_records.items():
+            if hashlib.sha256(archive.read('runtime/'+member)).hexdigest() != expected:
+                raise ValueError(f'retained Linux native baseline target differs: {member}')
+        if records.get('backend') == 'pi' and hashlib.sha256(archive.read('runtime/'+PI_RETRY_MEMBER)).hexdigest() != PI_RETRY_SHA256:
+            raise ValueError('retained Linux Pi retry SDK bytes are not the current patched source')
         for name, expected in records['native_modules_sha256'].items():
             if digest(lock/name) != expected:
                 raise ValueError(f'retained Linux managed module differs: {name}')
@@ -111,6 +247,19 @@ def derive_linux(output, package, braid_source, cache_root):
     binary = cache/'target/x86_64-unknown-linux-gnu/release/braid'
     shutil.copy2(binary, output/'bin/braid')
     (output/'bin/braid').chmod(0o755)
+    monitor_source = ROOT/'sources/resource-monitor'
+    subprocess.run(['cargo', 'zigbuild', '--locked', '--release', '--target',
+                    'x86_64-unknown-linux-gnu.2.36', '--manifest-path', str(monitor_source/'Cargo.toml')],
+                   check=True, env=env)
+    shutil.copy2(cache/'target/x86_64-unknown-linux-gnu/release/factory26-resource-monitor',
+                 output/'bin/factory26-resource-monitor')
+    (output/'bin/factory26-resource-monitor').chmod(0o755)
+    records.setdefault('sources', {})['resource_monitor'] = {
+        'binary_sha256': digest(output/'bin/factory26-resource-monitor'),
+        'files': {str(path.relative_to(monitor_source)): digest(path)
+                  for part in ('Cargo.toml', 'Cargo.lock', 'src')
+                  for path in ([monitor_source/part] if (monitor_source/part).is_file() else (monitor_source/part).rglob('*'))
+                  if path.is_file()}}
     versions = {}
     if records.get('backend') == 'codex':
         python = output/'python'
@@ -150,6 +299,7 @@ def derive_linux(output, package, braid_source, cache_root):
         'source_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
         'binary_sha256': digest(output/'bin/braid'), 'target': 'x86_64-unknown-linux-gnu.2.36',
         'files': before, 'command': ['cargo', 'zigbuild', '--locked', '--release', '--target', 'x86_64-unknown-linux-gnu.2.36']}
+    records.update(native_baseline_manifest(output, lock))
     (output/'runtime-source.json').write_text(json.dumps(records, indent=2)+'\n')
     progress.unlink()
     return output
@@ -169,64 +319,16 @@ def slim_linux(output, source, profile='arc-core'):
     if output.exists():
         raise FileExistsError(output)
     omitted = {'.playwright', 'share/fonts', 'share/glib-2.0', 'etc/fonts', 'bin/chromium',
-               # submission/build.py freezes one Linux ast-grep binary in
+               # tooling/linux/build.py freezes one Linux ast-grep binary in
                # libexec/; the two npm native copies are byte-identical and
                # are not imported by either DX entry.
-               'node_modules/@ast-grep/cli', 'node_modules/@ast-grep/cli-linux-x64-gnu'}
+               'node_modules/@ast-grep/cli', 'node_modules/@ast-grep/cli-linux-x64-gnu',
+               'e2e/browsers', 'e2e/.cache', 'e2e/.npm'}
     def ignore(directory, names):
         relative = Path(directory).relative_to(source)
         return [name for name in names if str(relative / name) in omitted]
     shutil.copytree(source, output, ignore=ignore, symlinks=True)
-    for name, script in browser_scripts().items():
-        path = output / 'bin' / name
-        path.write_text(script)
-        path.chmod(0o755)
-    installer = output / 'bin/browser-install'
-    installer.write_text(
-        '#!/bin/sh\nset -eu\n'
-        'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
-        'for candidate in "${FACTORY26_BROWSER_EXECUTABLE_PATH:-}" google-chrome chromium chromium-browser; do\n'
-        '  if [ -n "$candidate" ] && command -v "$candidate" >/dev/null 2>&1; then command -v "$candidate"; exit 0; fi\n'
-        'done\n'
-        'for directory in "${PLAYWRIGHT_BROWSERS_PATH:-}" /ms-playwright /root/.cache/ms-playwright /opt/playwright; do\n'
-        '  if [ -n "$directory" ] && [ -d "$directory" ]; then\n'
-        '    BROWSER=$(find "$directory" -type f -path "*/chromium-*/chrome-linux*/chrome" -perm -u+x -print -quit)\n'
-        '    if [ -n "$BROWSER" ]; then printf "%s\\n" "$BROWSER"; exit 0; fi\n'
-        '  fi\n'
-        'done\n'
-        'CACHE="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$HERE/../.cache}/factory26-playwright}"\n'
-        'mkdir -p "$CACHE"\n'
-        'export PLAYWRIGHT_BROWSERS_PATH="$CACHE"\n'
-        '"$HERE/node" "$HERE/../node_modules/playwright/cli.js" install chromium --no-shell "$@" >&2\n'
-        'exec "$HERE/node" -e '\
-        '\'console.log(require(process.argv[1]).chromium.executablePath())\' '
-        '"$HERE/../node_modules/playwright"\n')
-    installer.chmod(0o755)
-    browser_exec = output / 'bin/browser-exec'
-    browser_exec.write_text(
-        '#!/bin/sh\nset -eu\n'
-        'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
-        'BROWSER=$("$HERE/browser-install")\n'
-        'exec "$BROWSER" "$@"\n')
-    browser_exec.chmod(0o755)
-    # The frozen base wrapper points at its removed in-runtime Chromium tree.
-    # Keep browser use automatic: first invocation installs into the writable
-    # run cache, then executes the installed browser through the package CLI.
-    browser = output / 'bin/agent-browser'
-    browser.write_text(
-        '#!/bin/sh\nset -eu\n'
-        'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
-        'CACHE="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$HERE/../.cache}/factory26-playwright}"\n'
-        'export PLAYWRIGHT_BROWSERS_PATH="$CACHE"\n'
-        'find_browser() { for candidate in "${FACTORY26_BROWSER_EXECUTABLE_PATH:-}" google-chrome chromium chromium-browser; do if [ -n "$candidate" ] && command -v "$candidate" >/dev/null 2>&1; then command -v "$candidate"; return; fi; done; find "$CACHE" -type f -path "*/chromium-*/chrome-linux*/chrome" -perm -u+x -print -quit; }\n'
-        'BROWSER="$(find_browser || true)"\n'
-        'if [ -z "$BROWSER" ]; then BROWSER="$("$HERE/browser-install")"; fi\n'
-        'if [ -z "$BROWSER" ]; then echo "Playwright Chromium was not installed" >&2; exit 1; fi\n'
-        'export AGENT_BROWSER_EXECUTABLE_PATH="${AGENT_BROWSER_EXECUTABLE_PATH:-$BROWSER}"\n'
-        'exec "$HERE/node" "$HERE/../node_modules/agent-browser/bin/agent-browser.js" "$@"\n')
-    browser.chmod(0o755)
-    # Canonical wrappers are shared with direct Docker builds; the copied
-    # legacy files above are replaced before provenance is recorded.
+    # Canonical wrappers are shared with direct Docker builds.
     for name, script in browser_scripts().items():
         path = output / 'bin' / name
         path.write_text(script)
@@ -251,49 +353,7 @@ def prepare(lock_dir):
     env = production_environment(ROOT/'runs/build-cache'/cache.name)
     lock = lock_dir/'package-lock.json'
     expected = cache/'package-lock.json'
-    patches = (
-        ('pi-background-bash', 'pi-background-bash-1.0.5.patch', ('extensions/background-bash.ts', 'bin/pbb.js')),
-        ('pi-subagents', 'pi-subagents-0.56.0-completion-boundary.patch',
-         ('src/extension/index.ts', 'src/runs/background/notify.ts', 'src/runs/background/result-watcher.ts', 'src/shared/utils.ts')),
-        ('pi-subagents', 'pi-subagents-0.56.0-model-exclusion-boundary.patch',
-         ('src/runs/shared/model-exclusions.ts', 'src/runs/shared/model-fallback.ts', 'src/runs/background/subagent-runner.ts')),
-        ('pi-subagents', 'pi-subagents-0.56.0-open-tools.patch',
-         ('src/runs/shared/pi-args.ts', 'src/runs/shared/subagent-prompt-runtime.ts')),
-        ('pi-subagents', 'pi-subagents-0.56.0-acceptance-off.patch',
-         ('README.md',
-          'docs/agents.md',
-          'docs/tool-reference.md',
-          'docs/workflows.md',
-          'skills/pi-subagents/SKILL.md',
-          'skills/pi-subagents/references/constraints-and-recipes.md',
-          'skills/pi-subagents/references/execution-controls.md',
-          'skills/pi-subagents/references/multi-lane-orchestration.md',
-          'skills/pi-subagents/references/prompting-and-roles.md',
-          'src/extension/schemas.ts',
-          'src/extension/tool-description.ts',
-          'src/runs/background/async-execution.ts',
-          'src/runs/background/async-resume.ts',
-          'src/runs/background/async-status.ts',
-          'src/runs/background/run-status.ts',
-          'src/runs/background/subagent-runner.ts',
-          'src/runs/background/wait-tool.ts',
-          'src/runs/foreground/execution.ts',
-          'src/runs/foreground/subagent-executor.ts',
-          'src/runs/shared/acceptance.ts',
-          'src/runs/shared/single-output.ts',
-          'src/runs/shared/structured-output.ts')),
-        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js', 'dist/core/tools/edit.js', 'dist/core/tools/grep.js', 'dist/core/tools/find.js', 'dist/core/resource-loader.js', 'dist/bundle/cli.js', 'dist/bundle/rpc-entry.js')),
-        ('@upstash/context7-pi', 'context7-pi-0.1.2.patch', ('lib/prompts.ts', 'lib/api.ts', 'skills/context7-docs/SKILL.md')),
-        ('@ff-labs/pi-fff', 'pi-fff-0.11.0.patch', ('src/index.ts',)),
-        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-i13-2-managed.patch',
-         ('dist/modes/rpc/rpc-mode.js', 'dist/core/tools/bash.js')),
-        ('pi-background-bash', 'pi-background-bash-1.0.5-i13-2-managed.patch',
-         ('extensions/background-bash.ts',)),
-        ('pi-subagents', 'pi-subagents-0.56.0-i13-2-managed.patch',
-         ('src/runs/foreground/execution.ts', 'src/runs/background/async-execution.ts',
-          'src/runs/background/subagent-runner.ts', 'src/runs/background/result-watcher.ts',
-          'src/extension/index.ts')),
-    )
+    patches = native_patch_specs()
     def patch_matches(package, patch_name, target_names):
         patch_file = lock_dir/'patches'/patch_name
         targets = [cache/'node_modules'/package/name for name in target_names]
@@ -309,11 +369,7 @@ def prepare(lock_dir):
         for name in ('package.json','package-lock.json'):
             shutil.copy2(lock_dir/name, cache/name)
         subprocess.run(['npm','ci','--legacy-peer-deps','--prefix',str(cache)],check=True,env=env)
-        for package, patch_name, target_names in patches:
-            patch_file = lock_dir/'patches'/patch_name
-            targets = [cache/'node_modules'/package/name for name in target_names]
-            subprocess.run(['patch','--batch','--fuzz=0','-p1','-d',str(cache/'node_modules'/package),
-                            '-i',str(patch_file)],check=True)
+        apply_native_patches(cache, lock_dir, env)
         # Later patches may touch an earlier patch's targets; record the final assembly.
         for package, patch_name, target_names in patches:
             patch_file = lock_dir/'patches'/patch_name
@@ -321,7 +377,8 @@ def prepare(lock_dir):
             (cache/(patch_name+'.sha256')).write_text(
                 hashlib.sha256(patch_file.read_bytes()).hexdigest()+'\n'+
                 ''.join(hashlib.sha256(target.read_bytes()).hexdigest()+'\n' for target in targets))
-    shutil.copy2(lock_dir/'native-managed.mjs', cache/'native-managed.mjs')
+    for name in ('native-managed.mjs', 'v8-observation.mjs'):
+        shutil.copy2(lock_dir/name, cache/name)
     subprocess.run([str(cache/'node_modules/.bin/playwright'),'install','chromium','--no-shell'],
                    env=dict(env,PLAYWRIGHT_BROWSERS_PATH=str(cache/'.playwright')),check=True)
     return cache
@@ -345,18 +402,15 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None, pro
         for file in ('Dockerfile','build.py','browser_runtime.py'):
             shutil.copy2(ROOT/'tooling/linux'/file,context/file)
         shutil.copytree(lock_dir,context/'harness/npm',ignore=shutil.ignore_patterns('node_modules'))
+        shutil.copytree(ROOT/'sources/resource-monitor', context/'sources/resource-monitor',
+                        ignore=shutil.ignore_patterns('target'))
+        (context/'apply-native-patches.sh').write_text(native_patch_script())
         npm_sha256 = hashlib.sha256((context/'harness/npm/package-lock.json').read_bytes()).hexdigest()
-        native_patch_sha256 = {name:hashlib.sha256((context/'harness/npm/patches'/name).read_bytes()).hexdigest()
-                               for name in ('pi-background-bash-1.0.5.patch',
-                                            'pi-subagents-0.56.0-completion-boundary.patch',
-                                            'pi-subagents-0.56.0-model-exclusion-boundary.patch',
-                                            'pi-subagents-0.56.0-open-tools.patch',
-                                            'pi-subagents-0.56.0-acceptance-off.patch',
-                                            'pi-coding-agent-0.85.1-braid-boundary.patch',
-                                            'context7-pi-0.1.2.patch', 'pi-fff-0.11.0.patch',
-                                            'pi-coding-agent-0.85.1-i13-2-managed.patch',
-                                            'pi-background-bash-1.0.5-i13-2-managed.patch',
-                                            'pi-subagents-0.56.0-i13-2-managed.patch')}
+        records['resource_monitor'] = {'files': {str(path.relative_to(context/'sources/resource-monitor')):
+            hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in (context/'sources/resource-monitor').rglob('*') if path.is_file()}}
+        native_patch_sha256 = {name: hashlib.sha256((context/'harness/npm/patches'/name).read_bytes()).hexdigest()
+                               for _, name, _ in native_patch_specs()}
         if braid_source:
             source=Path(braid_source).resolve(strict=True)
             for part in ('Cargo.toml','Cargo.lock','src','migrations','config.example.toml'):
@@ -378,8 +432,7 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None, pro
                 'profile': profile,
                 'sources':records,'npm_sha256':npm_sha256,'docker_endpoint':endpoint,
                 'native_patch_sha256':native_patch_sha256,
-                'native_modules_sha256': {'native-managed.mjs': hashlib.sha256(
-                    (lock_dir/'native-managed.mjs').read_bytes()).hexdigest()}},indent=2)+'\n')
+                **native_baseline_manifest(output, context/'harness/npm')},indent=2)+'\n')
         try:
             subprocess.run(docker+['build','--platform','linux/amd64','--target','team' if braid_source else 'runtime',
                 '--build-arg',f'BACKEND={backend}','--build-arg',f'RUNTIME_PROFILE={profile}',
@@ -388,6 +441,8 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None, pro
             subprocess.run(docker+['create','--name',name,name],check=True,env=docker_env);created=True
             output.parent.mkdir(parents=True,exist_ok=True)
             subprocess.run(docker+['cp',name+':/runtime',str(output)],check=True,env=docker_env)
+            if backend == 'pi':
+                require_pi_retry_source(output)
             write_source_metadata()
             exported=True
         finally:
@@ -446,7 +501,7 @@ def host_lab(output, base_python, purpose):
     launcher = output/('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     subprocess.run(['uv', 'pip', 'install', '--python', str(launcher), '-r', str(requirements)], check=True,env=environment)
     packages = sorted(subprocess.check_output(
-        ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True, env=env).splitlines())
+        ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True, env=environment).splitlines())
     version = subprocess.check_output(
         [str(launcher), '-c', 'import platform; print(platform.python_version())'], text=True).strip()
     receipt = {'schema_version': 1, 'kind': 'factory26.exp.runtime', 'purpose': purpose,

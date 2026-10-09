@@ -43,6 +43,17 @@ def _target(state: Mapping[str, Any]) -> dict[str, Any]:
     return result
 
 
+def uses_prebuilt_runtime(state: Mapping[str, Any], target: Mapping[str, Any] | None = None) -> bool:
+    """Keep the complete-runtime path only for explicitly frozen old runs."""
+    target = target or _target(state)
+    delivery = state.get("runtime_delivery")
+    if delivery is not None:
+        return delivery == "prebuilt"
+    # Manifests written before runtime_delivery was introduced already froze
+    # this target choice.  Do not reinterpret those historical packages.
+    return bool(target.get("prebuilt_runtime"))
+
+
 def _task_config(state: Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(state.get("task_config"), Mapping):
         return dict(state["task_config"])
@@ -150,14 +161,51 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
     from tooling.scripts.hackathon_gateway import prepare_catalog, read_assignments
     route = Path(route_input).expanduser().resolve(strict=True)
     routes = json.loads(route.read_text())
-    aliases = declaration.get('models', [])
+    frozen_resume = bool(state.get('native_resume') and state.get('variant') == 'pi-braid-i15-reviewer-cleaner-e2e')
+    if frozen_resume:
+        route = layout['inputs']/'gateway-routes.json'
+        catalog_path = layout['inputs']/'model-gateway.json'
+        if not route.is_file() or not catalog_path.is_file():
+            raise ValueError('原生恢复缺少来源冻结模型路由/catalog')
+        routes = json.loads(route.read_text())
+        catalog = json.loads(catalog_path.read_text())
+        selected = state.get('model_routes')
+        change = state.get('native_route_change')
+        if change is not None:
+            # Reassembly must compare the immutable source inputs, rather
+            # than this destination's already transformed route files.
+            source_run = (run_path.parent / state['source_run']).resolve(strict=True)
+            source_inputs = paths(source_run)['inputs']
+            routes = json.loads((source_inputs/'gateway-routes.json').read_text())
+            catalog_path = source_inputs/'model-gateway.json'
+            if change.get('authorized_by') != 'user' or change.get('old_routes') != routes:
+                raise ValueError('原生恢复路由变更与来源冻结配方不一致')
+            routes = change['new_routes']
+            if change.get('native_model_substitution') is not None:
+                if target.get('kind') != 'local' or state.get('competition'):
+                    raise ValueError('临时原生模型替换仅限本地自费')
+                catalog_path = layout['inputs']/'authorized-model-catalog.json'
+                if json.loads(catalog_path.read_text()).get('native_model_substitution') != change['native_model_substitution']:
+                    raise ValueError('临时模型替换catalog与授权回执不一致')
+            catalog, selected = prepare_catalog(catalog_path, routes, aliases=list(routes))
+        if not isinstance(selected, list):
+            raise ValueError('原生恢复缺少来源model_routes身份')
+        substitution = catalog.get('native_model_substitution')
+        if substitution is not None:
+            if target.get('kind') != 'local' or state.get('competition'):
+                raise ValueError('临时原生模型替换仅限本地自费')
+            # A normal same-scope restart inherits the source's authorized
+            # catalog metadata as well as its routes and native model files.
+            updated['native_model_substitution'] = substitution
+    aliases = [] if frozen_resume else declaration.get('models', [])
     missing = set(aliases) - set(routes)
     if missing:
         raise ValueError(f"model recipe lacks required aliases: {sorted(missing)}")
     routes = {alias: routes[alias] for alias in aliases} if aliases else routes
     destination = layout["inputs"] / "gateway-routes.json"
-    catalog, selected = prepare_catalog(_repo() / "materials/model-gateway.json", routes, aliases=aliases)
-    for native, canonical in declaration.get('model_alias_map', {}).items():
+    if not frozen_resume:
+        catalog, selected = prepare_catalog(_repo() / "materials/model-gateway.json", routes, aliases=aliases)
+    for native, canonical in ({} if frozen_resume else declaration.get('model_alias_map', {})).items():
         routes[native] = routes[canonical]
         catalog['model_list'].extend({**row, 'model_name': native}
             for row in tuple(catalog['model_list']) if row['model_name'] == canonical)
@@ -180,7 +228,8 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
     provider_env.chmod(0o600)
     updated["route"] = str(destination)
     updated['route_override'] = str(route_override) if route_override else None
-    updated["model_recipe"] = recipe or "explicit"
+    updated["model_recipe"] = ("explicit-native-route-change" if state.get("native_route_change")
+                               else state.get("model_recipe")) if frozen_resume else recipe or "explicit"
     updated["model_routes"] = selected
     updated["provider_env_file"] = str(provider_env)
     frozen_target['model_transport'] = 'proxy'
@@ -222,6 +271,9 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
 def _assemble(run_path: Path) -> dict[str, Any]:
     state = manifest(run_path)
     target = _target(state)
+    prebuilt_runtime = uses_prebuilt_runtime(state, target)
+    if not prebuilt_runtime:
+        target.pop("prebuilt_runtime", None)
     variant = str(state.get("variant", ""))
     source = _repo() / "variants" / variant
     if not source.is_dir():
@@ -240,6 +292,17 @@ def _assemble(run_path: Path) -> dict[str, Any]:
     if not (layout["inputs"] / "requirements").exists():
         shutil.copytree(task, layout["inputs"] / "requirements", symlinks=True)
     task_config = _materialize_evaluation_inputs(layout, task_config)
+    if task_config.get('initial_application'):
+        baseline = Path(task_config['initial_application']).expanduser().resolve(strict=True)
+        frozen_baseline = layout['inputs']/'initial-application'
+        if baseline != frozen_baseline.resolve():
+            shutil.copytree(baseline, frozen_baseline, symlinks=True)
+        task_config['initial_application'] = str(frozen_baseline)
+    if task_config.get('task_context'):
+        context = Path(task_config['task_context']).expanduser().resolve(strict=True)
+        if context != (layout['inputs']/'task-context.md').resolve():
+            shutil.copy2(context, layout['inputs']/'task-context.md')
+        task_config['task_context'] = str(layout['inputs']/'task-context.md')
     for field, member in (("support", "support"),):
         value = target.get(field)
         if value:
@@ -260,11 +323,22 @@ def _assemble(run_path: Path) -> dict[str, Any]:
                     "program_entry": entry, "assembled_at": time.time()})
     if updated["native_resume"] and state.get("requirements_version") != requirements_version:
         raise ValueError("native resume requirements differ from the retained session")
+    if variant == 'pi-braid-i15-reviewer-cleaner-e2e':
+        capacity = target.get('max_active_agents', 2 if target['kind'] == 'hosted' else 4)
+        if isinstance(capacity, bool) or not isinstance(capacity, int) or capacity < 1:
+            raise ValueError('I15 max_active_agents must be a positive integer')
+        updated['max_active_agents'] = capacity
     updated, target, route_input = freeze_model_channel(run_path, updated, target)
     updated["target_config"] = target
     contract = {
         "run_id": run_path.name, "native_scope_id": updated["native_scope_id"],
+        "native_model_substitution": updated.get("native_model_substitution") or (updated.get("native_route_change") or {}).get("native_model_substitution"),
+        "evolution": bool(task_config.get('evolution')),
+        "task_context": 'task-context.md' if task_config.get('task_context') else None,
         "native_resume": updated["native_resume"], "requirements_version": requirements_version,
+        "max_active_agents": updated.get("max_active_agents"),
+        "source_run": state.get('source_run'),
+        "native_resume_receipt": 'native-resume.json' if updated['native_resume'] else None,
         "target_kind": updated["target_kind"],
         'competition': bool(updated.get('competition') or updated.get('billing_mode') in
                             {'competition', 'official_evaluation'}),
@@ -301,6 +375,26 @@ def _assemble(run_path: Path) -> dict[str, Any]:
     if contract['competition'] and target['kind'] == 'hosted':
         target['submission_models'] = json.loads((variant_material / 'submission-models.json').read_text())
         updated['target_config'] = target
+    if updated['native_resume']:
+        (variant_material/'inputs').mkdir(exist_ok=True)
+        shutil.copy2(layout['inputs']/'native-resume.json', variant_material/'inputs/native-resume.json')
+    if updated.get('native_route_change'):
+        change = updated['native_route_change']
+        scope = layout['harness']/updated['native_scope_id']
+        routing = scope/'routing-snapshot.json'
+        # Public Lab packages own the proxy outside the variant. Those
+        # scopes have frozen Lab inputs but no variant-local routing snapshot.
+        write_json(layout['inputs']/'native-route-change.json', {**change, 'native_scope_id': scope.name})
+        if routing.is_file():
+            receipt = {**change, 'run_id': scope.name,
+                       'old_routing_snapshot_sha256': hashlib.sha256(routing.read_bytes()).hexdigest(),
+                       'new_catalog_sha256': hashlib.sha256((layout['inputs']/'model-gateway.json').read_bytes()).hexdigest(),
+                       'new_routes_sha256': hashlib.sha256((layout['inputs']/'gateway-routes.json').read_bytes()).hexdigest()}
+            write_json(layout['inputs']/'routing-change.json', receipt)
+            shutil.copy2(layout['inputs']/'routing-change.json', variant_material/'inputs/routing-change.json')
+    if task_config.get('task_context'):
+        (variant_material/'inputs').mkdir(exist_ok=True)
+        shutil.copy2(layout['inputs']/'task-context.md', variant_material/'inputs/task-context.md')
     from tooling.linux.public_package import assemble as assemble_public
     assemble_public(
         variant_material, runtime, _repo(),
@@ -313,7 +407,8 @@ def _assemble(run_path: Path) -> dict[str, Any]:
         catalog=layout['inputs'] / 'model-gateway.json' if updated.get('route') else None,
         provider_env=Path(updated['provider_env_file']) if target['kind'] == 'hosted' and updated.get('provider_env_file') else None,
         model_proxy=Path(target['model_proxy']) if updated.get('route') and target.get('model_proxy') else None,
-        identity={'variant': variant, 'base_variant': state.get('base_variant', variant)})
+        identity={'variant': variant, 'base_variant': state.get('base_variant', variant)},
+        prebuilt_runtime=prebuilt_runtime)
     write_json(layout['records']/'program-assembly.json', {
         'started_at': updated['assembled_at'], 'finished_at': time.time(),
         'transport': 'directory' if target['kind'] == 'local' else 'zip',
@@ -623,6 +718,24 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     return value
 
 
+def _copy_hosted_workspace(source: Path, destination: Path, *, omit: Path | None = None) -> None:
+    """Merge an authoritative export, replacing its saved symbolic links.
+
+    copytree permits existing directories but rejects even identical links.
+    The original export remains immutable; only the derived saved copy changes.
+    """
+    def prepare(directory, names):
+        root = Path(directory)
+        ignored = [omit.name] if omit is not None and root == omit.parent else []
+        target = destination / root.relative_to(source)
+        for name in names:
+            if name not in ignored and (root / name).is_symlink() and (target / name).is_symlink():
+                (target / name).unlink()
+        return ignored
+
+    shutil.copytree(source, destination, symlinks=True, dirs_exist_ok=True, ignore=prepare)
+
+
 def save(run: str | os.PathLike[str], *, live: bool = False) -> dict[str, Any]:
     """Save the data domain and report scope/gaps explicitly.
 
@@ -651,27 +764,27 @@ def save(run: str | os.PathLike[str], *, live: bool = False) -> dict[str, Any]:
         exported = Path(value.get("workspace", "")) if value.get("workspace") else None
         mapped = []
         gaps = list(value.get("gaps", [])) if isinstance(value.get("gaps"), list) else []
+        # Independent application replay has no generation/native scope.
+        # Baseline-carried history is not this evaluation's native evidence.
+        scope = manifest(run_path).get("native_scope_id")
         if exported and exported.is_dir():
             template = exported / "template"
             if not template.is_dir():
                 raise FileNotFoundError(f"Hosted template-bundle has no template directory: {exported}")
             native = template / ".factory26/data/harness"
-            if native.is_dir():
-                shutil.copytree(native, paths(run_path)["harness"], symlinks=True, dirs_exist_ok=True)
+            if scope and native.is_dir():
+                _copy_hosted_workspace(native, paths(run_path)["harness"])
                 mapped.append("data/harness")
-            else:
+            elif scope:
                 gaps.append("template export has no native data subtree")
-            def skip_native(directory, names):
-                return ["harness"] if Path(directory) == native.parent else []
-            shutil.copytree(template, paths(run_path)["workspace"], symlinks=True,
-                            dirs_exist_ok=True, ignore=skip_native)
+            _copy_hosted_workspace(template, paths(run_path)["workspace"], omit=native)
             mapped.append("data/workspace")
             # Full native history is migrated, but this run's receiver writes
             # to a distinct producer directory rather than re-importing the
             # source run's batches as newly incurred activity or expense.
-            scope = manifest(run_path)["native_scope_id"]
-            telemetry = paths(run_path)["harness"] / scope / "producers" / run_path.name / "telemetry.sqlite"
-            if telemetry.is_file():
+            telemetry = (paths(run_path)["harness"] / scope / "producers" / run_path.name / "telemetry.sqlite"
+                         if scope else None)
+            if telemetry is not None and telemetry.is_file():
                 import sqlite3
                 from lab.otlp import connect
                 with connect(telemetry, readonly=True) as source, \
@@ -679,7 +792,7 @@ def save(run: str | os.PathLike[str], *, live: bool = False) -> dict[str, Any]:
                     source.backup(destination)
                 mapped.append("records/telemetry.sqlite")
                 _import_raw(run_path, paths(run_path)['records']/'telemetry.sqlite')
-            else:
+            elif scope:
                 gaps.append("current run raw collector database is unavailable")
         else:
             raise FileNotFoundError("Hosted saved workspace is unavailable")

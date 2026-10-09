@@ -1,5 +1,5 @@
-use tokio::sync::broadcast;
 use std::path::PathBuf;
+use tokio::sync::broadcast;
 
 #[derive(Clone)]
 pub(crate) struct CliContext {
@@ -88,6 +88,8 @@ pub enum SessionError {
     ResourceDeferred(String),
     #[error("session failed: {0}")]
     Failed(String),
+    #[error("resource recovery failed: {0}")]
+    ResourceRecoveryFailed(String),
     #[error("session is unavailable")]
     Unavailable,
     #[error("owned execution stop is unproved: {0}")]
@@ -108,6 +110,10 @@ impl SessionError {
 
     pub(crate) fn is_resource_deferred(&self) -> bool {
         matches!(self, Self::ResourceDeferred(_))
+    }
+
+    pub(crate) fn is_resource_recovery_failed(&self) -> bool {
+        matches!(self, Self::ResourceRecoveryFailed(_))
     }
 }
 
@@ -133,6 +139,12 @@ pub trait AgentSession: Send + Sync {
 
     /// Only Quiescent authorizes releasing an otherwise idle logical member.
     async fn managed_state(&self) -> Result<ManagedState, SessionError> {
+        Ok(ManagedState::Unknown)
+    }
+
+    /// Stop only explicitly restartable owned services when no finite work or
+    /// unconsumed result remains. Unknown adapters retain their execution slot.
+    async fn yield_stoppable_services(&self) -> Result<ManagedState, SessionError> {
         Ok(ManagedState::Unknown)
     }
 
@@ -179,8 +191,6 @@ pub(crate) struct CreatedSession {
 pub(crate) trait SessionFactory: Send + Sync {
     /// Check runtime availability even before a Work Item has a session.
     async fn check(&self) -> Result<(), SessionError>;
-    /// Serialize pressure relief across all groups sharing this factory.
-    async fn maintain_resources(&self) -> Result<(), SessionError> { Ok(()) }
     async fn start(
         &self,
         profile: crate::config::Profile,

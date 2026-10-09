@@ -8,6 +8,11 @@ The purpose is a supported next decision, not the largest possible collection of
 ## Read the Result in Context
 
 Separate the observation, its explanation, and the completion claim.
+
+At delivery, compare the executed observations with the original obligations, not only with the checks the implementer chose to write.
+Report supported, contradicted, blocked, and unexamined obligations separately; a passing case count does not establish coverage, and an unexamined obligation is neither a pass nor an observed product failure.
+When changing a check after failure, recheck its connection to the original requirement and retain the reason for the change; a green replacement does not restore an obligation it no longer observes.
+
 “Request returned 200” is an observation; “the business operation succeeded” is an interpretation; “the feature is complete” is a broader claim that needs evidence for its obligations.
 A static check can establish the constraints it actually enforces, and a measurement can establish behavior under its workload, without either establishing an unobserved user journey.
 
@@ -101,5 +106,7 @@ Equal trees alone do not prove equal runtime conditions, and a change of respons
 Once applicable evidence satisfies the current acceptance obligations and no unresolved contradiction remains, hand off the result and stop.
 Another acknowledgement or identical passing run adds no evidence for that decision.
 Report what holds, what remains uncertain, and what change would require another evaluation.
+
+For reviewer or delegated acceptance work, adopt the observed report only after locating the actual candidate, initial state, execution record and required scenario observations. A reviewer-authored check and its green result are useful evidence for the scenarios they exercised, but do not by themselves establish unexamined requirements or make a different data state equivalent. After a correction, compare the changed candidate, checks, data and dependencies. Rerun the path that exposed the issue under its necessary initial state; reuse unaffected evidence when applicability holds, and broaden to a fuller suite when shared code, state, or cross-path regressions are plausible. Do not repeat a full suite only to replace a prior failure or obtain another acknowledgement.
 
 Use [feedback and evolution](feedback-and-evolution.md) to carry the resulting decision into implementation, delivery, and observations from actual use.

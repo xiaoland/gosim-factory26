@@ -34,6 +34,9 @@ def application_environment(runtime: Path, environment: dict[str, str],
     result["AGENT_BROWSER_SOCKET_DIR"] = str(socket_root / hashlib.sha256(socket_scope.encode()).hexdigest()[:12])
     result["PATH"] = os.pathsep.join(map(str, (
         Path("/usr/local/bin"), *tool_paths, runtime / "tools", Path("/usr/bin"), Path("/bin"))))
+    e2e_lib = runtime / "e2e" / "lib"
+    if e2e_lib.is_dir():
+        result["LD_LIBRARY_PATH"] = os.pathsep.join((str(e2e_lib), result.get("LD_LIBRARY_PATH", "")))
     return result
 
 
@@ -71,20 +74,71 @@ def _repair_background_bash(path: Path) -> None:
     path.write_text(text.replace(old, new, 1))
 
 
+def _restore_executable_modes(root: Path) -> None:
+    """Restore producer-declared modes lost by Hosted ZIP extraction."""
+    manifest = root / "runtime-executables.json"
+    if not manifest.is_file():
+        return
+    for relative in json.loads(manifest.read_text()):
+        path = (root / relative).resolve(strict=True)
+        if not path.is_relative_to(root / "runtime") or not path.is_file():
+            raise ValueError(f"invalid runtime executable member: {relative}")
+        if not path.stat().st_mode & 0o111:
+            path.chmod(path.stat().st_mode | 0o111)
+
+
+def _install_e2e_addon(root: Path, runtime: Path) -> None:
+    """Install the locked E2E addon without browser payloads or caches."""
+    source = root / "inputs" / "e2e"
+    if not source.is_dir():
+        return
+    destination = runtime / "e2e"
+    marker = destination / ".factory26-installed.json"
+    if marker.is_file():
+        return
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(source, destination, symlinks=False)
+    npm = shutil.which("npm")
+    if not npm:
+        raise RuntimeError("public ARC package requires npm for its E2E addon")
+    env = dict(os.environ, PATH=str(runtime / "bin") + os.pathsep + os.environ.get("PATH", ""),
+               PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="1")
+    _run([npm, "ci", "--ignore-scripts", "--legacy-peer-deps", "--no-audit",
+          "--no-fund", "--prefix", str(destination)], env=env)
+    marker.write_text(json.dumps({"installed": True, "browser_download": "deferred"}) + "\n")
+
+
 def ensure(root: str | Path) -> Path:
     root = Path(root).resolve()
     runtime = root / "runtime"
+    package_manifest = root / "package-manifest.json"
+    submitted_runtime = False
+    if package_manifest.is_file():
+        try:
+            members = json.loads(package_manifest.read_text()).get("files", {})
+            submitted_runtime = any(str(name).startswith("runtime/") for name in members)
+        except (OSError, ValueError, TypeError):
+            submitted_runtime = False
+    # Only a package that actually submitted runtime members may take this
+    # legacy fast path.  A thin install can have a half-written runtime-source
+    # or node binary after failure and must retry from its submitted inputs.
+    if submitted_runtime and (runtime/'runtime-source.json').is_file() and (runtime/'bin/node').is_file():
+        _restore_executable_modes(root)
+        return runtime
     marker = runtime / ".factory26-installed.json"
     if marker.is_file():
         source_metadata = root / "native" / "runtime-source.json"
         if source_metadata.is_file() and not (runtime / source_metadata.name).is_file():
             shutil.copy2(source_metadata, runtime / source_metadata.name)
+        _install_e2e_addon(root, runtime)
         _tool_launchers(runtime)
+        _restore_executable_modes(root)
         return runtime
     runtime.mkdir(parents=True, exist_ok=True)
     (root / ".cache").mkdir(parents=True, exist_ok=True)
     native = root / "native"
-    for name in ("pi", "braid", "tini"):
+    for name in ("pi", "braid", "tini", "factory26-resource-monitor"):
         source = native / "bin" / name
         if source.is_file():
             target = runtime / "bin" / name
@@ -94,9 +148,8 @@ def ensure(root: str | Path) -> Path:
     source_metadata = native / "runtime-source.json"
     if source_metadata.is_file():
         shutil.copy2(source_metadata, runtime / source_metadata.name)
-    managed = native / "native-managed.mjs"
-    if managed.is_file():
-        shutil.copy2(managed, runtime / "native-managed.mjs")
+    for name in ("native-managed.mjs", "v8-observation.mjs"):
+        shutil.copy2(native / name, runtime / name)
 
     npm = shutil.which("npm")
     if not npm:
@@ -158,8 +211,10 @@ def ensure(root: str | Path) -> Path:
         path.unlink(missing_ok=True)
         path.write_text(script)
         path.chmod(0o755)
+    _install_e2e_addon(root, runtime)
     _tool_launchers(runtime)
     marker.write_text(json.dumps({"node": NODE_PACKAGE, "installed": True}) + "\n")
+    _restore_executable_modes(root)
     return runtime
 
 
@@ -196,7 +251,7 @@ def write_consumption_receipt(root: str | Path, output: str | Path, runtime: str
     entry_path = root / "variant_main.py"
     entry_sha256 = hashlib.sha256(entry_path.read_bytes()).hexdigest() if entry_path.is_file() else None
     native_files = {}
-    for relative in ("bin/pi", "bin/braid", "bin/tini", "native-managed.mjs"):
+    for relative in ("bin/pi", "bin/braid", "bin/tini", "bin/factory26-resource-monitor", "native-managed.mjs", "v8-observation.mjs"):
         candidate = runtime / relative
         if candidate.is_file():
             native_files[relative] = hashlib.sha256(candidate.read_bytes()).hexdigest()

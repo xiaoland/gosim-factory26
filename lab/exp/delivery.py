@@ -1,9 +1,76 @@
 """Self-contained delivery is a cached projection of immutable definitions."""
 from pathlib import Path
 import shutil
+import tarfile
 
 from . import artifacts, definitions
-from .core import atomic, canonical, locked, read
+from .core import atomic, canonical, digest, locked, read
+
+
+def project_prepared(prepared, store, cache, consumer, *, environment):
+    """Project a verified legacy Hosted prepared state without running repairs again."""
+    from tooling.linux.exp_checkpoint import validate, resolve_definition_assets, definition_mount_roots
+    prepared = Path(prepared).resolve(strict=True)
+    validation = validate(prepared)
+    manifest = read(prepared/'harness-manifest.json')
+    legacy = (manifest.get('acquisition', {}).get('status') == 'legacy-terminal-export'
+              and manifest.get('source_identity', {}).get('backend_identity', {}).get('kind') == 'hosted'
+              and not validation['readback']['gaps'])
+    if manifest['kind'] != 'factory26.harness.prepared' or (validation['status'] != 'complete' and not legacy):
+        raise ValueError('Hosted projection requires executable prepared state')
+    if manifest['target_layout']['os'] != 'Linux' or manifest['target_layout']['architecture'] != 'x86_64':
+        raise ValueError('Hosted prepared projection requires Linux x86_64')
+    mounts, _ = resolve_definition_assets(prepared, manifest)
+    roots = definition_mount_roots(manifest['definition_assets'], manifest['target_layout']['run_root'])
+    # The historical Hosted package has one flat root; overlapping roles must
+    # already refer to the same immutable artifact, as checked by the producer.
+    if len(roots) != 1 or roots[0]['logical_root'] != '/workspace/submission':
+        raise ValueError('Hosted legacy projection requires its original flat submission root')
+    variant = read(prepared/'content/run/harness-layout.json')['variant']
+    definition_root = dict(mounts)[roots[0]['logical_root']]
+    package_manifest = read(definition_root/'package-manifest.json')
+    if variant not in package_manifest['capabilities']['variants']:
+        raise ValueError('prepared state and replacement definition variants differ')
+    reference = artifacts.publish(store, prepared, 'prepared-state', consumer=consumer,
+        purpose='hosted-recovery', request_id='prepared-'+canonical([consumer, manifest['prepared_id']]))
+    output = Path(cache)/'prepared-deliveries'/canonical([reference, environment])
+    if output.exists():
+        raise FileExistsError('unfinished prepared delivery retained: '+str(output))
+    shutil.copytree(definition_root, output,
+                    symlinks=True, copy_function=artifacts.copy_file)
+    metadata = output/'.prepared'
+    metadata.mkdir()
+    for item in prepared.iterdir():
+        if item.name == 'content':
+            continue
+        if item.is_dir():
+            shutil.copytree(item, metadata/item.name, symlinks=True, copy_function=artifacts.copy_file)
+        else:
+            artifacts.copy_file(item, metadata/item.name)
+    with tarfile.open(metadata/'state.tar', 'w') as archive:
+        archive.add(prepared/'content/run', arcname='run', recursive=True)
+    roles = [{'role':row['name'], 'reference':row['artifact'], 'member':row['member'],
+              'logical_root':row['logical_root'],
+              'path':str(Path(row['logical_root']).relative_to('/workspace/submission')) or '.'}
+             for row in manifest['definition_assets']]
+    roles.append({'role':'support', 'reference':roots[0]['artifact'], 'member':'support',
+                  'logical_root':'/workspace/submission/support', 'path':'support'})
+    atomic(output/'delivery-layout.json', {'kind':'factory26.harness.delivery', 'schema_version':1,
+        'mode':'hosted-prepared', 'roles':roles, 'definition':None, 'environment':environment,
+        'prepared':{'reference':reference, 'manifest_path':'.prepared/harness-manifest.json',
+                    'manifest_sha256':validation['manifest_sha256'], 'state_archive':'.prepared/state.tar',
+                    'state_archive_sha256':digest(metadata/'state.tar')},
+        'inputs':{'gateway_routes':{'reference':roots[0]['artifact'], 'member':'support/gateway-routes.json',
+                                   'path':'support/gateway-routes.json'}},
+        'private_inputs':{'provider_env':{'path':'.private/provider-env.json'},
+                          'tool_env':{'path':'.private/tool-env.json'}}})
+    # This is facility entry selection, not a second restoration implementation.
+    shutil.copy2(output/'support/experiment_entry.py', output/'main.py')
+    from tooling.scripts.package_agent import write_zip
+    package = output.parent/(output.name+'.zip')
+    write_zip(output, package, package_manifest['backend'], package_manifest['sources'],
+              capabilities={**package_manifest['capabilities'], 'variant':variant})
+    return package
 
 
 def project(definition, store, cache, consumer, *, zipped=False, private_inputs=None, inputs=None):

@@ -14,19 +14,25 @@ use crate::{
     agent_session::SendResult,
     context::{self, CanonicalContext, ContextError, ContextPressure},
     group::issue_agent::{provision_issue_agent_worktree, resolve_issue_worktree_ref},
-    group::provider::{issue_system_prompt, pr_system_prompt, review_system_prompt, render_context_reset_notice, render_context_reset_source, render_event_references},
+    group::provider::{
+        issue_system_prompt, pr_system_prompt, render_context_reset_notice,
+        render_context_reset_source, render_event_references, review_system_prompt,
+    },
     objects::{RepositoryName, WorkItemLocator},
     queue::scheduler::record_context_pressure,
     store::{ContextResetClaim, StoreActor, TurnClaim, WorkItemLifecycleCandidate},
 };
 
 fn fail_claimed_turn(store: &StoreActor, claim: &TurnClaim, lifecycle: &str, reason: String) {
-    if let Err(error) = store.mark_turn_terminal(claim.turn_id.clone(), lifecycle.into(), Some(reason)) {
+    if let Err(error) =
+        store.mark_turn_terminal(claim.turn_id.clone(), lifecycle.into(), Some(reason))
+    {
         tracing::error!(%error, turn = %claim.turn_id, "cannot close failed turn claim");
     }
     if let Some(reset_id) = &claim.reset_id {
         if let Err(error) = store.fail_context_reset(
-            reset_id.clone(), format!("reset notice turn ended {lifecycle} before delivery"),
+            reset_id.clone(),
+            format!("reset notice turn ended {lifecycle} before delivery"),
         ) {
             tracing::error!(%error, "cannot block failed reset notice");
         }
@@ -52,7 +58,9 @@ pub(crate) fn record_context_unavailable(
 }
 
 impl GroupDriver<'_> {
-    pub(super) async fn handle_next_work_item_lifecycle(&self) -> (bool, Option<RunningAgentTurn>, Option<anyhow::Error>) {
+    pub(super) async fn handle_next_work_item_lifecycle(
+        &self,
+    ) -> (bool, Option<RunningAgentTurn>, Option<anyhow::Error>) {
         let store = self.store;
         let work_item_kind = self.spec.kind.as_str();
         let candidate = match store.work_item_lifecycle_candidates(work_item_kind.into(), 1) {
@@ -85,10 +93,14 @@ impl GroupDriver<'_> {
                 let mut retryable_error = None;
                 if let Err(error) = Box::pin(self.reactivate_work_item_agent(candidate)).await {
                     tracing::error!(%error, work_item_kind, "cannot reactivate reopened Agent Group");
-                    if matches!(error.downcast_ref::<crate::agent_session::SessionError>(),
-                        Some(crate::agent_session::SessionError::Deferred(_)
-                            | crate::agent_session::SessionError::ResourceDeferred(_)
-                            | crate::agent_session::SessionError::Unavailable)) {
+                    if matches!(
+                        error.downcast_ref::<crate::agent_session::SessionError>(),
+                        Some(
+                            crate::agent_session::SessionError::Deferred(_)
+                                | crate::agent_session::SessionError::ResourceDeferred(_)
+                                | crate::agent_session::SessionError::Unavailable
+                        )
+                    ) {
                         retryable_error = Some(error);
                     }
                 }
@@ -113,6 +125,7 @@ impl GroupDriver<'_> {
         let sessions = &self.sessions;
         let profile = &self.spec.profile;
         let policy = crate::queue::scheduler::policy_from_config(self.config);
+        let slot = sessions.reserve().await?;
         let Some(materialization) =
             store.begin_work_item_reactivation(candidate.event_id.clone(), profile.id.clone())?
         else {
@@ -209,7 +222,7 @@ impl GroupDriver<'_> {
                 // writer start before the previous native writer has stopped.
                 sessions.remove(&session.id).await?;
                 if materialization.description_event_ids.is_empty() {
-                    let result = sessions.resume(session.id.clone(), effective_profile.clone(), instructions.clone()).await;
+                    let result = sessions.resume(session.id.clone(), effective_profile.clone(), instructions.clone(), slot.clone()).await;
                     if let Err(error) = &result { store.record_provider_resume_error(session.id.clone(), error.to_string())?; }
                     match result {
                         Ok(Some(binding_id)) => return Ok((session.id.clone(), binding_id, session.context_revision.clone(), instruction_revision)),
@@ -232,7 +245,7 @@ impl GroupDriver<'_> {
             if rendered.pressure == ContextPressure::Hard {
                 return Err(ContextError::TooLarge { bytes: rendered.bytes, hard_bytes: profile.context_hard_bytes }.into());
             }
-            let (thread_id, binding_id) = sessions.start(effective_profile, instructions, rendered.text).await?;
+            let (thread_id, binding_id) = sessions.start(effective_profile, instructions, rendered.text, slot).await?;
             Ok::<_, anyhow::Error>((thread_id, binding_id, rendered.revision, instruction_revision))
         })
         .await;
@@ -258,7 +271,11 @@ impl GroupDriver<'_> {
                 Ok(())
             }
             Err(error) => {
-                if retryable_resume || error.downcast_ref::<crate::agent_session::SessionError>().is_some_and(crate::agent_session::SessionError::is_deferred) {
+                if retryable_resume
+                    || error
+                        .downcast_ref::<crate::agent_session::SessionError>()
+                        .is_some_and(crate::agent_session::SessionError::is_deferred)
+                {
                     store.defer_work_item_reactivation(
                         candidate.event_id,
                         materialization.assignment_id,
@@ -267,11 +284,7 @@ impl GroupDriver<'_> {
                     return Err(error);
                 }
                 if !is_context_too_large(&error) {
-                    record_context_unavailable(
-                        store,
-                        &materialization.assignment_id,
-                        &error,
-                    )?;
+                    record_context_unavailable(store, &materialization.assignment_id, &error)?;
                 }
                 store.fail_work_item_reactivation(
                     candidate.event_id,
@@ -309,13 +322,15 @@ impl GroupDriver<'_> {
         let reset_id = reset.reset_id.clone();
         let assignment_id = reset.assignment_id.clone();
         if let Err(error) = Box::pin(self.materialize_context_reset(reset)).await {
-            if error.downcast_ref::<crate::agent_session::SessionError>().is_some_and(crate::agent_session::SessionError::is_deferred) {
+            if error
+                .downcast_ref::<crate::agent_session::SessionError>()
+                .is_some_and(crate::agent_session::SessionError::is_deferred)
+            {
                 tracing::info!(%error, reset = %reset_id, "Context materialization deferred; reset retained");
                 return Ok(false);
             }
             if !is_context_too_large(&error)
-                && let Err(status_error) =
-                    record_context_unavailable(store, &assignment_id, &error)
+                && let Err(status_error) = record_context_unavailable(store, &assignment_id, &error)
             {
                 tracing::error!(%status_error, reset = %reset_id, "cannot record unavailable Context status");
             }
@@ -349,8 +364,8 @@ impl GroupDriver<'_> {
             )
         } else if reset.work_item_kind == "issue" {
             CanonicalContext::Issue(context::materialize_issue(github, &locator, 100).await?)
-        } else if reset.work_item_kind=="review" {
-            github.canonical("review",reset.number as i64)?
+        } else if reset.work_item_kind == "review" {
+            github.canonical("review", reset.number as i64)?
         } else {
             bail!("unsupported Context reset Work Item kind {}", reset.work_item_kind);
         };
@@ -362,7 +377,8 @@ impl GroupDriver<'_> {
         );
         record_context_pressure(store, &reset.assignment_id, &rendered, None)?;
         let context = format!("{}{}", render_context_reset_source(&reset), rendered.text);
-        if rendered.pressure == ContextPressure::Hard || context.len() > profile.context_hard_bytes {
+        if rendered.pressure == ContextPressure::Hard || context.len() > profile.context_hard_bytes
+        {
             return Err(ContextError::TooLarge {
                 bytes: context.len(),
                 hard_bytes: profile.context_hard_bytes,
@@ -379,11 +395,17 @@ impl GroupDriver<'_> {
                 .context("PR Context reset has no local branch reference")?;
             effective_profile.workspace = Some(worktree.clone());
             pr_system_prompt(config, profile, reset.number, head_ref, reset.member_login.as_deref())
-        } else if reset.work_item_kind=="review" {
-            let worktree=reset.worktree_path.as_ref().context("review reset has no frozen checkout")?;
-            github.verify_reviewer_checkout(reset.number as i64,worktree,reset.member_login.as_deref().context("review reset has no member")?,&config.tools.git)?;
-            effective_profile.workspace=Some(worktree.clone());
-            review_system_prompt(config,profile,reset.number,reset.member_login.as_deref())
+        } else if reset.work_item_kind == "review" {
+            let worktree =
+                reset.worktree_path.as_ref().context("review reset has no frozen checkout")?;
+            github.verify_reviewer_checkout(
+                reset.number as i64,
+                worktree,
+                reset.member_login.as_deref().context("review reset has no member")?,
+                &config.tools.git,
+            )?;
+            effective_profile.workspace = Some(worktree.clone());
+            review_system_prompt(config, profile, reset.number, reset.member_login.as_deref())
         } else {
             let worktree = reset
                 .worktree_path
@@ -393,8 +415,14 @@ impl GroupDriver<'_> {
             issue_system_prompt(config, profile, reset.number, reset.member_login.as_deref())
         };
         let instruction_revision = hex::encode(Sha256::digest(instructions.as_bytes()));
-        let (thread_id, binding_id) =
-            sessions.start(effective_profile.clone(), instructions.clone(), context).await?;
+        let (thread_id, binding_id) = sessions
+            .start(
+                effective_profile.clone(),
+                instructions.clone(),
+                context,
+                sessions.reserve().await?,
+            )
+            .await?;
         if let Err(error) = store.complete_context_reset(
             reset.reset_id.clone(),
             thread_id.clone(),
@@ -437,7 +465,9 @@ impl GroupDriver<'_> {
         match session.send_user_msg(reference, true).await {
             Ok(SendResult::Acknowledged) => {}
             Ok(SendResult::Started) => {
-                tracing::error!("running input unexpectedly started a new turn; batch remains runnable");
+                tracing::error!(
+                    "running input unexpectedly started a new turn; batch remains runnable"
+                );
                 return;
             }
             Err(error) if error.is_deferred() => return,
@@ -446,7 +476,11 @@ impl GroupDriver<'_> {
                 return;
             }
         }
-        if let Err(error) = store.consume_steer_batch(active.claim.turn_id.clone(), steer.batch_id, steer.steer_event_ids) {
+        if let Err(error) = store.consume_steer_batch(
+            active.claim.turn_id.clone(),
+            steer.batch_id,
+            steer.steer_event_ids,
+        ) {
             tracing::error!(%error, "cannot acknowledge running input batch");
         }
     }
@@ -458,16 +492,24 @@ impl GroupDriver<'_> {
         let work_item_kind = self.spec.kind.as_str();
         // Unrelated idle members must not create a resource wait that prevents
         // the run from finishing. Only inspect sessions with durable input.
-        let candidates = match store.provider_resume_candidates(profile.id.clone(), work_item_kind.into()) {
-            Ok(candidates) => candidates.into_iter().filter(|candidate| candidate.needs_resume)
-                .map(|candidate| candidate.provider_session_id).collect(),
-            Err(error) => {
-                tracing::error!(%error, "cannot inspect runnable input candidates");
-                return None;
-            }
-        };
+        let candidates =
+            match store.provider_resume_candidates(profile.id.clone(), work_item_kind.into()) {
+                Ok(candidates) => candidates
+                    .into_iter()
+                    .filter(|candidate| candidate.needs_resume)
+                    .map(|candidate| candidate.provider_session_id)
+                    .collect(),
+                Err(error) => {
+                    tracing::error!(%error, "cannot inspect runnable input candidates");
+                    return None;
+                }
+            };
         let ready = sessions.input_ready_ids(&candidates).await;
-        let reset_notice = match store.claim_context_reset_notice(work_item_kind.into(), profile.id.clone(), ready.clone()) {
+        let reset_notice = match store.claim_context_reset_notice(
+            work_item_kind.into(),
+            profile.id.clone(),
+            ready.clone(),
+        ) {
             Ok(claim) => claim,
             Err(error) => {
                 tracing::error!(%error, "cannot claim Context reset notice");
@@ -477,9 +519,7 @@ impl GroupDriver<'_> {
         let next = if let Some(claim) = reset_notice {
             Ok(Some(claim))
         } else {
-            store.claim_runnable_turn(
-                work_item_kind.into(), profile.id.clone(), ready,
-            )
+            store.claim_runnable_turn(work_item_kind.into(), profile.id.clone(), ready)
         };
         let claim = match next {
             Ok(claim) => claim,
@@ -529,25 +569,42 @@ impl GroupDriver<'_> {
                 provider_session = %claim.provider_session_id,
                 "no AgentSession found for claimed turn"
             );
-            fail_claimed_turn(store, &claim, "failed", "no AgentSession found for claimed turn".into());
+            fail_claimed_turn(
+                store,
+                &claim,
+                "failed",
+                "no AgentSession found for claimed turn".into(),
+            );
             return None;
         };
         // Subscribe before sending so the `TurnStarted` event — the single
         // authority for provider turn identity — cannot be missed.
         let mut events = session.events();
         match session.send_user_msg(reference.clone(), false).await {
-            Ok(SendResult::Started) => { sessions.clear_session_deferred(&claim.provider_session_id).await; }
+            Ok(SendResult::Started) => {
+                sessions.clear_session_deferred(&claim.provider_session_id).await;
+            }
             Ok(SendResult::Acknowledged) => {
                 tracing::error!(turn = %claim.turn_id, "AgentSession did not start a turn");
-                fail_claimed_turn(store, &claim, "failed", "AgentSession did not start a turn".into());
+                fail_claimed_turn(
+                    store,
+                    &claim,
+                    "failed",
+                    "AgentSession did not start a turn".into(),
+                );
                 return None;
             }
             Err(error) => {
                 if error.is_deferred() {
-                    sessions.record_session_deferred(&claim.provider_session_id, error.clone()).await;
+                    sessions
+                        .record_session_deferred(&claim.provider_session_id, error.clone())
+                        .await;
                     let deferred = if let Some(reset_id) = &claim.reset_id {
                         store.defer_context_reset_notice(
-                            reset_id.clone(), claim.turn_id.clone(), "retry".into(), Some(error.to_string()),
+                            reset_id.clone(),
+                            claim.turn_id.clone(),
+                            "retry".into(),
+                            Some(error.to_string()),
                         )
                     } else {
                         store.defer_unstarted_turn(claim.turn_id.clone(), error.to_string())
@@ -564,6 +621,7 @@ impl GroupDriver<'_> {
                     | crate::agent_session::SessionError::ResourceDeferred(_)
                     | crate::agent_session::SessionError::HistoryUnavailable(_)
                     | crate::agent_session::SessionError::Failed(_)
+                    | crate::agent_session::SessionError::ResourceRecoveryFailed(_)
                     | crate::agent_session::SessionError::StopUnproved(_)
                     | crate::agent_session::SessionError::Materialization { .. } => "failed".into(),
                 };
@@ -590,7 +648,12 @@ impl GroupDriver<'_> {
             }
             other => {
                 tracing::error!(?other, turn = %claim.turn_id, "AgentSession stream did not begin with TurnStarted");
-                fail_claimed_turn(store, &claim, "failed", format!("AgentSession stream did not begin with TurnStarted: {other:?}"));
+                fail_claimed_turn(
+                    store,
+                    &claim,
+                    "failed",
+                    format!("AgentSession stream did not begin with TurnStarted: {other:?}"),
+                );
                 return None;
             }
         };
@@ -614,8 +677,13 @@ impl GroupDriver<'_> {
         let reset_id = claim.reset_id.clone();
         let notice_text = reset_id.as_ref().map(|_| reference);
         Some(RunningAgentTurn {
-            telemetry, claim, provider_turn_id, reset_id, notice_text,
-            last_notice_poll: None, events,
+            telemetry,
+            claim,
+            provider_turn_id,
+            reset_id,
+            notice_text,
+            last_notice_poll: None,
+            events,
         })
     }
 
@@ -647,8 +715,13 @@ impl GroupDriver<'_> {
             }
             active.reset_id = Some(reset.reset_id);
         }
-        if active.claim.trigger_kind == "context_reset_notice" { return }
-        if active.last_notice_poll.is_some_and(|at| at.elapsed() < tokio::time::Duration::from_secs(3)) {
+        if active.claim.trigger_kind == "context_reset_notice" {
+            return;
+        }
+        if active
+            .last_notice_poll
+            .is_some_and(|at| at.elapsed() < tokio::time::Duration::from_secs(3))
+        {
             return;
         }
         active.last_notice_poll = Some(tokio::time::Instant::now());
@@ -661,11 +734,15 @@ impl GroupDriver<'_> {
             }
         };
         let notice = render_context_reset_notice(&reset);
-        if active.notice_text.as_deref() == Some(notice.as_str()) { return }
+        if active.notice_text.as_deref() == Some(notice.as_str()) {
+            return;
+        }
         let Some(session) = sessions.get(&active.claim.provider_session_id).await else { return };
         match session.send_user_msg(notice.clone(), true).await {
             Ok(SendResult::Acknowledged) => active.notice_text = Some(notice),
-            Ok(SendResult::Started) => tracing::error!("active reset steer unexpectedly started a turn"),
+            Ok(SendResult::Started) => {
+                tracing::error!("active reset steer unexpectedly started a turn")
+            }
             Err(error) => tracing::warn!(%error, "Context reset notice was not queued; will retry"),
         }
     }

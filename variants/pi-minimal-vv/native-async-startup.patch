@@ -1,0 +1,50 @@
+--- node_modules/pi-subagents/src/runs/background/async-execution.ts
++++ node_modules/pi-subagents/src/runs/background/async-execution.ts
+@@ -610,15 +610,6 @@
+ 			return { error: `async runner did not produce a pid for cwd: ${cwd}` };
+ 		}
+ 		proc.unref();
+-		if (managedRuntime) {
+-			try {
+-				await managedStartup;
+-			} catch (error) {
+-				const message = error instanceof Error ? error.message : String(error);
+-				if (typeof proc.pid === "number") terminateRunnerBeforeProceed(proc.pid);
+-				return { pid: proc.pid, runnerProcessInstanceId, error: message, terminationObserved: false, startupDidNotProceed: false };
+-			}
+-		}
+ 		if (startupPath && startupAckPath && startupProceedPath) {
+ 			const persistStartupFailure = (message: string) => {
+ 				if (launchAsyncDir) persistPreProceedStartupFailure(launchAsyncDir, launchRunId, runnerProcessInstanceId, launchSessionId, launchCompletionOwnerId, message);
+@@ -657,16 +648,23 @@
+ 				// Proceed is the commit point; handshake cleanup cannot turn a running revival into a start error.
+ 			}
+ 		}
+-		if (managedRuntime && launchAsyncDir) {
++		managedStartup?.then(async () => {
++			if (!launchAsyncDir) return;
++			const startup = await managedRuntime.waitChildStartup(launchAsyncDir, RUNNER_STARTUP_TIMEOUT_MS);
++			if (startup.status !== "started") throw new Error(startup.reason || "Async child was not physically started.");
++		}).catch((error) => {
++			const message = error instanceof Error ? error.message : String(error);
++			console.error(`[pi-subagents] managed async startup failed: ${message}`);
++			if (typeof proc.pid === "number") terminateRunnerBeforeProceed(proc.pid);
++			if (!launchAsyncDir) return;
+ 			try {
+-				const startup = managedRuntime.waitChildStartup(launchAsyncDir, RUNNER_STARTUP_TIMEOUT_MS);
+-				if (startup.status !== "started") throw new Error(startup.reason || "Async child was not physically started.");
+-			} catch (error) {
+-				const message = error instanceof Error ? error.message : String(error);
+-				terminateRunnerBeforeProceed(proc.pid);
+-				return { pid: proc.pid, runnerProcessInstanceId, error: message, terminationObserved: false, startupDidNotProceed: false };
++				const statusPath = path.join(launchAsyncDir, "status.json");
++				const status = JSON.parse(fs.readFileSync(statusPath, "utf-8"));
++				writePrivateAtomicJson(statusPath, { ...status, state: "failed", lastUpdate: Date.now(), error: message });
++			} catch (persistError) {
++				console.error("Failed to persist managed async startup error:", persistError);
+ 			}
+-		}
++		});
+ 		return { pid: proc.pid, runnerProcessInstanceId };
+ 	} catch (error) {
+ 		closeFd(stdoutFd);

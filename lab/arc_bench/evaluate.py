@@ -275,6 +275,66 @@ def _task_paths(source, state, configuration):
     return requirements, tests, (alias or state.get("task")), entry
 
 
+def _relocate_saved_input(value, source):
+    """Resolve a run input after a remote evaluation was relayed to Mac.
+
+    Deferred evaluation records retain the remote absolute path in their
+    configuration.  The controller has the same immutable input under its
+    local source run; map only paths below an ``inputs`` component and never
+    guess an arbitrary application path.
+    """
+    if value is None:
+        return None
+    path = Path(value).expanduser()
+    if path.exists():
+        return path.resolve(strict=True)
+    parts = path.parts
+    if "inputs" not in parts:
+        return None
+    suffix = parts[parts.index("inputs") + 1:]
+    candidate = paths(source)["inputs"].joinpath(*suffix)
+    return candidate.resolve(strict=True) if candidate.exists() else None
+
+
+def _evolution_baseline(source, source_state, configuration, platform_task):
+    """Return the explicitly frozen official baseline for an Evo replay."""
+    if platform_task != "hackathon-evolution--github":
+        return None
+    nested = configuration.get("evolution") if isinstance(configuration.get("evolution"), dict) else {}
+    task_config = source_state.get("task_config") if isinstance(source_state.get("task_config"), dict) else {}
+    candidates = (
+        configuration.get("baseline"),
+        configuration.get("initial_application"),
+        nested.get("baseline"),
+        nested.get("initial_application"),
+        task_config.get("baseline"),
+        task_config.get("initial_application"),
+        source_state.get("baseline"),
+        source_state.get("initial_application"),
+    )
+    for value in candidates:
+        if not value:
+            continue
+        candidate = _relocate_saved_input(value, source)
+        if candidate is not None:
+            return _application_root(candidate)
+        candidate = Path(value).expanduser()
+        if not candidate.is_absolute():
+            candidate = (source / candidate).resolve()
+        if candidate.exists():
+            return _application_root(candidate)
+    # The assembly contract may publish the baseline under one of these
+    # stable input names even when the task config only carries platform_task.
+    for name in ("initial-application", "evolution-baseline", "baseline"):
+        candidate = paths(source)["inputs"] / name
+        if candidate.is_dir():
+            return _application_root(candidate)
+    raise ValueError(
+        "hackathon-evolution--github official evaluation requires the frozen "
+        "baseline/initial_application input"
+    )
+
+
 def _self_test_platform_task(configuration, state, task_alias, task_entry, platform_task):
     """Map the public generation task identity to the private self-test task.
 
@@ -307,7 +367,7 @@ def _self_test_platform_task(configuration, state, task_alias, task_entry, platf
     )
 
 
-def _copy_input(source, destination, *, label):
+def _copy_input(source, destination):
     destination.parent.mkdir(parents=True, exist_ok=True)
     if source.is_dir():
         shutil.copytree(source, destination, symlinks=True, dirs_exist_ok=True)
@@ -381,14 +441,28 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     # available for replay and diagnosis.
     _copy_input(application, layout["workspace"])
     replay_package = None
+    replay_manifest = None
     if kind == "official":
         if config.get("billing_mode") not in {"self_funded", "competition"}:
             raise ValueError("official evaluation requires an explicit billing_mode")
-        from .package_arc_replay import package_snapshot
         replay_package = layout["inputs"] / "official-replay.zip"
-        package_snapshot(source, application, replay_package,
-                         requirements=requirements, task=task,
-                         platform_task=platform_task)
+        baseline = _evolution_baseline(source, source_state, config, platform_task)
+        if baseline is not None:
+            from .package_incremental_replay import package as package_incremental
+            source_identity = {
+                "run_id": source_state.get("run_id", source.name),
+                "run_path": str(source),
+                "platform_task": platform_task,
+                "baseline": str(baseline),
+                "application": str(application),
+            }
+            replay_manifest = package_incremental(
+                baseline, application, requirements/"requirements.yaml", replay_package, source_identity)
+        else:
+            from .package_arc_replay import package_snapshot
+            replay_manifest = package_snapshot(source, application, replay_package,
+                                               requirements=requirements, task=task,
+                                               platform_task=platform_task)
     noop_package = _noop_package(layout["inputs"] / "arc-noop.zip") if kind == "task" else None
     manifest = read_run_manifest(evaluation)
     manifest.update({
@@ -415,6 +489,7 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
         "agent_package": (str(replay_package) if replay_package else
                           str(noop_package) if noop_package else config.get("agent_package")),
         "replay_package": str(replay_package) if replay_package else None,
+        "replay_manifest": replay_manifest,
         "evaluation_inputs": {"requirements": "inputs/requirements", "tests": "inputs/tests" if tests else None,
                                "application": "inputs/application",
                                "workspace_application": "data/workspace"},
@@ -429,6 +504,8 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     elif not manifest.get("target_config"):
         manifest["target_config"] = resolve_target(manifest)
     target_config = dict(manifest["target_config"])
+    if kind == 'official' and platform_task == 'hackathon-evolution--github':
+        target_config['competition_id'] = 'hackathon-evolution'
     if kind == "self-test":
         # Self-test is a site submission, not a Hosted ARC execution.  Drop
         # every generation/remote field inherited from registry defaults so a

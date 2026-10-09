@@ -4,14 +4,16 @@ import base64
 import datetime
 import fcntl
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
+import tarfile
 import time
 
 from .hosted_monitor import alert, accept_run, collected_run, publish_acceptance, collector_session
-from .provider_liveness import assess, transition
+from .provider_liveness import assess, transition, collect_provider_evidence
 
 TERMINAL={'completed','finished','failed','interrupted','cancelled','lost'}
 
@@ -83,19 +85,219 @@ def collect(run,batch,module_source, *, model_facts_only=False):
     return item
 
 
+def collect_attempt(attempt, output, *, stale_after=1800, minimum_samples=2):
+    """Collect one current Lab attempt without manufacturing a legacy run.json."""
+    attempt = Path(attempt).resolve(strict=True)
+    attempt_record = json.loads((attempt/'attempt.json').read_text())
+    execution = json.loads((attempt/'execution.json').read_text())
+    attempt_id = attempt_record['attempt_id']
+    if attempt_id != attempt.name:
+        raise ValueError('attempt directory/name identity mismatch')
+    observed = time.time()
+    phase = execution.get('phase') or ('running' if execution.get('execution') == 'running' else 'unknown')
+    row = {
+        'run_id': attempt_id, 'attempt_id': attempt_id,
+        'experiment_id': attempt_record.get('experiment_id'),
+        'incarnation_id': execution.get('incarnation_id'),
+        'phase': phase, 'execution': execution.get('execution'),
+        'observed_at': observed, 'started_at': execution.get('launch_intent_at'),
+        'finished_at': execution.get('finished_at'),
+        'exit_code': execution.get('exit_code'),
+        'entry_exit_code': execution.get('entry_exit_code'),
+        'entry_status': execution.get('entry_status'),
+        'stop_reason': execution.get('stop_reason'),
+        'files': {}, 'notes': {},
+        'provider_sources': [], 'model_invoked': False,
+        'source': str(attempt/'execution.json'),
+    }
+    resource_path = attempt/'workspace/generation.resource.json'
+    if not resource_path.is_file():
+        row.update(status='preparing', preparation={'reason':'generation.resource.json missing',
+                                                     'source':str(resource_path)})
+        return row
+    resource = json.loads(resource_path.read_text())
+    row['resource'] = {key: resource.get(key) for key in
+                       ('state','image_id','workspace','labels','endpoint')}
+    endpoint = resource.get('endpoint') or attempt_record['job']['backend']['external_docker']['endpoint']
+    argv = endpoint['argv']
+    if resource.get('state') in {'sending','not-started','preparing'}:
+        row.update(status='preparing', preparation={'resource_state':resource.get('state'),
+                                                     'source':str(resource_path)})
+        return row
+    label = (resource.get('labels') or {}).get('io.factory26.exp.attempt',
+                                                attempt_id+'--generation')
+    ps = subprocess.run([*argv,'ps','-aq','--filter',f'label=io.factory26.exp.attempt={label}'],
+                        capture_output=True,text=True,timeout=20)
+    container = ps.stdout.strip().splitlines()[0] if ps.returncode == 0 and ps.stdout.strip() else None
+    if not container:
+        row.update(status='preparing', preparation={'resource_state':resource.get('state'),
+                                                     'label':label,
+                                                     'docker_stderr':ps.stderr[-2000:]})
+        return row
+    inspect = subprocess.run([*argv,'inspect',container],capture_output=True,text=True,timeout=20)
+    if inspect.returncode:
+        row['observation_error'] = f'Docker inspect exit {inspect.returncode}: {inspect.stderr[-2000:]}'
+        return row
+    physical=json.loads(inspect.stdout)[0]
+    labels=physical.get('Config',{}).get('Labels',{})
+    if physical.get('Image') != resource.get('image_id') or labels.get('io.factory26.run') != attempt_id:
+        raise ValueError('generation image/run identity mismatch')
+    row['physical']={'id':physical['Id'],'image':physical['Image'],'state':physical['State'],
+                     'labels':{key:labels.get(key) for key in
+                               ('io.factory26.run','io.factory26.exp.attempt','io.factory26.exp.incarnation')}}
+    row['physical_running']=bool(physical['State'].get('Running'))
+    if not row['physical_running']:
+        row['status']='stopped_finalizing'
+        batch=output/'monitor'/datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
+        batch.mkdir(parents=True,exist_ok=True)
+        row['evidence']=str(batch)
+        save(batch/'attempt.json',attempt_record)
+        save(batch/'execution.json',execution)
+        save(batch/'attempt-resource.json',resource)
+        for name in ('resource-latest.json','resource-status.json'):
+            source=attempt/'process-evidence'/name
+            if source.is_file():
+                (batch/name).write_bytes(source.read_bytes())
+        debug=subprocess.run([*argv,'cp',f'{container}:/workspace/execution.debug.log','-'],
+                             capture_output=True,timeout=30)
+        if debug.returncode==0:
+            try:
+                with tarfile.open(fileobj=io.BytesIO(debug.stdout),mode='r:*') as archive:
+                    member=next((x for x in archive.getmembers() if x.isfile()),None)
+                    if member:
+                        data=archive.extractfile(member).read()[-2*1024*1024:]
+                        (batch/'execution.debug.log').write_bytes(data)
+                        row['debug_evidence']=str(batch/'execution.debug.log')
+            except tarfile.TarError as error:
+                row['observation_error']=f'docker cp debug archive: {error}'
+        save(batch/'collection.json',row)
+        return row
+    provider_source = Path(__file__).with_name('provider_liveness.py').read_text()
+    remote = (
+        "import json,time\n"
+        "from pathlib import Path\n"
+        "exec("+repr(provider_source)+")\n"
+        "root=Path('/workspace/template/.factory26')\n"
+        "sources=[]; sessions=[]; evidence={}\n"
+        "for braid in sorted(root.glob('*')) if root.is_dir() else []:\n"
+        "  state=braid/'braid-state'; status=state/'status.json'\n"
+        "  if not status.is_file(): continue\n"
+        "  sources.append(collect_provider_evidence(state,time.time(),"+repr(row.get('started_at'))+"))\n"
+        "  for name in ('braid-state/status.json','braid-state/result.json','process-evidence/resource-latest.json','process-evidence/resource-status.json'):\n"
+        "    p=braid/name\n"
+        "    if p.is_file(): evidence[str(braid.name+'/'+name)]=p.read_text()[-2097152:]\n"
+        "print(json.dumps({'provider_sources':sources,'evidence':evidence}))"
+    )
+    response=subprocess.run([*argv,'exec','-i',physical['Id'],'python3','-'],
+                            input=remote,text=True,capture_output=True,timeout=75)
+    if response.returncode:
+        row['observation_error']=f'Docker exec exit {response.returncode}: {response.stderr[-2000:]}'
+        return row
+    captured=json.loads(response.stdout)
+    row.update(captured)
+    batch=output/'monitor'/datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
+    batch.mkdir(parents=True,exist_ok=True)
+    row['evidence']=str(batch)
+    save(batch/'attempt.json',attempt_record)
+    save(batch/'execution.json',execution)
+    save(batch/'collection.json',row)
+    save(batch/'provider-observation.json',{
+        'observed_at':observed,'phase':phase,'physical_running':row.get('physical_running'),
+        'boundary':max([s.get('boundary') for s in row.get('provider_sources',[])
+                        if s.get('boundary') is not None],default=row.get('started_at')),
+        'sessions':[x for s in row.get('provider_sources',[]) for x in s.get('sessions',[])],
+        'errors':[x for s in row.get('provider_sources',[]) for x in s.get('errors',[])],
+        'provider_health':{g:h for s in row.get('provider_sources',[])
+                           for g,h in s.get('provider_health',{}).items()}})
+    save(batch/'attempt-resource.json',resource)
+    return row
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--matrix',required=True,type=Path)
+    parser.add_argument('--matrix',type=Path)
     parser.add_argument('--output',required=True,type=Path)
     parser.add_argument('--stale-after-seconds',type=int,default=1800)
     parser.add_argument('--minimum-samples',type=int,default=2)
     parser.add_argument('--once',action='store_true')
+    parser.add_argument('--attempt',action='append',type=Path,
+                        help='读取一个真实 Lab attempt 目录；不生成 legacy run.json')
     args=parser.parse_args()
     if args.stale_after_seconds<=0 or args.minimum_samples<2:parser.error('positive threshold and at least two samples required')
+    if not args.matrix and not args.attempt: parser.error('provide --matrix or --attempt')
     os.umask(0o077)
     output=args.output.resolve();monitor=output/'monitor';monitor.mkdir(parents=True,exist_ok=True)
     lock=(monitor/'lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     module_source=Path(__file__).with_name('provider_liveness.py').read_text()
+    if args.attempt:
+        state_path=monitor/'attempt-scheduler.json'
+        state=json.loads(state_path.read_text()) if state_path.exists() else {
+            'attempts':{},'liveness':{},'notifications':{},'samples':0,
+            'collector_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            'provider_liveness_sha256':hashlib.sha256(module_source.encode()).hexdigest(),
+            'model_invoked':False}
+        start=time.time()
+        while True:
+            results=[]
+            for attempt in args.attempt:
+                results.append(collect_attempt(attempt,output,
+                                               stale_after=args.stale_after_seconds,
+                                               minimum_samples=args.minimum_samples))
+            verdicts=[]
+            for row in results:
+                sources=row.get('provider_sources',[])
+                observation={'observed_at':row['observed_at'],'phase':row['phase'],
+                    'physical_running':row.get('physical_running'),
+                    'observation_error':row.get('observation_error'),
+                    'boundary':max([s['boundary'] for s in sources
+                                    if s.get('boundary') is not None],
+                                   default=row.get('started_at')),
+                    'sessions':[x for s in sources for x in s.get('sessions',[])],
+                    'errors':[x for s in sources for x in s.get('errors',[])],
+                    'provider_health':{g:h for s in sources
+                                       for g,h in s.get('provider_health',{}).items()}}
+                key=row['attempt_id']
+                verdict=assess(observation,state['liveness'].get(key),
+                               stale_after=args.stale_after_seconds,
+                               min_samples=args.minimum_samples)
+                if row.get('status') in ('paused','preparing'):
+                    verdict['classification']=row['status']
+                state['liveness'][key]=verdict
+                history=state['attempts'].setdefault(key,{})
+                previous_phase=history.get('last_phase')
+                previous_status=history.get('last_status')
+                if previous_phase != row.get('phase') or previous_status != row.get('status'):
+                    history['stage_changed_at']=row.get('observed_at')
+                if row.get('status') == 'preparing':
+                    history.setdefault('preparing_since',row.get('observed_at'))
+                    if row.get('observed_at',0)-history['preparing_since'] >= args.stale_after_seconds:
+                        verdict['classification']='suspected_stale'
+                        verdict['reason']='preparing stage unchanged beyond stale threshold'
+                        verdict['preparing_since']=history['preparing_since']
+                notice=transition(key,verdict,state['notifications'])
+                if notice: alert(output,'provider_liveness',notice)
+                verdicts.append({'attempt_id':key,**verdict})
+                history.update({'attempt':str(Path(row.get('source','')).parent),
+                                'last_phase':row.get('phase'),
+                                'last_status':row.get('status'),
+                                'last_observed_at':row.get('observed_at'),
+                                'physical':row.get('physical')})
+            state['samples']+=1
+            state['last_batch']=str(monitor)
+            state['last_completed_at']=time.time()
+            save(state_path,state)
+            save(monitor/'attempt-outcome.json',{'observed_at':time.time(),
+                 'model_invoked':False,'sample':state['samples'],
+                 'attempts':results,'liveness':verdicts})
+            print(json.dumps({'sample':state['samples'],
+                'attempts':[{'attempt_id':r.get('attempt_id'),'phase':r.get('phase'),
+                             'status':r.get('status'),'physical_running':r.get('physical_running'),
+                             'evidence':r.get('evidence')}
+                            for r in results]},ensure_ascii=False),flush=True)
+            if args.once or all(r.get('phase') in TERMINAL for r in results):
+                return
+            elapsed=time.time()-start
+            time.sleep(180 if elapsed < 600 else 480)
     schedule=monitor/'scheduler.json'
     state=json.loads(schedule.read_text()) if schedule.exists() else {'done':[],'liveness':{},'notifications':{}}
     state.update(pid=os.getpid(),matrix=str(args.matrix.resolve()),module_sha256=hashlib.sha256(module_source.encode()).hexdigest(),model_invoked=False)

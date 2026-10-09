@@ -63,6 +63,8 @@ pub struct ReviewRequest {
 }
 #[derive(Debug, Clone, Serialize)]
 pub struct ReviewCheckout {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub automatic_result: Option<AutomaticResult>,
     pub request_id: i64,
     pub responsibility_revision: i64,
     pub issue_assignment_revision: i64,
@@ -76,7 +78,12 @@ pub struct ReviewCheckout {
 }
 #[derive(Debug, Clone, Serialize)]
 pub struct ReviewView {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub execution_dispatch: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub automatic_result: Option<AutomaticResult>,
     pub request: ReviewRequest,
+    pub execution_node_id: String,
     pub current_member: Option<String>,
     pub execution: Option<ExecutionFact>,
     pub checkout: Option<ReviewCheckout>,
@@ -131,7 +138,8 @@ pub(crate) fn single_reviewer_conflict(
          ORDER BY r.request_id LIMIT 1",
         params![node("pr", pr), current_request],
         |row| Ok((row.get(0)?, row.get(1)?)),
-    ).optional()
+    )
+    .optional()
 }
 
 pub(crate) fn requirements_digest(body: &str) -> String {
@@ -191,6 +199,7 @@ fn checkout_in(
     Ok(c.query_row("SELECT path,origin,commit_sha,tree_sha,member_login,agent_id,created_at FROM review_checkouts
         WHERE request_id=?1 AND responsibility_revision=?2 AND issue_assignment_revision=?3",
         params![request.id,request.responsibility_revision,issue_revision], |r| Ok(ReviewCheckout {
+            automatic_result: None,
             request_id:request.id,responsibility_revision:request.responsibility_revision,issue_assignment_revision:issue_revision,
             path:PathBuf::from(r.get::<_,String>(0)?),origin:PathBuf::from(r.get::<_,String>(1)?),commit:r.get(2)?,tree:r.get(3)?,member:r.get(4)?,agent:r.get(5)?,created_at:r.get(6)?,
         })).optional()?)
@@ -251,6 +260,30 @@ impl LocalObjects {
         }
         Ok(())
     }
+    // Terminal receipt reads do not restore a retired writer's mutation right.
+    // If both identity inputs exist, they must designate the same saved actor.
+    fn receipt_actor(
+        &self,
+        c: &Connection,
+        turn: Option<&str>,
+    ) -> Result<Option<(String, Option<String>)>> {
+        if turn.is_none() && self.cli_binding_id.is_none() {
+            return Ok(Some(("external".into(), None)));
+        }
+        let actors = c
+            .prepare(
+                "SELECT DISTINCT a.member_login,ai.agent_id FROM turns t
+            JOIN provider_sessions ps ON ps.session_id=t.session_id
+            JOIN agent_instances ai ON ai.agent_id=ps.agent_id
+            JOIN assignments a ON a.assignment_id=ai.assignment_id
+            WHERE (?1 IS NULL OR t.turn_id=?1) AND (?2 IS NULL OR ps.cli_binding_id=?2)",
+            )?
+            .query_map(params![turn, self.cli_binding_id.as_deref()], |r| {
+                Ok((r.get::<_, String>(0)?, Some(r.get::<_, String>(1)?)))
+            })?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        Ok((actors.len() == 1).then(|| actors[0].clone()))
+    }
     pub fn request_review(
         &self,
         turn: Option<&str>,
@@ -275,11 +308,25 @@ impl LocalObjects {
                 "request-id belongs to a different PR or acceptance Issue"
             );
             drop(tx);
-            return self.review_view(pr, id);
+            let mut view = self.review_view(pr, id)?;
+            view.automatic_result = Some(AutomaticResult {
+                action: "reused_request",
+                requested: key.into(),
+                actual: format!("review #{id}"),
+                reason:
+                    "同request-id的PR与验收Issue身份匹配，返回原请求；没有新增候选、事件或责任。"
+                        .into(),
+                additional_write: false,
+                changed: false,
+                original_error: None,
+            });
+            return Ok(view);
         }
         if self.single_reviewer_per_pr()? {
             if let Some((other, lifecycle)) = single_reviewer_conflict(&tx, pr, None)? {
-                bail!("PR #{pr} already has review #{other} ({lifecycle}); finish or explicitly cancel that review and wait for its reviewer assignment to retire before requesting another candidate");
+                bail!(
+                    "PR #{pr} already has review #{other} ({lifecycle}); finish or explicitly cancel that review and wait for its reviewer assignment to retire before requesting another candidate"
+                );
             }
         }
         let item = Self::item(&tx, "pr", pr)?;
@@ -340,14 +387,44 @@ impl LocalObjects {
             VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,'issue_owner',?17)",
             params![id,review_node,node("pr",pr),node("issue",issue),key,Self::member_login(&tx,writer.as_ref())?.unwrap_or_else(||"external".into()),writer.as_ref().map(|w|&w.group),writer.as_ref().map(|w|&w.turn),
                 base_ref,head_ref,base_commit,head_commit,head_tree,requirements.revision,requirements.body,requirements_digest(&requirements.body),now()])?;
-        let reference = format!(
-            "PR #{pr} 请求 review #{id}，验收 Issue #{issue}；固定候选 {head_commit}；读取 braid pr review view {pr} {id}"
-        );
+        let reference =
+            format!("PR #{pr} 请求 review #{id}，验收 Issue #{issue}；固定候选 {head_commit}");
         for target in [node("pr", pr), node("issue", issue)] {
             Self::activity_in(&tx, &target, writer.as_ref(), "review_requested", None, &reference)?;
         }
         self.notify_member(&tx, &review_node, &owner.login, writer.as_ref(), &reference)?;
-        tx.commit().with_context(|| format!("review #{id} commit is unconfirmed; retained candidate refs: refs/braid/reviews/{id}; retry request-id {key}"))?;
+        if let Err(error) = tx.commit() {
+            let original = anyhow::Error::new(error).context(format!("review #{id} commit is unconfirmed; retained candidate refs: refs/braid/reviews/{id}; request-id {key}"));
+            let recovered = (|| -> Result<ReviewView> {
+                let c = self.connect()?;
+                let saved_id = c.query_row(
+                    "SELECT request_id FROM review_requests WHERE request_key=?1",
+                    [key],
+                    |r| r.get::<_, i64>(0),
+                )?;
+                let view = self.review_view(pr, saved_id)?;
+                ensure!(
+                    view.request.request_key == key && view.request.issue == issue,
+                    "authoritative review request does not match request-id, PR and acceptance Issue"
+                );
+                Ok(view)
+            })();
+            match recovered {
+                Ok(mut view) => {
+                    view.automatic_result = Some(AutomaticResult {
+                        action: "recovered_after_commit_error", requested: key.into(), actual: format!("review #{}",view.request.id),
+                        reason: "提交返回错误后一次权威回读确认同请求已保存；返回实际结果，没有重复写入。".into(),
+                        additional_write: false, changed: false, original_error: Some(format!("{original:#}")),
+                    });
+                    return Ok(view);
+                }
+                Err(read_error) => {
+                    return Err(original.context(format!(
+                        "authoritative readback did not confirm recovery: {read_error:#}"
+                    )));
+                }
+            }
+        }
         self.review_view(pr, id)
     }
     pub fn review_request(&self, id: i64) -> Result<ReviewRequest> {
@@ -360,6 +437,9 @@ impl LocalObjects {
         let (target, current_member, issue_revision) = responsibility_in(&c, &request)?;
         let freshness_errors = self.review_freshness_in(&c, &request)?;
         Ok(ReviewView {
+            execution_dispatch: None,
+            automatic_result: None,
+            execution_node_id: target.clone(),
             checkout: checkout_in(&c, &request, issue_revision)?,
             execution: Self::execution_fact(&c, &target)?,
             request,
@@ -414,6 +494,15 @@ impl LocalObjects {
     fn review_freshness_in(&self, c: &Connection, request: &ReviewRequest) -> Result<Vec<String>> {
         let mut errors = Vec::new();
         let pr = Self::item(c, "pr", request.pr)?;
+        let associated: bool = c.query_row(
+            "SELECT EXISTS(SELECT 1 FROM associations WHERE pr_node_id=?1 AND issue_node_id=?2 AND active=1)",
+            params![node("pr",request.pr),node("issue",request.issue)], |r|r.get(0))?;
+        if !associated {
+            errors.push(format!(
+                "review acceptance Issue #{} is no longer actively associated with PR #{}",
+                request.issue, request.pr
+            ));
+        }
         let origin = self.repository()?;
         for (label, current_ref, frozen_ref, frozen_commit) in [
             (
@@ -504,29 +593,78 @@ impl LocalObjects {
         )?;
         if self.single_reviewer_per_pr()? {
             if let Some((other, lifecycle)) = single_reviewer_conflict(&tx, pr, Some(id))? {
-                bail!("PR #{pr} already has review #{other} ({lifecycle}); wait for its reviewer assignment to retire before assigning review #{id}");
-            }
-            if existing.as_deref() != Some(&login) {
-                let outstanding: Option<String> = tx.query_row(
-                    "SELECT lifecycle FROM assignments WHERE work_item_node_id=?1 AND lifecycle!='retired' LIMIT 1",
-                    [&request.node_id], |row| row.get(0),
-                ).optional()?;
-                ensure!(outstanding.is_none(), "review #{id} still has a reviewer assignment ({outstanding:?}); finish or explicitly cancel this review and wait for native teardown before assigning a new reviewer to a new request");
+                bail!(
+                    "PR #{pr} already has review #{other} ({lifecycle}); wait for its reviewer assignment to retire before assigning review #{id}"
+                );
             }
         }
+
+        let requested_login = login.clone();
+        let assignment_changed = existing.as_deref() != Some(&login);
         if existing.as_deref() != Some(&login) {
             let profiles = self.current_profiles()?;
-            let mut candidate = None;
+            let mut candidates = Vec::new();
             for profile in profiles
                 .into_iter()
                 .filter(|profile| profile.has_tag("reviewer-only") && !profile.has_tag("root-only"))
             {
-                if Self::next_member_for_profile(&tx, &profile)? == login {
-                    candidate = Some(profile.id);
-                    break;
+                candidates.push(AssigneeCandidate {
+                    login: Self::next_member_for_profile(&tx, &profile)?,
+                    profile: profile.id,
+                    description: profile.assignee_description,
+                });
+            }
+            if let Some(current) = existing.as_deref() {
+                if !candidates.iter().any(|candidate| candidate.login == login) {
+                    let (requested_profile, _) =
+                        Self::resolve_assignee_candidate(&tx, &login, &candidates, true)?;
+                    let current_profile: Option<String> = tx.query_row(
+                        "SELECT desired_profile_id FROM local_items WHERE node_id=?1",
+                        [&request.node_id],
+                        |r| r.get(0),
+                    )?;
+                    ensure!(
+                        current_profile.as_deref() == Some(requested_profile.as_str()),
+                        "claimed member {login} has a different responsibility Profile from current reviewer {current}"
+                    );
+                    let lifecycle: Option<String> = tx.query_row(
+                        "SELECT lifecycle FROM assignments WHERE work_item_node_id=?1 AND member_login=?2 AND assignment_revision=?3 ORDER BY generation DESC LIMIT 1",
+                        params![request.node_id,current,revision], |r| r.get(0)).optional()?;
+                    ensure!(
+                        !lifecycle.as_deref().is_some_and(|value| matches!(
+                            value,
+                            "stopping" | "retired" | "blocked"
+                        )),
+                        "current reviewer {current} responsibility is {}",
+                        lifecycle.as_deref().unwrap_or("unmaterialized")
+                    );
+                    let mut view = self.review_view(pr, id)?;
+                    if let Some(failure) = &view.execution {
+                        bail!(
+                            "current reviewer execution has an unresolved failure: {}: {}",
+                            failure.outcome,
+                            failure.summary
+                        );
+                    }
+                    view.automatic_result = Some(AutomaticResult {
+                        action: "retained_current_member", requested: requested_login.clone(), actual: current.into(),
+                        reason: "请求名称已被认领，事实确认其与本请求当前reviewer属于同一职责配方；保留当前负责人，不新增改派、通知或关闭。此回执不判断执行健康。".into(),
+                        additional_write: false, changed: false, original_error: None,
+                    });
+                    drop(tx);
+                    return Ok(view);
                 }
             }
-            let profile = candidate.context(
+            // An unassigned request may claim the current member of a known
+            // former member's Profile. Replacement keeps exact identities so
+            // a stale retry cannot repeatedly retire a healthy reviewer.
+            let (profile, login) = Self::resolve_assignee_candidate(
+                &tx,
+                &login,
+                &candidates,
+                existing.is_none(),
+            )
+            .context(
                 "member is not an available reviewer; choose braid assignee list --reviewer",
             )?;
             let item = Item {
@@ -563,7 +701,11 @@ impl LocalObjects {
             )?;
         }
         tx.commit()?;
-        self.review_view(pr, id)
+        let mut view = self.review_view(pr, id)?;
+        view.automatic_result =
+            AutomaticResult::assignment(Some(&requested_login), view.current_member.as_deref());
+        view.execution_dispatch = assignment_changed.then_some("queued");
+        Ok(view)
     }
     pub fn checkout_review(&self, turn: Option<&str>, pr: i64, id: i64) -> Result<ReviewCheckout> {
         let mut c = self.connect()?;
@@ -599,7 +741,7 @@ impl LocalObjects {
         agent: Option<&str>,
         git_path: &Path,
     ) -> Result<ReviewCheckout> {
-        if let Some(existing) = checkout_in(tx, request, issue_revision)? {
+        if let Some(mut existing) = checkout_in(tx, request, issue_revision)? {
             ensure!(
                 existing.member == member,
                 "checkout member differs from current responsibility"
@@ -611,6 +753,12 @@ impl LocalObjects {
                 member,
                 git_path,
             )?;
+            existing.automatic_result = Some(AutomaticResult {
+                action: "reused_checkout", requested: format!("review #{}", request.id),
+                actual: existing.path.display().to_string(),
+                reason: "已登记的同责任冻结checkout通过身份与候选核对，复用原路径；没有新建或重置工作区。".into(),
+                additional_write: false, changed: false, original_error: None,
+            });
             return Ok(existing);
         }
         let origin = self.repository()?;
@@ -633,6 +781,7 @@ impl LocalObjects {
             member_login: member,
         })?;
         let checkout = ReviewCheckout {
+            automatic_result: None,
             request_id: request.id,
             responsibility_revision: request.responsibility_revision,
             issue_assignment_revision: issue_revision,
@@ -716,9 +865,40 @@ impl LocalObjects {
         );
         let mut c = self.connect()?;
         let tx = c.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let writer = self.writer(&tx, turn)?;
         let request = request_in(&tx, id)?;
         ensure!(request.pr == pr, "review #{id} belongs to PR #{}", request.pr);
+        if request.status == ReviewStatus::Completed {
+            let conclusion =
+                request.conclusion.as_ref().context("completed review has no saved conclusion")?;
+            ensure!(
+                conclusion.verdict == verdict
+                    && conclusion.body == body
+                    && conclusion.evidence == evidence,
+                "review #{id} already has a different immutable conclusion"
+            );
+            let actor = self.receipt_actor(&tx, turn)?;
+            let confirmed = actor.as_ref().is_some_and(|(member, agent)| {
+                member == &conclusion.member && agent == &conclusion.agent
+            });
+            drop(tx);
+            let mut view = self.review_view(pr, id)?;
+            view.automatic_result = Some(AutomaticResult {
+                action: if confirmed { "already_recorded" } else { "read_saved_result" },
+                requested: format!("review #{id} conclusion"),
+                actual: format!("review #{id} completed"),
+                reason: if confirmed {
+                    "同提交者的完整结论已保存，返回原作者、时间与证据；本次无新增变更。"
+                } else {
+                    "已读取保存结果，未确认原作者重复；本次未写入。"
+                }
+                .into(),
+                additional_write: false,
+                changed: false,
+                original_error: None,
+            });
+            return Ok(view);
+        }
+        let writer = self.writer(&tx, turn)?;
         ensure!(
             request.status == ReviewStatus::Pending,
             "review #{id} is already {}; conclusions are immutable",
@@ -753,11 +933,50 @@ impl LocalObjects {
             &tx,
             &request,
             writer.as_ref(),
-            &format!("review #{id} {}；读取 braid pr review view {pr} {id}", verdict.as_str()),
+            &format!("Review #{id}（PR #{pr} / Issue #{}）：{}", request.issue, verdict.as_str()),
         )?;
-        tx.commit().with_context(|| {
-            format!("review #{id} conclusion commit unconfirmed; read pr review view {pr} {id}")
-        })?;
+        if let Err(error) = tx.commit() {
+            let original = anyhow::Error::new(error)
+                .context(format!("review #{id} conclusion commit unconfirmed"));
+            let recovered = (|| -> Result<ReviewView> {
+                let view = self.review_view(pr, id)?;
+                ensure!(
+                    view.request.request_key == request.request_key
+                        && view.request.issue == request.issue
+                        && view.request.status == ReviewStatus::Completed,
+                    "authoritative review identity or completed status does not match"
+                );
+                let conclusion = view
+                    .request
+                    .conclusion
+                    .as_ref()
+                    .context("authoritative review has no conclusion")?;
+                ensure!(
+                    conclusion.verdict == verdict
+                        && conclusion.body == body
+                        && conclusion.evidence == evidence
+                        && conclusion.member == actor
+                        && conclusion.agent == writer.as_ref().map(|w| w.group.clone()),
+                    "authoritative conclusion content or submitting identity does not match"
+                );
+                Ok(view)
+            })();
+            match recovered {
+                Ok(mut view) => {
+                    view.automatic_result = Some(AutomaticResult {
+                        action: "recovered_after_commit_error", requested: format!("review #{id} conclusion"), actual: format!("review #{id} completed"),
+                        reason: "提交返回错误后一次权威回读确认同请求的完整结论与提交者已保存；未重复结论、通知或责任变更。".into(),
+                        additional_write: false, changed: false, original_error: Some(format!("{original:#}")),
+                    });
+                    return Ok(view);
+                }
+                Err(read_error) => {
+                    return Err(original.context(format!(
+                        "authoritative readback did not confirm recovery: {read_error:#}"
+                    )));
+                }
+            }
+        }
         self.review_view(pr, id)
     }
     pub fn cancel_review(
@@ -770,9 +989,39 @@ impl LocalObjects {
         ensure!(!reason.trim().is_empty(), "review cancellation reason is empty");
         let mut c = self.connect()?;
         let tx = c.transaction_with_behavior(TransactionBehavior::Immediate)?;
-        let writer = self.writer(&tx, turn)?;
         let request = request_in(&tx, id)?;
         ensure!(request.pr == pr, "review #{id} belongs to PR #{}", request.pr);
+        if request.status == ReviewStatus::Cancelled {
+            ensure!(
+                request.cancelled_reason.as_deref() == Some(reason),
+                "review #{id} was cancelled for a different reason"
+            );
+            let closed = tx.prepare("SELECT actor_login,detail FROM local_activity WHERE work_item_node_id=?1 AND action='closed'")?
+                .query_map([&request.node_id], |r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?)))?
+                .collect::<rusqlite::Result<Vec<_>>>()?;
+            let actor = self.receipt_actor(&tx, turn)?;
+            let confirmed = closed.len() == 1
+                && closed[0].1 == reason
+                && actor.as_ref().is_some_and(|(member, _)| member == &closed[0].0);
+            drop(tx);
+            let mut view = self.review_view(pr, id)?;
+            view.automatic_result = Some(AutomaticResult {
+                action: if confirmed { "already_recorded" } else { "read_saved_result" },
+                requested: format!("review #{id} cancellation"),
+                actual: format!("review #{id} cancelled"),
+                reason: if confirmed {
+                    "同授权身份与理由的取消已保存，返回原记录；本次没有新增关闭、通知或责任变更。"
+                } else {
+                    "已读取保存结果，未确认原作者重复；本次未写入。"
+                }
+                .into(),
+                additional_write: false,
+                changed: false,
+                original_error: None,
+            });
+            return Ok(view);
+        }
+        let writer = self.writer(&tx, turn)?;
         self.review_owner(&tx, &request, writer.as_ref())?;
         ensure!(
             request.status == ReviewStatus::Pending,
@@ -785,7 +1034,7 @@ impl LocalObjects {
             &tx,
             &request,
             writer.as_ref(),
-            &format!("review #{id} cancelled: {reason}；读取 braid pr review view {pr} {id}"),
+            &format!("Review #{id}（PR #{pr} / Issue #{}）：已取消（{reason}）", request.issue),
         )?;
         tx.commit()?;
         self.review_view(pr, id)
@@ -804,14 +1053,29 @@ impl LocalObjects {
                 // through the existing native unassignment/teardown workflow.
                 let member: Option<String> = tx.query_row(
                     "SELECT desired_member_login FROM local_items WHERE node_id=?1",
-                    [&request.node_id], |row| row.get(0),
+                    [&request.node_id],
+                    |row| row.get(0),
                 )?;
                 Self::retire_direct_messages(tx, member.as_deref(), None)?;
                 tx.execute("UPDATE local_items SET desired_profile_id=NULL,desired_member_login=NULL,assignment_revision=assignment_revision+1,revision=revision+1 WHERE node_id=?1", [&request.node_id])?;
-                Self::activity_in(tx, &request.node_id, writer, "unassigned", None, "review ended; reviewer teardown requested")?;
-                self.emit(tx, &request.node_id, EventKind::Unassign, Some("unassign"), "review ended; reviewer teardown requested", writer, None)?;
+                Self::activity_in(
+                    tx,
+                    &request.node_id,
+                    writer,
+                    "unassigned",
+                    None,
+                    "review ended; reviewer teardown requested",
+                )?;
+                self.emit(
+                    tx,
+                    &request.node_id,
+                    EventKind::Unassign,
+                    Some("unassign"),
+                    "review ended; reviewer teardown requested",
+                    writer,
+                    None,
+                )?;
             }
-
         } else {
             // IssueOwner has no independent driver to consume review-node lifecycle events.
             tx.execute(
